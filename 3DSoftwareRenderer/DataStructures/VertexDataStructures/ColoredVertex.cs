@@ -1,7 +1,7 @@
-﻿using System.Windows.Media;
-using System.Windows.Media.Media3D;
+﻿using g3;
+using System.Windows.Media;
 
-namespace _3DSoftwareRenderer.DataStructures.VertexDataStructures
+namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
 {
     public class ColoredVertex: StandardVertex
     {
@@ -16,7 +16,7 @@ namespace _3DSoftwareRenderer.DataStructures.VertexDataStructures
             }
         }
 
-        public ColoredVertex(Vector3D position, Color color) : base(position)
+        public ColoredVertex(Vector3f position, Color color) : base(position)
         {
             _color = color;
         }

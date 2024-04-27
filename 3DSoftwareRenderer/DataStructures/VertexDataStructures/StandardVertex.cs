@@ -1,20 +1,18 @@
-﻿using SoftwareRenderer3D.DataStructures.VertexDataStructures;
-using System.Windows.Media.Media3D;
+﻿using g3;
 
-namespace _3DSoftwareRenderer.DataStructures.VertexDataStructures
+namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
 {
     public class StandardVertex : IVertex
     {
-        private Vector3D _position;
+        private Vector3f _position;
 
-        public StandardVertex(Vector3D position)
+        public StandardVertex(Vector3f position)
         {
             _position = position;
         }
-        public Vector3D GetVertexPoint()
+        public Vector3f GetVertexPoint()
         {
             return _position;
         }
-
     }
 }

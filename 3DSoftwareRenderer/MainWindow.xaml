@@ -5,8 +5,21 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_3DSoftwareRenderer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="600" Width="800">
+    
     <Grid>
-        <Image x:Name="RenderTarget" Source="{Binding RenderTarget}"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20" />
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0" FontSize="14">
+            <MenuItem Header="File">
+                <MenuItem Command="ApplicationCommands.Open"/>
+            </MenuItem>
+        </Menu>
+        <Grid Grid.Row="1">
+            <Image x:Name="RenderTarget" Source="{Binding RenderTarget}"/>
+            <Label x:Name="OpenedFile" Content="{Binding OpenedFileName}"/>
+        </Grid>
     </Grid>
 </Window>

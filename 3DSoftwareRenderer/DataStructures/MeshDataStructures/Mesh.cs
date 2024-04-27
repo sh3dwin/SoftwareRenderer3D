@@ -1,6 +1,7 @@
-﻿using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+﻿using g3;
+using SoftwareRenderer3D.DataStructures.FacetDataStructures;
+using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using System.Collections.Generic;
-using System.Windows.Media.Media3D;
 
 namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 {
@@ -8,20 +9,35 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
     /// Describes the base class for the Mesh data structure
     /// </summary>
     /// <typeparam name="V"></typeparam>
-    public abstract class Mesh<V>
+    public class Mesh<V>
         where V : IVertex
     {
         protected Dictionary<int, V> _vertices { get; set; }
-        protected List<int> _facets { get; set; }
+        protected Dictionary<int, Facet> _facets { get; set; }
 
-        public abstract int VertexCount { get; }
-        public abstract int FacetCount { get; }
+        public Mesh(Dictionary<int, V> vertices, Dictionary<int, Facet> facets) {
 
-        public abstract List<int> GetFacets();
+        }
+        public int VertexCount { get; }
+        public int FacetCount { get; }
 
-        public abstract Vector3D GetVertexPoint(int index);
+        public IEnumerable<Facet> GetFacets()
+        {
+            return _facets.Values;
+        }
 
-        public abstract Vector3D GetFacetNormal(int index);
-        public abstract V GetVertex(int index);
+        public Vector3f GetVertexPoint(int index)
+        {
+            return _vertices[index].GetVertexPoint();
+        }
+
+        public Vector3f GetFacetNormal(int index)
+        {
+            return _facets[index].Normal;
+        }
+        public V GetVertex(int index)
+        {
+            return _vertices[index];
+        }
     }
 }
