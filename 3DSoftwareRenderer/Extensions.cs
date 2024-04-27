@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace _3DSoftwareRenderer
+﻿namespace _3DSoftwareRenderer
 {
     public static class Extensions
     {
