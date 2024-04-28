@@ -31,7 +31,7 @@ namespace SoftwareRenderer3D.DataStructures.Buffers
             }
             return result;
         }
-
+         
         public void ColorPixel(int y, int x, int z, Color color)
         {
             if (z >= _depthBuffer[x, y])
