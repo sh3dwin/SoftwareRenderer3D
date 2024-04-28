@@ -1,10 +1,4 @@
-﻿using SoftwareRenderer3D.DataStructures.VertexDataStructures;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 
 namespace SoftwareRenderer3D.DataStructures.Buffers
 {

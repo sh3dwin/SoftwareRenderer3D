@@ -5,6 +5,7 @@ using System.IO;
 using System.Collections.Generic;
 using g3;
 using SoftwareRenderer3D.DataStructures.FacetDataStructures;
+using System.Numerics;
 
 namespace SoftwareRenderer3D.FileReaders
 {
@@ -42,7 +43,7 @@ namespace SoftwareRenderer3D.FileReaders
         private Mesh<IVertex> ReadBinary(string path) { throw new NotImplementedException(); }
         private Mesh<IVertex> ReadASCII(string path) {
 
-            Dictionary<Vector3f, int> veIds = new Dictionary<Vector3f, int>();
+            Dictionary<Vector3, int> veIds = new Dictionary<Vector3, int>();
             Dictionary<int, Facet> faIds = new Dictionary<int, Facet>();
 
             try
@@ -97,7 +98,7 @@ namespace SoftwareRenderer3D.FileReaders
             return null;
         }
 
-        private Dictionary<int, IVertex> BuildVertexDictionary(Dictionary<Vector3f, int> veIds)
+        private Dictionary<int, IVertex> BuildVertexDictionary(Dictionary<Vector3, int> veIds)
         {
             var result = new Dictionary<int, IVertex>();
 
@@ -110,7 +111,7 @@ namespace SoftwareRenderer3D.FileReaders
             return result;
         }
 
-        private Vector3f ParseVertex(string line, Dictionary<Vector3f, int> vertexIdDictionary)
+        private Vector3 ParseVertex(string line, Dictionary<Vector3, int> vertexIdDictionary)
         {
             var vertex = ParseVector3f(line, 1);
 
@@ -120,7 +121,7 @@ namespace SoftwareRenderer3D.FileReaders
             return vertex;
         }
 
-        private Vector3f ParseVector3f(string line, int skip)
+        private Vector3 ParseVector3f(string line, int skip)
         {
             var parts = line.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -128,7 +129,7 @@ namespace SoftwareRenderer3D.FileReaders
             var y = float.Parse(parts[skip + 1]);
             var z = float.Parse(parts[skip + 2]);
 
-            return new Vector3f(x, y, z);
+            return new Vector3(x, y, z);
         }
 
         private void SkipLines(StreamReader reader, int count)

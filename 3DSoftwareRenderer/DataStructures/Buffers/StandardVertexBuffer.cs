@@ -1,11 +1,7 @@
 ﻿using SoftwareRenderer3D.DataStructures.VertexDataStructures;
-using SoftwareRenderer3D.Utils.LinearAlgebraUtils;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SoftwareRenderer3D.DataStructures.Buffers
 {
@@ -32,7 +28,7 @@ namespace SoftwareRenderer3D.DataStructures.Buffers
         private Dictionary<int, StandardVertex> TransformVertices(Matrix4x4 transformation)
         {
             var vertices = _vertices.Values;
-            var transformedVertices = vertices.Select(vertex => new StandardVertex(vertex.GetVertexPoint().Transform(transformation)));
+            var transformedVertices = vertices.Select(vertex => new StandardVertex(Vector3.Transform(vertex.GetVertexPoint(), transformation)));
             var result = new Dictionary<int, StandardVertex>(vertices.Count);
             foreach (var vertex in transformedVertices)
             {
