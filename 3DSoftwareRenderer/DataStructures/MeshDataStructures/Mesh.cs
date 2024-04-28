@@ -16,10 +16,11 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
         protected Dictionary<int, Facet> _facets { get; set; }
 
         public Mesh(Dictionary<int, V> vertices, Dictionary<int, Facet> facets) {
-
+            _vertices = vertices;
+            _facets = facets;
         }
-        public int VertexCount { get; }
-        public int FacetCount { get; }
+        public int VertexCount => _vertices.Count;
+        public int FacetCount => _facets.Count;
 
         public IEnumerable<Facet> GetFacets()
         {
