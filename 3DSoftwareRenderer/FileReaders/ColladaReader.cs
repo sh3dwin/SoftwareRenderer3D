@@ -4,7 +4,7 @@ using System;
 
 namespace SoftwareRenderer3D.FileReaders
 {
-    public class ColladaReader : IFileReader
+    public class ColladaReader : IMeshFileReader
     {
         public Mesh<IVertex> ReadFile(string path)
         {

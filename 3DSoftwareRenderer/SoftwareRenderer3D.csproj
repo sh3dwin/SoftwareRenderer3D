@@ -40,6 +40,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -60,17 +61,29 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Camera\ArcBallCamera.cs" />
+    <Compile Include="DataStructures\Buffers\IVertexBuffer.cs" />
+    <Compile Include="DataStructures\Buffers\StandardVertexBuffer.cs" />
     <Compile Include="DataStructures\FacetDataStructures\Facet.cs" />
     <Compile Include="DataStructures\MeshDataStructures\Mesh.cs" />
+    <Compile Include="DataStructures\PixelDataStructures\RasterizedPixel.cs" />
+    <Compile Include="DataStructures\Texture.cs" />
     <Compile Include="DataStructures\VertexDataStructures\ColoredVertex.cs" />
     <Compile Include="DataStructures\VertexDataStructures\IVertex.cs" />
     <Compile Include="DataStructures\VertexDataStructures\StandardVertex.cs" />
+    <Compile Include="DataStructures\VertexDataStructures\TexturedVertex.cs" />
     <Compile Include="Enums\FileType.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Factories\FileReaderFactory.cs" />
     <Compile Include="FileReaders\ColladaReader.cs" />
-    <Compile Include="FileReaders\IFileReader.cs" />
+    <Compile Include="FileReaders\IMeshFileReader.cs" />
     <Compile Include="FileReaders\STLReader.cs" />
+    <Compile Include="FrameBuffers\IFrameBuffer.cs" />
+    <Compile Include="Rasterizers\ScanLineRasterizer.cs" />
+    <Compile Include="RenderContexts\RenderContext.cs" />
+    <Compile Include="Renderers\SimpleRenderer.cs" />
+    <Compile Include="Utils\Constants.cs" />
+    <Compile Include="Utils\Globals.cs" />
+    <Compile Include="Utils\LinearAlgebraUtils\Vector3Extensions.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -118,5 +131,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

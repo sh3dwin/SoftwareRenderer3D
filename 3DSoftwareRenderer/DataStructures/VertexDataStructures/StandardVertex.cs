@@ -1,18 +1,20 @@
-﻿using g3;
+﻿using System.Numerics;
 
 namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
 {
     public class StandardVertex : IVertex
     {
-        private Vector3f _position;
+        private Vector3 _position;
 
-        public StandardVertex(Vector3f position)
+        public StandardVertex(Vector3 position)
         {
             _position = position;
         }
-        public Vector3f GetVertexPoint()
+        public Vector3 GetVertexPoint()
         {
             return _position;
         }
+
+        public Vector3 Position => _position;
     }
 }

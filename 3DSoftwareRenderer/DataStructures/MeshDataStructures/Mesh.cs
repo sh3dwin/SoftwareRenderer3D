@@ -1,7 +1,7 @@
-﻿using g3;
-using SoftwareRenderer3D.DataStructures.FacetDataStructures;
+﻿using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 {
@@ -27,12 +27,17 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
             return _facets.Values;
         }
 
-        public Vector3f GetVertexPoint(int index)
+        public Vector3 GetVertexPoint(int index)
         {
             return _vertices[index].GetVertexPoint();
         }
 
-        public Vector3f GetFacetNormal(int index)
+        public Facet GetFacet(int index)
+        {
+            return _facets[index];
+        }
+
+        public Vector3 GetFacetNormal(int index)
         {
             return _facets[index].Normal;
         }

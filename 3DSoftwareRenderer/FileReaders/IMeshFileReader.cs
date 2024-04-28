@@ -3,7 +3,7 @@ using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 
 namespace SoftwareRenderer3D.FileReaders
 {
-    public interface IFileReader
+    public interface IMeshFileReader
     {
         Mesh<IVertex> ReadFile(string path);
     }

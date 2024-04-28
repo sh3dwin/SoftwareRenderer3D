@@ -1,9 +1,9 @@
-﻿using g3;
+﻿using System.Numerics;
 
 namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
 {
     public interface IVertex
     {
-        Vector3f GetVertexPoint();
+        Vector3 GetVertexPoint();
     }
 }

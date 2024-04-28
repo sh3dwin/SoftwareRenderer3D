@@ -1,10 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoftwareRenderer3D.Factories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SoftwareRenderer3D.Tests
 {
@@ -24,7 +19,7 @@ namespace SoftwareRenderer3D.Tests
         }
 
         [TestMethod]
-        public void ReadSphereStlAscii()
+        public void ReadSphereStlBinary()
         {
             var filepath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\sphere.stl";
 

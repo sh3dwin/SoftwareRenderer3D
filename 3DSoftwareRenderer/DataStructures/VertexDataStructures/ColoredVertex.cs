@@ -1,5 +1,5 @@
-﻿using g3;
-using System.Windows.Media;
+﻿using System.Numerics;
+using System.Drawing;
 
 namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
 {
@@ -16,7 +16,7 @@ namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
             }
         }
 
-        public ColoredVertex(Vector3f position, Color color) : base(position)
+        public ColoredVertex(Vector3 position, Color color) : base(position)
         {
             _color = color;
         }

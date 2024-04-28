@@ -8,7 +8,7 @@ using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 
 namespace SoftwareRenderer3D.FileReaders
 {
-    public class STLReader : IFileReader
+    public class STLReader : IMeshFileReader
     {
         public Mesh<IVertex> ReadFile(string path)
         {

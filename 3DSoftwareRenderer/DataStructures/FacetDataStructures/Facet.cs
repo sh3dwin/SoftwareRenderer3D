@@ -1,4 +1,4 @@
-﻿using g3;
+﻿using System.Numerics;
 
 namespace SoftwareRenderer3D.DataStructures.FacetDataStructures
 {
@@ -8,9 +8,9 @@ namespace SoftwareRenderer3D.DataStructures.FacetDataStructures
         private int _vertex1;
         private int _vertex2;
 
-        private Vector3f _normal;
+        private Vector3 _normal;
 
-        public Facet(int vertex0, int vertex1, int vertex2, Vector3f normal)
+        public Facet(int vertex0, int vertex1, int vertex2, Vector3 normal)
         {
             _vertex0 = vertex0;
             _vertex1 = vertex1;
@@ -21,6 +21,6 @@ namespace SoftwareRenderer3D.DataStructures.FacetDataStructures
         public int V0 => _vertex0;
         public int V1 => _vertex1;
         public int V2 => _vertex2;
-        public Vector3f Normal => _normal;
+        public Vector3 Normal => _normal;
     }
 }

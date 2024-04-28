@@ -7,13 +7,13 @@ namespace SoftwareRenderer3D.Factories
 {
     public static class FileReaderFactory
     {
-        private static Dictionary<FileType, IFileReader> _factory = new Dictionary<FileType, IFileReader>()
+        private static Dictionary<FileType, IMeshFileReader> _factory = new Dictionary<FileType, IMeshFileReader>()
         {
             {FileType.STL, new STLReader()},
             {FileType.Collada, new ColladaReader()},
         };
 
-        public static IFileReader GetFileReader(string filename)
+        public static IMeshFileReader GetFileReader(string filename)
         {
             if (filename.EndsWith(".stl"))
                 return _factory[FileType.STL];
