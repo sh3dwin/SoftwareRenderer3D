@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace SoftwareRenderer3D.Camera
 {
@@ -44,14 +45,14 @@ namespace SoftwareRenderer3D.Camera
         /// <returns></returns>
         public Matrix4x4 LookAt()
         {
-            var forward = Vector3.Normalize(-_position);
-            var upDir = Vector3.UnitY;
-            var left = Vector3.Cross(forward, upDir);
-            var up = Vector3.Cross(forward, left);
+            var forward = Vector3.Normalize(_position);
+            var upDir = (Math.Abs(Vector3.Dot(forward, Vector3.UnitY)) < 0.5 ) ? Vector3.UnitY : Vector3.UnitZ;
+            var left = Vector3.Normalize(Vector3.Cross(forward, upDir));
+            var up = Vector3.Normalize(Vector3.Cross(forward, left));
 
             var rotationMatrix = new Matrix4x4(
-                left.X, left.Y, left.Z, 0,
-                up.X, up.Y, up.Z, 0,
+                left.X,    left.Y,    left.Z,    0,
+                up.X,      up.Y,      up.Z,      0,
                 forward.X, forward.Y, forward.Z, 0,
                 0, 0, 0, 1);
 
@@ -65,5 +66,7 @@ namespace SoftwareRenderer3D.Camera
 
             return viewMatrix;
         }
+
+        public Vector3 Position => _position;
     }
 }

@@ -26,9 +26,9 @@ namespace SoftwareRenderer3D.ViewModels
 
             _mesh = FileReaderFactory.GetFileReader(filepath).ReadFile(filepath);
 
-            _camera = new ArcBallCamera(new Vector3(1, 0, 0));
+            _camera = new ArcBallCamera(new Vector3(0, 0, 15));
 
-            _renderTarget = BitmapToImageSource(new SimpleRenderer(new RenderContext(800, 800)).Render(_mesh, _camera));
+            _renderTarget = BitmapToImageSource(new SimpleRenderer(new RenderContext(800, 800, 150)).Render(_mesh, _camera));
         }
 
         /// <summary>

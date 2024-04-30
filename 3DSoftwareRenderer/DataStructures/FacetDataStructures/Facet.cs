@@ -22,5 +22,10 @@ namespace SoftwareRenderer3D.DataStructures.FacetDataStructures
         public int V1 => _vertex1;
         public int V2 => _vertex2;
         public Vector3 Normal => _normal;
+
+        public void UpdateNormal(Vector3 normal)
+        {
+            _normal = normal;
+        }
     }
 }

@@ -10,6 +10,11 @@ namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
         {
             _position = position;
         }
+
+        public StandardVertex(float x, float y, float z)
+        {
+            _position = new Vector3(x, y, z);
+        }
         public Vector3 GetVertexPoint()
         {
             return _position;

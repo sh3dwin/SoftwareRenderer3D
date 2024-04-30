@@ -45,5 +45,19 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
         {
             return _vertices[index];
         }
+
+        public void RecalculateNormals()
+        {
+            foreach(var facet in _facets.Values)
+            {
+                var v0 = _vertices[facet.V0].GetVertexPoint();
+                var v1 = _vertices[facet.V1].GetVertexPoint();
+                var v2 = _vertices[facet.V2].GetVertexPoint();
+
+                var normal = Vector3.Cross(Vector3.Normalize(v2 - v0), Vector3.Normalize(v1 - v0));
+
+                facet.UpdateNormal(normal);
+            }
+        }
     }
 }

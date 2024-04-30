@@ -1,10 +1,12 @@
 ﻿using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures.Buffers;
+using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.RenderContexts;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -29,18 +31,37 @@ namespace SoftwareRenderer3D.Renderers
 
             var viewMatrix = camera.LookAt();
 
-            var lightSourceAt = new Vector3(5, 5, 0);
+
+
+            var lightSourceAt = new Vector3(0, 10, 1);
+
+            var newDict = new Dictionary<int, StandardVertex>
+            {
+                {0,  new StandardVertex(new Vector3(-2.0f,  1.0f, 0.0f)) },
+                {1,  new StandardVertex(new Vector3(-1.0f, -1.0f, 0.0f)) },
+                {2,  new StandardVertex(new Vector3( 1.0f, -1.0f, 0.0f)) },
+            };
+
+            var newFacetDict = new Dictionary<int, Facet>
+            {
+                {0, new Facet(0, 1, 2, Vector3.UnitZ) },
+            };
+
+            var newMesh = new Mesh<StandardVertex>(newDict, newFacetDict);
+
+            //mesh.RecalculateNormals();
 
             foreach ( var facet in mesh.GetFacets()) {
                 var v0 = mesh.GetVertexPoint(facet.V0);
                 var v1 = mesh.GetVertexPoint(facet.V1);
                 var v2 = mesh.GetVertexPoint(facet.V2);
 
-                v0 = Vector3.Transform(v0, Matrix4x4.CreateScale(10, 10, 10));
-                v1 = Vector3.Transform(v1, Matrix4x4.CreateScale(10, 10, 10));
-                v2 = Vector3.Transform(v2, Matrix4x4.CreateScale(10, 10, 10));
-
                 var normal = facet.Normal;
+
+                var scale = Matrix4x4.CreateScale(0.1f);
+                v0 = Vector3.Transform(v0, scale);
+                v1 = Vector3.Transform(v1, scale);
+                v2 = Vector3.Transform(v2, scale);
 
                 var lightContribution = Vector3.Dot(Vector3.Normalize(lightSourceAt), Vector3.Normalize(normal));
 
@@ -57,7 +78,7 @@ namespace SoftwareRenderer3D.Renderers
 
                 var screenV0 = new Vector3((ndcV0.X + 1) * _renderContext.Width / 2.0f, (-ndcV0.Y + 1) * _renderContext.Width / 2.0f, ndcV0.Z);
                 var screenV1 = new Vector3((ndcV1.X + 1) * _renderContext.Width / 2.0f, (-ndcV1.Y + 1) * _renderContext.Width / 2.0f, ndcV1.Z);
-                var screenV2 = new Vector3((ndcV0.X + 1) * _renderContext.Width / 2.0f, (-ndcV2.Y + 1) * _renderContext.Width / 2.0f, ndcV2.Z);
+                var screenV2 = new Vector3((ndcV2.X + 1) * _renderContext.Width / 2.0f, (-ndcV2.Y + 1) * _renderContext.Width / 2.0f, ndcV2.Z);
 
                 ScanLineTriangle(screenV0, screenV1, screenV2, Math.Abs(lightContribution));
             }
@@ -66,7 +87,7 @@ namespace SoftwareRenderer3D.Renderers
         }
 
 
-        public void ScanLineTriangle(Vector3 v0, Vector3 v1, Vector3 v2, float c)
+        public void ScanLineTriangle(Vector3 v0, Vector3 v1, Vector3 v2, float diffuse)
         {
             var (p0, p1, p2) = SortIndices(v0, v1, v2);
             if (p0 == p1 || p1 == p2 || p2 == p0)
@@ -86,8 +107,8 @@ namespace SoftwareRenderer3D.Renderers
                 // P0
                 //   P1
                 // P2
-                ScanLineHalfTriangleBottomFlat(yStart, (int)yMiddle - 1, p0, p1, p2, c);
-                ScanLineHalfTriangleTopFlat((int)yMiddle, yEnd, p2, p1, p0, c);
+                ScanLineHalfTriangleBottomFlat(yStart, (int)yMiddle - 1, p0, p1, p2, diffuse);
+                ScanLineHalfTriangleTopFlat((int)yMiddle, yEnd, p2, p1, p0, diffuse);
             }
             else
             {
@@ -95,8 +116,8 @@ namespace SoftwareRenderer3D.Renderers
                 // P1 
                 //   P2
 
-                ScanLineHalfTriangleBottomFlat(yStart, (int)yMiddle - 1, p0, p2, p1, c);
-                ScanLineHalfTriangleTopFlat((int)yMiddle, yEnd, p2, p0, p1, c);
+                ScanLineHalfTriangleBottomFlat(yStart, (int)yMiddle - 1, p0, p2, p1, diffuse);
+                ScanLineHalfTriangleTopFlat((int)yMiddle, yEnd, p2, p0, p1, diffuse);
             }
         }
 
@@ -107,7 +128,7 @@ namespace SoftwareRenderer3D.Renderers
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ScanLineHalfTriangleBottomFlat(int yStart, int yEnd,
-            Vector3 anchor, Vector3 vRight, Vector3 vLeft, float c)
+            Vector3 anchor, Vector3 vRight, Vector3 vLeft, float diffuse)
         {
             var deltaY1 = Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
             var deltaY2 = Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
@@ -126,7 +147,7 @@ namespace SoftwareRenderer3D.Renderers
                 start.Y = y;
                 end.Y = y;
 
-                ScanSingleLine(start, end, c);
+                ScanSingleLine(start, end, diffuse);
             }
         }
 
@@ -137,7 +158,7 @@ namespace SoftwareRenderer3D.Renderers
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ScanLineHalfTriangleTopFlat(int yStart, int yEnd,
-            Vector3 anchor, Vector3 vRight, Vector3 vLeft, float c)
+            Vector3 anchor, Vector3 vRight, Vector3 vLeft, float diffuse)
         {
             var deltaY1 = Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
             var deltaY2 = Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
@@ -156,7 +177,7 @@ namespace SoftwareRenderer3D.Renderers
                 start.Y = y;
                 end.Y = y;
 
-                ScanSingleLine(start, end, c);
+                ScanSingleLine(start, end, diffuse);
             }
         }
 
@@ -167,7 +188,7 @@ namespace SoftwareRenderer3D.Renderers
         /// <param name="end">Scan line end</param>
         /// <param name="faId">Facet id</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ScanSingleLine(Vector3 start, Vector3 end, float c)
+        private void ScanSingleLine(Vector3 start, Vector3 end, float diffuse)
         {
             var minX = Math.Max(start.X, 0);
             var maxX = Math.Min(end.X, _renderContext.Width);
@@ -181,7 +202,7 @@ namespace SoftwareRenderer3D.Renderers
                 var xInt = (int)x;
                 var yInt = (int)point.Y;
 
-                _frameBuffer.ColorPixel(xInt, yInt, (int)point.Z, Color.FromArgb((int)(255 * c), (int)(255 * c), (int)(255 * c)));
+                _frameBuffer.ColorPixel(xInt, yInt, point.Z, Color.FromArgb((int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse)));
             }
         }
 
