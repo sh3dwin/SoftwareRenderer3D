@@ -1,6 +1,8 @@
-﻿using SoftwareRenderer3D.DataStructures.FacetDataStructures;
+﻿using g3;
+using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
@@ -19,6 +21,12 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
             Vertices = vertices;
             Facets = facets;
         }
+
+        public Mesh(Mesh<V> otherMesh)
+        {
+            Vertices = otherMesh.Vertices;
+            Facets = otherMesh.Facets;
+        }
         public int VertexCount => Vertices.Count;
         public int FacetCount => Facets.Count;
 
@@ -30,6 +38,11 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
         public Vector3 GetVertexPoint(int index)
         {
             return Vertices[index].GetVertexPoint();
+        }
+
+        public Vector3 GetFacetMidpoint(int index)
+        {
+            return (GetVertexPoint(Facets[index].V0) + GetVertexPoint(Facets[index].V1) + GetVertexPoint(Facets[index].V2)) / 3.0f;
         }
 
         public Facet GetFacet(int index)
@@ -44,6 +57,18 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
         public V GetVertex(int index)
         {
             return Vertices[index];
+        }
+
+        public Vector3 GetCenterOfMass()
+        {
+            var sum = Vector3.Zero;
+
+            foreach(var vertex in Vertices.Values)
+            {
+                sum += vertex.GetVertexPoint();
+            }
+
+            return sum / Vertices.Count;
         }
 
         public void RecalculateNormals()

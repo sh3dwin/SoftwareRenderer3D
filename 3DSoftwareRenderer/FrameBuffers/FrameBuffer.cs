@@ -3,11 +3,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-namespace SoftwareRenderer3D.DataStructures.Buffers
+namespace SoftwareRenderer3D.FrameBuffers
 {
     public class FrameBuffer
     {
-        private Int32[] _colorBuffer;
+        private int[] _colorBuffer;
         private float[] _depthBuffer;
 
         private int _width;
@@ -22,14 +22,14 @@ namespace SoftwareRenderer3D.DataStructures.Buffers
             _height = height;
         }
 
-        private Int32[] GetEmptyIntBuffer(int width, int height)
+        private int[] GetEmptyIntBuffer(int width, int height)
         {
             var result = new int[height * width];
             for (var i = 0; i < height; i++)
             {
                 for (var j = 0; j < width; j++)
                 {
-                    int index = j + (i * height);
+                    int index = j + i * width;
                     result[index] = int.MaxValue;
                 }
             }
@@ -43,7 +43,7 @@ namespace SoftwareRenderer3D.DataStructures.Buffers
             {
                 for (var j = 0; j < width; j++)
                 {
-                    int index = j + (i * height);
+                    int index = j + i * width;
                     result[index] = int.MaxValue;
                 }
             }
@@ -52,7 +52,7 @@ namespace SoftwareRenderer3D.DataStructures.Buffers
 
         public void ColorPixel(int x, int y, float z, Color color)
         {
-            int index = x + (y * _height);
+            int index = x + y * _width;
             if (z >= _depthBuffer[index])
                 return;
 

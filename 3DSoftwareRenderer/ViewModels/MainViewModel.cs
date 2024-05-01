@@ -4,6 +4,7 @@ using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.Factories;
 using SoftwareRenderer3D.RenderContexts;
 using SoftwareRenderer3D.Renderers;
+using SoftwareRenderer3D.Utils;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -36,9 +37,11 @@ namespace SoftwareRenderer3D.ViewModels
 
             _mesh = FileReaderFactory.GetFileReader(filepath).ReadFile(filepath);
 
-            var camera = new ArcBallCamera(new Vector3(0, 0, 15), Vector3.Zero);
+            //_mesh = Globals.TestMesh;
 
-            _renderer = new SimpleRenderer(new RenderContext((int)_width, (int)_height, 150, camera));
+            var camera = new ArcBallCamera(new Vector3(0, 0, 100), Vector3.Zero);
+
+            _renderer = new SimpleRenderer(new RenderContext((int)_width, (int)_height, 100, camera));
         }
 
         /// <summary>

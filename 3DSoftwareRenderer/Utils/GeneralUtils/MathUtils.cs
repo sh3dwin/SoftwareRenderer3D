@@ -57,6 +57,17 @@ namespace SoftwareRenderer3D.Utils.GeneralUtils
 
         }
 
+        public static Vector4 Transform(this Vector4 vector, Matrix4x4 matrix)
+        {
+            var x = vector.X * matrix.M11 + vector.Y * matrix.M12 + vector.Z * matrix.M13 + vector.W * matrix.M14;
+            var y = vector.X * matrix.M21 + vector.Y * matrix.M22 + vector.Z * matrix.M23 + vector.W * matrix.M24;
+            var z = vector.X * matrix.M31 + vector.Y * matrix.M32 + vector.Z * matrix.M33 + vector.W * matrix.M34;
+            var w = vector.X * matrix.M41 + vector.Y * matrix.M42 + vector.Z * matrix.M43 + vector.W * matrix.M44;
+
+            return new Vector4(x, y, z, w);
+
+        }
+
         public static Vector3 ToVector3(this Vector4 vector)
         {
             return new Vector3(vector.X, vector.Y, vector.Z);

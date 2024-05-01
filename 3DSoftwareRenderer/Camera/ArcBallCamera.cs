@@ -10,8 +10,6 @@ namespace SoftwareRenderer3D.Camera
         private Vector3 _position;
         private Vector3 _lookAt;
 
-        private Matrix4x4 _rotation;
-
         private Matrix4x4 _viewMatrix;
 
         private Matrix4x4 _projectionMatrix;
@@ -44,15 +42,15 @@ namespace SoftwareRenderer3D.Camera
         /// <returns></returns>
         private void CalculateView()
         {
-            var forward = Vector3.Normalize(GetForwardVector());
-            var upDir = (Math.Abs(Vector3.Dot(forward, Vector3.UnitY)) < 0.95 ) ? Vector3.UnitY : Vector3.UnitZ;
+            var forward = -Vector3.Normalize(GetForwardVector());
+            var upDir = Vector3.UnitY;
             var left = Vector3.Normalize(Vector3.Cross(forward, upDir));
             var up = Vector3.Normalize(Vector3.Cross(forward, left));
 
             var rotationMatrix = new Matrix4x4(
-                left.X, up.X, forward.X, 0,
-                left.Y, up.Y, forward.Y, 0,
-                left.Z, up.Z, forward.Z, 0,
+                left.X, left.Y, left.Z, 0,
+                up.X, up.Y, up.Z, 0,
+                forward.X, forward.Y, forward.Z, 0,
                 0, 0, 0, 1);
 
             var translationMatrix = new Matrix4x4(
@@ -61,12 +59,12 @@ namespace SoftwareRenderer3D.Camera
                 0, 0, 1, -_position.Z,
                 0, 0, 0, 1);
 
-            _viewMatrix = Matrix4x4.Transpose(rotationMatrix) * translationMatrix;
+            _viewMatrix = rotationMatrix * translationMatrix;
         }
 
         private Vector3 GetForwardVector()
         {
-            return (_position - _lookAt);
+            return (_lookAt - _position);
         }
 
         private void CalculateProjection()
@@ -74,7 +72,7 @@ namespace SoftwareRenderer3D.Camera
             _projectionMatrix = new Matrix4x4(
                 (2.0f * _nearPlane) / (_right - _left), 0, (_right + _left) / (_right - _left), 0,
                 0, (2.0f * _nearPlane) / (_top - _bottom), (_top + _bottom) / (_top - _bottom), 0,
-                0, 0, (-(_farPlane + _nearPlane)) / (_farPlane - _nearPlane), (-(2.0f * _farPlane * _nearPlane)) / (_farPlane - _nearPlane),
+                0, 0, (-(_farPlane + _nearPlane)) / (_farPlane - _nearPlane), (-(20.0f * _farPlane * _nearPlane)) / (_farPlane - _nearPlane),
                 0, 0, -1, 0
                 );
         }
@@ -101,15 +99,15 @@ namespace SoftwareRenderer3D.Camera
         /// </summary>
         public void Rotate(float width, float height, Vector3 firstPixel, Vector3 secondPixel)
         {
-            var ndcFirst = ConvertToNdc(width, height, firstPixel);
-            var ndcSecond = ConvertToNdc(width, height, secondPixel);
+            var ndcSecond = ConvertToNdc(width, height, firstPixel);
+            var ndcFirst = ConvertToNdc(width, height, secondPixel);
 
             var angle = (float)Math.Acos(Math.Min(1, Vector3.Dot(Vector3.Normalize(ndcFirst), Vector3.Normalize(ndcSecond))));
             var axis = Vector3.Normalize(Vector3.Cross(ndcFirst, ndcSecond));
 
             var rotation = MathUtils.RotateAroundAxis(angle, axis);
 
-            _position = Vector3.Transform(_position, rotation);
+            _position = _position.TransformHomogeneus(rotation).ToVector3();
             CalculateView();
         }
 
@@ -117,10 +115,11 @@ namespace SoftwareRenderer3D.Camera
         {
             var ndcCoordinates = new Vector3((screenCoordinates.X - width / 2.0f) / (width / 2.0f), -(screenCoordinates.Y - height / 2.0f) / (height / 2.0f), 0);
 
+
             if ((ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y) <= 1)
                 ndcCoordinates.Z = (float)Math.Abs(Math.Sqrt(1 - ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y));
             else
-                ndcCoordinates.Z = 0;
+                ndcCoordinates.Z = (1.0f / 2.0f) / (float)(Math.Sqrt(ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y));
 
             return ndcCoordinates;
         }

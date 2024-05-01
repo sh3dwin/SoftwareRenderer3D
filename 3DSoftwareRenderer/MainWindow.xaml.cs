@@ -18,7 +18,7 @@ namespace SoftwareRenderer3D
         {
             InitializeComponent();
 
-            _viewModel = new MainViewModel(200, 200);
+            _viewModel = new MainViewModel(800, 200);
 
             DataContext = _viewModel;
 

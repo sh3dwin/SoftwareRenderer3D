@@ -71,6 +71,8 @@ namespace SoftwareRenderer3D.FileReaders
                                 var v1 = ParseVertex(reader.ReadLine(), veIds);
                                 var v2 = ParseVertex(reader.ReadLine(), veIds);
 
+                                normal = Vector3.Normalize(Vector3.Cross(Vector3.Normalize(v1 - v0), Vector3.Normalize(v2 - v0)));
+
                                 var facet = new Facet(veIds[v0], veIds[v1], veIds[v2], normal);
 
                                 faIds.Add(faIds.Count, facet);

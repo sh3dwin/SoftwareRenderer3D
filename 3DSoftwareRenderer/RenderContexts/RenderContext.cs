@@ -1,5 +1,5 @@
 ﻿using SoftwareRenderer3D.Camera;
-using SoftwareRenderer3D.DataStructures.Buffers;
+using SoftwareRenderer3D.FrameBuffers;
 using System.Drawing;
 using System.Numerics;
 
@@ -23,7 +23,7 @@ namespace SoftwareRenderer3D.RenderContexts
             _fov = fov;
 
             _frameBuffer = new FrameBuffer(width, height);
-            _camera = new ArcBallCamera(new Vector3(0, 0, 15), Vector3.Zero);
+            _camera = new ArcBallCamera(new Vector3(0, 0, 50), Vector3.Zero);
         }
 
         public RenderContext(int width, int height, float fov, ArcBallCamera camera)

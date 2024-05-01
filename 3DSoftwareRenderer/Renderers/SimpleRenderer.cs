@@ -2,6 +2,7 @@
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.RenderContexts;
+using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
 using System.Collections.Generic;
@@ -28,47 +29,45 @@ namespace SoftwareRenderer3D.Renderers
             var height = _renderContext.Height;
 
             var viewMatrix = _renderContext.Camera.ViewMatrix;
+            var projectionMatrix = _renderContext.Camera.ProjectionMatrix;
+
+            var modelMatrix = Matrix4x4.Transpose(Matrix4x4.CreateTranslation(-mesh.GetCenterOfMass()));
+
             var lightSourceAt = new Vector3(0, 10, 1);
 
-            var newDict = new Dictionary<int, StandardVertex>
-            {
-                {0,  new StandardVertex(new Vector3(-1.0f,  1.0f, 1.0f)) },
-                {1,  new StandardVertex(new Vector3(-1.0f, -1.0f, 1.0f)) },
-                {2,  new StandardVertex(new Vector3( 1.0f, -1.0f, 1.0f)) },
-                {3,  new StandardVertex(new Vector3(-2.0f, -0.0f, 10.0f)) },
-                {4,  new StandardVertex(new Vector3(-2.0f, -2.0f, 10.0f)) },
-                {5,  new StandardVertex(new Vector3(-0.0f, -2.0f, 10.0f)) },
-            };
+            var facets = mesh.GetFacets().Where(x => Vector3.Dot(Vector3.Normalize(
+                ((mesh.GetVertexPoint(x.V0) + mesh.GetVertexPoint(x.V1) + mesh.GetVertexPoint(x.V2)) / 3.0f) - _renderContext.Camera.Position)
+                , Vector3.Normalize(x.Normal)) < 0);
 
-            var newFacetDict = new Dictionary<int, Facet>
+            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1} ,facet =>
             {
-                {0, new Facet(0, 1, 2, Vector3.Cross(Vector3.Normalize(newDict[2].GetVertexPoint() - newDict[0].GetVertexPoint()), Vector3.Normalize(newDict[1].GetVertexPoint() - newDict[0].GetVertexPoint()))) },
-                {1, new Facet(3, 4, 5, Vector3.Cross(Vector3.Normalize(newDict[5].GetVertexPoint() - newDict[3].GetVertexPoint()), Vector3.Normalize(newDict[4].GetVertexPoint() - newDict[3].GetVertexPoint()))) },
-            };
-
-            var newMesh = new Mesh<StandardVertex>(newDict, newFacetDict);
-
-            Parallel.ForEach(newMesh.GetFacets().Where(x => Vector3.Dot(Vector3.Normalize(lightSourceAt), Vector3.Normalize(x.Normal)) < 0), new ParallelOptions() { MaxDegreeOfParallelism = 1} ,facet =>
-            {
-                var v0 = newMesh.GetVertexPoint(facet.V0);
-                var v1 = newMesh.GetVertexPoint(facet.V1);
-                var v2 = newMesh.GetVertexPoint(facet.V2);
+                var v0 = mesh.GetVertexPoint(facet.V0);
+                var v1 = mesh.GetVertexPoint(facet.V1);
+                var v2 = mesh.GetVertexPoint(facet.V2);
 
                 var normal = facet.Normal;
 
                 var lightContribution = -Vector3.Dot(Vector3.Normalize(lightSourceAt), Vector3.Normalize(normal));
 
-                var viewV0 = v0.TransformHomogeneus(viewMatrix);
-                var viewV1 = v1.TransformHomogeneus(viewMatrix);
-                var viewV2 = v2.TransformHomogeneus(viewMatrix);
+                var modelV0 = v0.TransformHomogeneus(modelMatrix);
+                modelV0 /= modelV0.W;
+                var modelV1 = v1.TransformHomogeneus(modelMatrix);
+                modelV1 /= modelV1.W;
+                var modelV2 = v2.TransformHomogeneus(modelMatrix);
+                modelV2 /= modelV2.W;
 
-                var worldToNdc = _renderContext.Camera.ProjectionMatrix;
+                var viewV0 = modelV0.Transform(viewMatrix);
+                viewV0 /= viewV0.W;
+                var viewV1 = modelV1.Transform(viewMatrix);
+                viewV1 /= viewV1.W;
+                var viewV2 = modelV2.Transform(viewMatrix);
+                viewV2 /= viewV2.W;
 
-                var clipV0 = viewV0.ToVector3().TransformHomogeneus(worldToNdc);
+                var clipV0 = viewV0.Transform(projectionMatrix);
                 var ndcV0 = clipV0 / clipV0.W;
-                var clipV1 = viewV1.ToVector3().TransformHomogeneus(worldToNdc);
+                var clipV1 = viewV1.Transform(projectionMatrix);
                 var ndcV1 = clipV1 / clipV1.W;
-                var clipV2 = viewV2.ToVector3().TransformHomogeneus(worldToNdc);
+                var clipV2 = viewV2.Transform(projectionMatrix);
                 var ndcV2 = clipV2 / clipV2.W;
 
                 var screenV0 = new Vector3((ndcV0.X + 1) * _renderContext.Width / 2.0f, (-ndcV0.Y + 1) * _renderContext.Height / 2.0f, ndcV0.Z);

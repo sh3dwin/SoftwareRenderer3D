@@ -3,6 +3,6 @@
     public static class Constants
     {
         public const float NearFrustumPlaneDistance = 0.5f;
-        public const float FarFrustumPlaneDistance = 100f;
+        public const float FarFrustumPlaneDistance = 50f;
     }
 }

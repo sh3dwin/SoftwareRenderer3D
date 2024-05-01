@@ -63,7 +63,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Camera\ArcBallCamera.cs" />
-    <Compile Include="DataStructures\Buffers\FrameBuffer.cs" />
+    <Compile Include="FrameBuffers\FrameBuffer.cs" />
     <Compile Include="DataStructures\Buffers\IVertexBuffer.cs" />
     <Compile Include="DataStructures\Buffers\StandardVertexBuffer.cs" />
     <Compile Include="DataStructures\FacetDataStructures\Facet.cs" />
