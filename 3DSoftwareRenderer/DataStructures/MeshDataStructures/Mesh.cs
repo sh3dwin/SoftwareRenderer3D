@@ -12,47 +12,47 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
     public class Mesh<V>
         where V : IVertex
     {
-        protected Dictionary<int, V> _vertices { get; set; }
-        protected Dictionary<int, Facet> _facets { get; set; }
+        private Dictionary<int, V> Vertices { get; set; }
+        private Dictionary<int, Facet> Facets { get; set; }
 
         public Mesh(Dictionary<int, V> vertices, Dictionary<int, Facet> facets) {
-            _vertices = vertices;
-            _facets = facets;
+            Vertices = vertices;
+            Facets = facets;
         }
-        public int VertexCount => _vertices.Count;
-        public int FacetCount => _facets.Count;
+        public int VertexCount => Vertices.Count;
+        public int FacetCount => Facets.Count;
 
         public IEnumerable<Facet> GetFacets()
         {
-            return _facets.Values;
+            return Facets.Values;
         }
 
         public Vector3 GetVertexPoint(int index)
         {
-            return _vertices[index].GetVertexPoint();
+            return Vertices[index].GetVertexPoint();
         }
 
         public Facet GetFacet(int index)
         {
-            return _facets[index];
+            return Facets[index];
         }
 
         public Vector3 GetFacetNormal(int index)
         {
-            return _facets[index].Normal;
+            return Facets[index].Normal;
         }
         public V GetVertex(int index)
         {
-            return _vertices[index];
+            return Vertices[index];
         }
 
         public void RecalculateNormals()
         {
-            foreach(var facet in _facets.Values)
+            foreach(var facet in Facets.Values)
             {
-                var v0 = _vertices[facet.V0].GetVertexPoint();
-                var v1 = _vertices[facet.V1].GetVertexPoint();
-                var v2 = _vertices[facet.V2].GetVertexPoint();
+                var v0 = Vertices[facet.V0].GetVertexPoint();
+                var v1 = Vertices[facet.V1].GetVertexPoint();
+                var v2 = Vertices[facet.V2].GetVertexPoint();
 
                 var normal = Vector3.Cross(Vector3.Normalize(v2 - v0), Vector3.Normalize(v1 - v0));
 

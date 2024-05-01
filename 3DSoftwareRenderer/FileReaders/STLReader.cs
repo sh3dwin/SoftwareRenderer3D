@@ -3,7 +3,6 @@ using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using System;
 using System.IO;
 using System.Collections.Generic;
-using g3;
 using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using System.Numerics;
 

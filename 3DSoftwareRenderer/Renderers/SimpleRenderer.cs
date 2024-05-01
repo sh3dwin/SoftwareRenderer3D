@@ -1,6 +1,4 @@
-﻿using SoftwareRenderer3D.Camera;
-using SoftwareRenderer3D.DataStructures.Buffers;
-using SoftwareRenderer3D.DataStructures.FacetDataStructures;
+﻿using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.RenderContexts;
@@ -8,82 +6,94 @@ using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace SoftwareRenderer3D.Renderers
 {
     public class SimpleRenderer
     {
         private RenderContext _renderContext;
-        private FrameBuffer _frameBuffer;
 
         public SimpleRenderer(RenderContext renderContext)
         {
             _renderContext = renderContext;
-            _frameBuffer = new FrameBuffer((int)renderContext.Width, (int)renderContext.Height);
         }
 
-        public Bitmap Render(Mesh<IVertex> mesh, ArcBallCamera camera)
+        public Bitmap Render(Mesh<IVertex> mesh)
         {
             var width = _renderContext.Width;
             var height = _renderContext.Height;
 
-            var viewMatrix = camera.LookAt();
-
-
-
+            var viewMatrix = _renderContext.Camera.ViewMatrix;
             var lightSourceAt = new Vector3(0, 10, 1);
 
             var newDict = new Dictionary<int, StandardVertex>
             {
-                {0,  new StandardVertex(new Vector3(-2.0f,  1.0f, 0.0f)) },
-                {1,  new StandardVertex(new Vector3(-1.0f, -1.0f, 0.0f)) },
-                {2,  new StandardVertex(new Vector3( 1.0f, -1.0f, 0.0f)) },
+                {0,  new StandardVertex(new Vector3(-1.0f,  1.0f, 1.0f)) },
+                {1,  new StandardVertex(new Vector3(-1.0f, -1.0f, 1.0f)) },
+                {2,  new StandardVertex(new Vector3( 1.0f, -1.0f, 1.0f)) },
+                {3,  new StandardVertex(new Vector3(-2.0f, -0.0f, 10.0f)) },
+                {4,  new StandardVertex(new Vector3(-2.0f, -2.0f, 10.0f)) },
+                {5,  new StandardVertex(new Vector3(-0.0f, -2.0f, 10.0f)) },
             };
 
             var newFacetDict = new Dictionary<int, Facet>
             {
-                {0, new Facet(0, 1, 2, Vector3.UnitZ) },
+                {0, new Facet(0, 1, 2, Vector3.Cross(Vector3.Normalize(newDict[2].GetVertexPoint() - newDict[0].GetVertexPoint()), Vector3.Normalize(newDict[1].GetVertexPoint() - newDict[0].GetVertexPoint()))) },
+                {1, new Facet(3, 4, 5, Vector3.Cross(Vector3.Normalize(newDict[5].GetVertexPoint() - newDict[3].GetVertexPoint()), Vector3.Normalize(newDict[4].GetVertexPoint() - newDict[3].GetVertexPoint()))) },
             };
 
             var newMesh = new Mesh<StandardVertex>(newDict, newFacetDict);
 
-            //mesh.RecalculateNormals();
-
-            foreach ( var facet in mesh.GetFacets()) {
-                var v0 = mesh.GetVertexPoint(facet.V0);
-                var v1 = mesh.GetVertexPoint(facet.V1);
-                var v2 = mesh.GetVertexPoint(facet.V2);
+            Parallel.ForEach(newMesh.GetFacets().Where(x => Vector3.Dot(Vector3.Normalize(lightSourceAt), Vector3.Normalize(x.Normal)) < 0), new ParallelOptions() { MaxDegreeOfParallelism = 1} ,facet =>
+            {
+                var v0 = newMesh.GetVertexPoint(facet.V0);
+                var v1 = newMesh.GetVertexPoint(facet.V1);
+                var v2 = newMesh.GetVertexPoint(facet.V2);
 
                 var normal = facet.Normal;
 
-                var scale = Matrix4x4.CreateScale(0.1f);
-                v0 = Vector3.Transform(v0, scale);
-                v1 = Vector3.Transform(v1, scale);
-                v2 = Vector3.Transform(v2, scale);
+                var lightContribution = -Vector3.Dot(Vector3.Normalize(lightSourceAt), Vector3.Normalize(normal));
 
-                var lightContribution = Vector3.Dot(Vector3.Normalize(lightSourceAt), Vector3.Normalize(normal));
+                var viewV0 = v0.TransformHomogeneus(viewMatrix);
+                var viewV1 = v1.TransformHomogeneus(viewMatrix);
+                var viewV2 = v2.TransformHomogeneus(viewMatrix);
 
-                var viewV0 = Vector3.Transform(v0, viewMatrix);
-                var viewV1 = Vector3.Transform(v1, viewMatrix);
-                var viewV2 = Vector3.Transform(v2, viewMatrix);
-                var transformedNormal = Vector3.Transform(normal, viewMatrix);
+                var worldToNdc = _renderContext.Camera.ProjectionMatrix;
 
-                var worldToNdc = _renderContext.GetProjectionMatrix();
+                var clipV0 = viewV0.ToVector3().TransformHomogeneus(worldToNdc);
+                var ndcV0 = clipV0 / clipV0.W;
+                var clipV1 = viewV1.ToVector3().TransformHomogeneus(worldToNdc);
+                var ndcV1 = clipV1 / clipV1.W;
+                var clipV2 = viewV2.ToVector3().TransformHomogeneus(worldToNdc);
+                var ndcV2 = clipV2 / clipV2.W;
 
-                var ndcV0 = Vector3.Transform(viewV0, worldToNdc);
-                var ndcV1 = Vector3.Transform(viewV1, worldToNdc);
-                var ndcV2 = Vector3.Transform(viewV2, worldToNdc);
-
-                var screenV0 = new Vector3((ndcV0.X + 1) * _renderContext.Width / 2.0f, (-ndcV0.Y + 1) * _renderContext.Width / 2.0f, ndcV0.Z);
-                var screenV1 = new Vector3((ndcV1.X + 1) * _renderContext.Width / 2.0f, (-ndcV1.Y + 1) * _renderContext.Width / 2.0f, ndcV1.Z);
-                var screenV2 = new Vector3((ndcV2.X + 1) * _renderContext.Width / 2.0f, (-ndcV2.Y + 1) * _renderContext.Width / 2.0f, ndcV2.Z);
+                var screenV0 = new Vector3((ndcV0.X + 1) * _renderContext.Width / 2.0f, (-ndcV0.Y + 1) * _renderContext.Height / 2.0f, ndcV0.Z);
+                var screenV1 = new Vector3((ndcV1.X + 1) * _renderContext.Width / 2.0f, (-ndcV1.Y + 1) * _renderContext.Height / 2.0f, ndcV1.Z);
+                var screenV2 = new Vector3((ndcV2.X + 1) * _renderContext.Width / 2.0f, (-ndcV2.Y + 1) * _renderContext.Height / 2.0f, ndcV2.Z);
 
                 ScanLineTriangle(screenV0, screenV1, screenV2, Math.Abs(lightContribution));
-            }
+            });
 
-            return _frameBuffer.GetFrame();
+            return _renderContext.GetFrame();
+        }
+
+        public void Update(float width, float height, Vector3 previousMouseCoords, Vector3 newMouseCoords)
+        {
+            _renderContext.Update(width, height, previousMouseCoords, newMouseCoords);
+        }
+
+        public void Update(float width, float height)
+        {
+            _renderContext.Update(width, height);
+        }
+
+        internal void Update(Vector3 previousMouseCoords, Vector3 mouseCoords)
+        {
+            _renderContext.Update(previousMouseCoords, mouseCoords);
         }
 
 
@@ -202,7 +212,7 @@ namespace SoftwareRenderer3D.Renderers
                 var xInt = (int)x;
                 var yInt = (int)point.Y;
 
-                _frameBuffer.ColorPixel(xInt, yInt, point.Z, Color.FromArgb((int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse)));
+                _renderContext.ColorPixel(xInt, yInt, point.Z, Color.FromArgb((int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse)));
             }
         }
 
@@ -242,5 +252,7 @@ namespace SoftwareRenderer3D.Renderers
             return (p1, p2, p0);
 
         }
+
+        
     }
 }

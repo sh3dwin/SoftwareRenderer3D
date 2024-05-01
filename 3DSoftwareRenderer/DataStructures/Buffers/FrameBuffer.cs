@@ -1,11 +1,14 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace SoftwareRenderer3D.DataStructures.Buffers
 {
     public class FrameBuffer
     {
-        private int[,] _colorBuffer;
-        private float[,] _depthBuffer;
+        private Int32[] _colorBuffer;
+        private float[] _depthBuffer;
 
         private int _width;
         private int _height;
@@ -19,27 +22,29 @@ namespace SoftwareRenderer3D.DataStructures.Buffers
             _height = height;
         }
 
-        private int[,] GetEmptyIntBuffer(int width, int height)
+        private Int32[] GetEmptyIntBuffer(int width, int height)
         {
-            var result = new int[width, height];
+            var result = new int[height * width];
             for (var i = 0; i < height; i++)
             {
                 for (var j = 0; j < width; j++)
                 {
-                    result[i, j] = int.MaxValue;
+                    int index = j + (i * height);
+                    result[index] = int.MaxValue;
                 }
             }
             return result;
         }
 
-        private float[,] GetEmptyFloatBuffer(int width, int height)
+        private float[] GetEmptyFloatBuffer(int width, int height)
         {
-            var result = new float[width, height];
+            var result = new float[height * width];
             for (var i = 0; i < height; i++)
             {
                 for (var j = 0; j < width; j++)
                 {
-                    result[i, j] = int.MaxValue;
+                    int index = j + (i * height);
+                    result[index] = int.MaxValue;
                 }
             }
             return result;
@@ -47,25 +52,31 @@ namespace SoftwareRenderer3D.DataStructures.Buffers
 
         public void ColorPixel(int x, int y, float z, Color color)
         {
-            if (z >= _depthBuffer[x, y])
+            int index = x + (y * _height);
+            if (z >= _depthBuffer[index])
                 return;
 
-            _depthBuffer[x, y] = z;
-            _colorBuffer[x, y] = color.ToArgb();
+            _depthBuffer[index] = z;
+            _colorBuffer[index] = color.ToArgb();
         }
 
         public Bitmap GetFrame()
         {
-            var result = new Bitmap(_width, _height);
-            for (var i = 0; i < _height; i++)
-            {
-                for (var j = 0; j < _width; j++)
-                {
-                    result.SetPixel(i, j, Color.FromArgb(_colorBuffer[i, j]));
-                }
-            }
+            var bitsHandle = GCHandle.Alloc(_colorBuffer, GCHandleType.Pinned);
+            var bitmap = new Bitmap(_width, _height, _width * 4, PixelFormat.Format32bppPArgb, bitsHandle.AddrOfPinnedObject());
 
-            return result;
+            bitsHandle.Free();
+
+            return bitmap;
+        }
+
+        public void Update(float width, float height)
+        {
+            _width = (int)width;
+            _height = (int)height;
+
+            _colorBuffer = GetEmptyIntBuffer(_width, _height);
+            _depthBuffer = GetEmptyFloatBuffer(_width, _height);
         }
     }
 }

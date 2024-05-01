@@ -15,26 +15,44 @@ namespace SoftwareRenderer3D.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        private float _width;
+        private float _height;
+
         private BitmapImage _renderTarget;
-        private ArcBallCamera _camera;
         private Mesh<IVertex> _mesh;
+        private SimpleRenderer _renderer;
+
+        private int _lastX;
+        private int _lastY;
 
         private string _openedFileName;
 
-        public MainViewModel() {
+        public MainViewModel(float width, float height)
+        {
+            _width = width;
+            _height = height;
+
             var filepath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\bunny.stl";
 
             _mesh = FileReaderFactory.GetFileReader(filepath).ReadFile(filepath);
 
-            _camera = new ArcBallCamera(new Vector3(0, 0, 15));
+            var camera = new ArcBallCamera(new Vector3(0, 0, 15), Vector3.Zero);
 
-            _renderTarget = BitmapToImageSource(new SimpleRenderer(new RenderContext(800, 800, 150)).Render(_mesh, _camera));
+            _renderer = new SimpleRenderer(new RenderContext((int)_width, (int)_height, 150, camera));
         }
 
         /// <summary>
         /// The image to be rendered on screen
         /// </summary>
-        public BitmapImage RenderTarget => _renderTarget;
+        public BitmapImage RenderTarget
+        {
+            get => _renderTarget;
+
+            set  {
+                _renderTarget = value;
+                RaisePropertyChanged(nameof(RenderTarget));
+            }
+        }
 
         public string OpenedFileName
         {
@@ -67,6 +85,33 @@ namespace SoftwareRenderer3D.ViewModels
 
                 return bitmapImage;
             }
+        }
+
+        public void Update(Vector3 mouseCoords)
+        {
+            var previousMouseCoords = new Vector3(_lastX, _lastY, 0);
+            _lastX = (int)mouseCoords.X;
+            _lastY = (int)mouseCoords.Y;
+
+            _renderer.Update(_width, _height, previousMouseCoords, mouseCoords);
+
+            RenderTarget = BitmapToImageSource(_renderer.Render(_mesh));
+        }
+
+        public void Update(float width, float height)
+        {
+            _width = width;
+            _height = height;
+
+            _renderer.Update(width, height);
+
+            RenderTarget = BitmapToImageSource(_renderer.Render(_mesh));
+        }
+
+        public void SetMouse(float x, float y)
+        {
+            _lastX = (int) x;
+            _lastY = (int) y;
         }
 
 

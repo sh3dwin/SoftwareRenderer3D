@@ -3,15 +3,10 @@ using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
-using SoftwareRenderer3D.Factories;
 using SoftwareRenderer3D.RenderContexts;
 using SoftwareRenderer3D.Renderers;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SoftwareRenderer3D.Tests
 {
