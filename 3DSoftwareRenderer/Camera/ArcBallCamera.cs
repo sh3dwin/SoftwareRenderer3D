@@ -102,7 +102,7 @@ namespace SoftwareRenderer3D.Camera
             var ndcSecond = ConvertToNdc(width, height, firstPixel);
             var ndcFirst = ConvertToNdc(width, height, secondPixel);
 
-            var angle = (float)Math.Acos(Math.Min(1, Vector3.Dot(Vector3.Normalize(ndcFirst), Vector3.Normalize(ndcSecond))));
+            var angle = -(float)Math.Acos(Math.Min(1, Vector3.Dot(Vector3.Normalize(ndcFirst), Vector3.Normalize(ndcSecond))));
             var axis = Vector3.Normalize(Vector3.Cross(ndcFirst, ndcSecond));
 
             var rotation = MathUtils.RotateAroundAxis(angle, axis);

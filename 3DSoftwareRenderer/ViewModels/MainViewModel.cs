@@ -111,6 +111,13 @@ namespace SoftwareRenderer3D.ViewModels
             RenderTarget = BitmapToImageSource(_renderer.Render(_mesh));
         }
 
+        public void Update(bool reduce)
+        {
+            _renderer.UpdateZoom(reduce);
+
+            RenderTarget = BitmapToImageSource(_renderer.Render(_mesh));
+        }
+
         public void SetMouse(float x, float y)
         {
             _lastX = (int) x;

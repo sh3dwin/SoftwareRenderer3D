@@ -1,7 +1,10 @@
 ﻿using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.FrameBuffers;
+using SoftwareRenderer3D.Utils.GeneralUtils;
+using System;
 using System.Drawing;
 using System.Numerics;
+using System.Windows.Media.Media3D;
 
 namespace SoftwareRenderer3D.RenderContexts
 {
@@ -79,6 +82,14 @@ namespace SoftwareRenderer3D.RenderContexts
         public void Update(Vector3 previousMouseCoords, Vector3 mouseCoords)
         {
             _camera.Rotate(_width, _height, previousMouseCoords, mouseCoords);
+        }
+
+        internal void UpdateZoom(bool reduce)
+        {
+            _fov *= reduce ? 1.1f : 0.9f;
+            _fov = MathUtils.Clamp(_fov, 1, 160);
+            _camera.Update(_width, _height, _fov);
+            _frameBuffer.Update(_width, _height);
         }
     }
 }

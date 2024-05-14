@@ -24,6 +24,7 @@ namespace SoftwareRenderer3D
 
             MouseMove += UpdateVisualization;
             SizeChanged += UpdateWindow;
+            MouseWheel += UpdateZoom;
         }
 
         private void UpdateVisualization(object sender, MouseEventArgs e)
@@ -37,6 +38,19 @@ namespace SoftwareRenderer3D
             var mousePos = new Vector3((float)e.GetPosition(RenderTarget).X, (float)e.GetPosition(RenderTarget).Y, 0);
 
             _viewModel.Update(mousePos);
+        }
+
+        private void UpdateZoom(object sender, MouseWheelEventArgs e)
+        {
+            if (e.Delta > 0)
+            {
+                _viewModel.Update(true);
+            }
+            if ( e.Delta < 0)
+            {
+                _viewModel.Update(false);
+            }
+            
         }
 
         private void UpdateWindow(object sender, EventArgs e)

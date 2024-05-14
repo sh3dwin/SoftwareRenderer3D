@@ -95,6 +95,11 @@ namespace SoftwareRenderer3D.Renderers
             _renderContext.Update(previousMouseCoords, mouseCoords);
         }
 
+        internal void UpdateZoom(bool reduce)
+        {
+            _renderContext.UpdateZoom(reduce);
+        }
+
 
         public void ScanLineTriangle(Vector3 v0, Vector3 v1, Vector3 v2, float diffuse)
         {
