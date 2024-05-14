@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
@@ -69,6 +68,9 @@ namespace SoftwareRenderer3D.FrameBuffers
 
             return bitmap;
         }
+
+        public int Width => _width;
+        public int Height => _height;
 
         public void Update(float width, float height)
         {

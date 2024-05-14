@@ -22,12 +22,12 @@ namespace SoftwareRenderer3D
 
             DataContext = _viewModel;
 
-            MouseMove += UpdateVisualization;
-            SizeChanged += UpdateWindow;
-            MouseWheel += UpdateZoom;
+            MouseMove += Rotate;
+            SizeChanged += Resize;
+            MouseWheel += Zoom;
         }
 
-        private void UpdateVisualization(object sender, MouseEventArgs e)
+        private void Rotate(object sender, MouseEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed)
             {
@@ -37,29 +37,29 @@ namespace SoftwareRenderer3D
 
             var mousePos = new Vector3((float)e.GetPosition(RenderTarget).X, (float)e.GetPosition(RenderTarget).Y, 0);
 
-            _viewModel.Update(mousePos);
+            _viewModel.Rotate(mousePos);
         }
 
-        private void UpdateZoom(object sender, MouseWheelEventArgs e)
+        private void Zoom(object sender, MouseWheelEventArgs e)
         {
             if (e.Delta > 0)
             {
-                _viewModel.Update(true);
+                _viewModel.UpdateZoom(true);
             }
             if ( e.Delta < 0)
             {
-                _viewModel.Update(false);
+                _viewModel.UpdateZoom(false);
             }
             
         }
 
-        private void UpdateWindow(object sender, EventArgs e)
+        private void Resize(object sender, EventArgs e)
         {
 
             var width = (float)ActualWidth;
             var height = (float)ActualHeight;
 
-            _viewModel.Update(width, height);
+            _viewModel.Resize(width, height);
         }
     }
 }

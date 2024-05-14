@@ -22,7 +22,8 @@ namespace SoftwareRenderer3D.Camera
         private float _top;
         private float _bottom;
 
-        public ArcBallCamera(Vector3 initialPosition, Vector3 lookAt) {
+        public ArcBallCamera(Vector3 initialPosition, Vector3 lookAt)
+        {
 
             _nearPlane = Constants.NearFrustumPlaneDistance;
             _farPlane = Constants.FarFrustumPlaneDistance;
@@ -40,6 +41,39 @@ namespace SoftwareRenderer3D.Camera
         /// Returns the view matrix of the camera looking at world origin.
         /// </summary>
         /// <returns></returns>
+
+        /// <summary>
+        /// Updates the camera position by rotating by delta X and delta Y
+        /// http://asliceofrendering.com/camera/2019/11/30/ArcballCamera/
+        /// </summary>
+        public void Rotate(float width, float height, Vector3 firstPixel, Vector3 secondPixel)
+        {
+            var ndcSecond = ConvertToNdc(width, height, firstPixel);
+            var ndcFirst = ConvertToNdc(width, height, secondPixel);
+
+            var angle = -(float)Math.Acos(Math.Min(1, Vector3.Dot(Vector3.Normalize(ndcFirst), Vector3.Normalize(ndcSecond))));
+            var axis = Vector3.Normalize(Vector3.Cross(ndcFirst, ndcSecond));
+
+            var rotation = MathUtils.RotateAroundAxis(angle, axis);
+
+            _position = _position.TransformHomogeneus(rotation).ToVector3();
+            CalculateView();
+        }
+
+
+        public void Rotate(float width, float height, float fov, Vector3 previousMouseCoords, Vector3 newMouseCoords)
+        {
+            Rotate(width, height, previousMouseCoords, newMouseCoords);
+            UpdateProjectionMatrix(width, height, fov);
+        }
+
+        public void Zoom(float width, float height, float fov)
+        {
+            UpdateProjectionMatrix(width, height, fov);
+        }
+
+        public Vector3 Position => _position;
+
         private void CalculateView()
         {
             var forward = -Vector3.Normalize(GetForwardVector());
@@ -62,6 +96,19 @@ namespace SoftwareRenderer3D.Camera
             _viewMatrix = rotationMatrix * translationMatrix;
         }
 
+        private Vector3 ConvertToNdc(float width, float height, Vector3 screenCoordinates)
+        {
+            var ndcCoordinates = new Vector3((screenCoordinates.X - width / 2.0f) / (width / 2.0f), -(screenCoordinates.Y - height / 2.0f) / (height / 2.0f), 0);
+
+
+            if ((ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y) <= 1)
+                ndcCoordinates.Z = (float)Math.Abs(Math.Sqrt(1 - ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y));
+            else
+                ndcCoordinates.Z = (1.0f / 2.0f) / (float)(Math.Sqrt(ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y));
+
+            return ndcCoordinates;
+        }
+
         private Vector3 GetForwardVector()
         {
             return (_lookAt - _position);
@@ -77,7 +124,7 @@ namespace SoftwareRenderer3D.Camera
                 );
         }
 
-        public void UpdateProjectionMatrix(float width, float height, float fov)
+        private void UpdateProjectionMatrix(float width, float height, float fov)
         {
 
             var degToRad = Math.Acos(-1.0f) / 180.0;
@@ -92,49 +139,5 @@ namespace SoftwareRenderer3D.Camera
 
             CalculateProjection();
         }
-
-        /// <summary>
-        /// Updates the camera position by rotating by delta X and delta Y
-        /// http://asliceofrendering.com/camera/2019/11/30/ArcballCamera/
-        /// </summary>
-        public void Rotate(float width, float height, Vector3 firstPixel, Vector3 secondPixel)
-        {
-            var ndcSecond = ConvertToNdc(width, height, firstPixel);
-            var ndcFirst = ConvertToNdc(width, height, secondPixel);
-
-            var angle = -(float)Math.Acos(Math.Min(1, Vector3.Dot(Vector3.Normalize(ndcFirst), Vector3.Normalize(ndcSecond))));
-            var axis = Vector3.Normalize(Vector3.Cross(ndcFirst, ndcSecond));
-
-            var rotation = MathUtils.RotateAroundAxis(angle, axis);
-
-            _position = _position.TransformHomogeneus(rotation).ToVector3();
-            CalculateView();
-        }
-
-        private Vector3 ConvertToNdc(float width, float height, Vector3 screenCoordinates)
-        {
-            var ndcCoordinates = new Vector3((screenCoordinates.X - width / 2.0f) / (width / 2.0f), -(screenCoordinates.Y - height / 2.0f) / (height / 2.0f), 0);
-
-
-            if ((ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y) <= 1)
-                ndcCoordinates.Z = (float)Math.Abs(Math.Sqrt(1 - ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y));
-            else
-                ndcCoordinates.Z = (1.0f / 2.0f) / (float)(Math.Sqrt(ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y));
-
-            return ndcCoordinates;
-        }
-
-        public void Update(float width, float height, float fov, Vector3 previousMouseCoords, Vector3 newMouseCoords)
-        {
-            Rotate(width, height, previousMouseCoords, newMouseCoords);
-            UpdateProjectionMatrix(width, height, fov);
-        }
-
-        public void Update(float width, float height, float fov)
-        {
-            UpdateProjectionMatrix(width, height, fov);
-        }
-
-        public Vector3 Position => _position;
     }
 }

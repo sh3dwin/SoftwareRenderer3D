@@ -1,8 +1,6 @@
-﻿using g3;
-using SoftwareRenderer3D.DataStructures.FacetDataStructures;
+﻿using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 
 namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
@@ -16,10 +14,17 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
     {
         private Dictionary<int, V> Vertices { get; set; }
         private Dictionary<int, Facet> Facets { get; set; }
+        private Vector3 _center;
+        private Matrix4x4 _modelMatrix;
+
+
 
         public Mesh(Dictionary<int, V> vertices, Dictionary<int, Facet> facets) {
             Vertices = vertices;
             Facets = facets;
+
+            _center = GetCenterOfMass();
+            _modelMatrix = Matrix4x4.Transpose(Matrix4x4.CreateTranslation(_center));
         }
 
         public Mesh(Mesh<V> otherMesh)
@@ -29,6 +34,7 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
         }
         public int VertexCount => Vertices.Count;
         public int FacetCount => Facets.Count;
+        public Matrix4x4 ModelMatrix => _modelMatrix;
 
         public IEnumerable<Facet> GetFacets()
         {

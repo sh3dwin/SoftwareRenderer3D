@@ -4,7 +4,6 @@ using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.Factories;
 using SoftwareRenderer3D.RenderContexts;
 using SoftwareRenderer3D.Renderers;
-using SoftwareRenderer3D.Utils;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -21,7 +20,8 @@ namespace SoftwareRenderer3D.ViewModels
 
         private BitmapImage _renderTarget;
         private Mesh<IVertex> _mesh;
-        private SimpleRenderer _renderer;
+
+        private RenderContext _renderContext;
 
         private int _lastX;
         private int _lastY;
@@ -41,7 +41,7 @@ namespace SoftwareRenderer3D.ViewModels
 
             var camera = new ArcBallCamera(new Vector3(0, 0, 100), Vector3.Zero);
 
-            _renderer = new SimpleRenderer(new RenderContext((int)_width, (int)_height, 100, camera));
+            _renderContext = new RenderContext((int)width, (int)height, 100, camera);
         }
 
         /// <summary>
@@ -90,32 +90,38 @@ namespace SoftwareRenderer3D.ViewModels
             }
         }
 
-        public void Update(Vector3 mouseCoords)
+        public void Rotate(Vector3 mouseCoords)
         {
             var previousMouseCoords = new Vector3(_lastX, _lastY, 0);
             _lastX = (int)mouseCoords.X;
             _lastY = (int)mouseCoords.Y;
 
-            _renderer.Update(_width, _height, previousMouseCoords, mouseCoords);
+            _renderContext.Rotate(_width, _height, previousMouseCoords, mouseCoords);
 
-            RenderTarget = BitmapToImageSource(_renderer.Render(_mesh));
+            Render();
         }
 
-        public void Update(float width, float height)
+        public void Resize(float width, float height)
         {
             _width = width;
             _height = height;
 
-            _renderer.Update(width, height);
+            _renderContext.Resize(width, height);
 
-            RenderTarget = BitmapToImageSource(_renderer.Render(_mesh));
+            Render();
         }
 
-        public void Update(bool reduce)
+        public void UpdateZoom(bool reduce)
         {
-            _renderer.UpdateZoom(reduce);
+            _renderContext.Zoom(reduce);
 
-            RenderTarget = BitmapToImageSource(_renderer.Render(_mesh));
+            Render();
+        }
+
+        public void Render()
+        {
+            var bitmap = SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera);
+            RenderTarget = BitmapToImageSource(bitmap);
         }
 
         public void SetMouse(float x, float y)

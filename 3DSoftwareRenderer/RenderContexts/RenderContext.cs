@@ -1,10 +1,8 @@
 ﻿using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.FrameBuffers;
 using SoftwareRenderer3D.Utils.GeneralUtils;
-using System;
 using System.Drawing;
 using System.Numerics;
-using System.Windows.Media.Media3D;
 
 namespace SoftwareRenderer3D.RenderContexts
 {
@@ -26,7 +24,7 @@ namespace SoftwareRenderer3D.RenderContexts
             _fov = fov;
 
             _frameBuffer = new FrameBuffer(width, height);
-            _camera = new ArcBallCamera(new Vector3(0, 0, 50), Vector3.Zero);
+            _camera = new ArcBallCamera(new Vector3(0, 0, 1), Vector3.Zero);
         }
 
         public RenderContext(int width, int height, float fov, ArcBallCamera camera)
@@ -37,6 +35,12 @@ namespace SoftwareRenderer3D.RenderContexts
             _fov = fov;
 
             _frameBuffer = new FrameBuffer(width, height);
+            _camera = camera;
+        }
+
+        public RenderContext(FrameBuffer frameBuffer, ArcBallCamera camera)
+        {
+            _frameBuffer = frameBuffer;
             _camera = camera;
         }
 
@@ -61,34 +65,35 @@ namespace SoftwareRenderer3D.RenderContexts
             _frameBuffer.ColorPixel(xInt, yInt, z, color);
         }
 
-        public void Update(float width, float height, Vector3 previousMouseCoords, Vector3 newMouseCoords)
+        public void Rotate(float width, float height, Vector3 previousMouseCoords, Vector3 newMouseCoords)
         {
             _width = width;
             _height = height;
 
-            _camera.Update(width, height, _fov, previousMouseCoords, newMouseCoords);
+            _camera.Rotate(width, height, _fov, previousMouseCoords, newMouseCoords);
             _frameBuffer.Update(width, height);
         }
-
-        public void Update(float width, float height)
-        {
-            _width = width;
-            _height = height;
-
-            _camera.Update(width, height, _fov);
-            _frameBuffer.Update(width, height);
-        }
-
-        public void Update(Vector3 previousMouseCoords, Vector3 mouseCoords)
+        public void Rotate(Vector3 previousMouseCoords, Vector3 mouseCoords)
         {
             _camera.Rotate(_width, _height, previousMouseCoords, mouseCoords);
         }
 
-        internal void UpdateZoom(bool reduce)
+        public void Resize(float width, float height)
         {
-            _fov *= reduce ? 1.1f : 0.9f;
+            _width = width;
+            _height = height;
+
+            _camera.Zoom(width, height, _fov);
+            _frameBuffer.Update(width, height);
+        }
+
+        
+
+        public void Zoom(bool zoomOut)
+        {
+            _fov *= zoomOut ? 1.1f : 0.9f;
             _fov = MathUtils.Clamp(_fov, 1, 160);
-            _camera.Update(_width, _height, _fov);
+            _camera.Zoom(_width, _height, _fov);
             _frameBuffer.Update(_width, _height);
         }
     }
