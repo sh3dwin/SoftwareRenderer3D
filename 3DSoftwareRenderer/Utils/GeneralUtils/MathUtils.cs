@@ -15,6 +15,11 @@ namespace SoftwareRenderer3D.Utils.GeneralUtils
             return Math.Min(max, Math.Max(x, min));
         }
 
+        public static Vector3 Normalize(this Vector3 vector)
+        {
+            return Vector3.Normalize(vector);
+        }
+
         public static Matrix4x4 RotateAroundAxis(float angle, Vector3 axis)
         {
             return new Matrix4x4(

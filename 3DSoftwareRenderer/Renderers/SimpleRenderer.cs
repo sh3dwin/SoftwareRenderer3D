@@ -24,11 +24,12 @@ namespace SoftwareRenderer3D.Renderers
 
             Matrix4x4.Invert(mesh.ModelMatrix, out var modelMatrix);
 
-            var lightSourceAt = new Vector3(0, 10, 1);
+            var lightSourceAt = new Vector3(0, 100, 1);
 
-            var facets = mesh.GetFacets().Where(x => Vector3.Dot(Vector3.Normalize(
-                ((mesh.GetVertexPoint(x.V0) + mesh.GetVertexPoint(x.V1) + mesh.GetVertexPoint(x.V2)) / 3.0f) - camera.Position)
-                , Vector3.Normalize(x.Normal)) < 0);
+            var facets = mesh.GetFacets().Where((x, i) => 
+            Vector3.Dot(
+                (mesh.GetFacetMidpoint(i) - camera.Position).Normalize(), 
+                x.Normal.Normalize()) <= 0.3);
 
             Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1} ,facet =>
             {
@@ -38,7 +39,7 @@ namespace SoftwareRenderer3D.Renderers
 
                 var normal = facet.Normal;
 
-                var lightContribution = MathUtils.Clamp(-Vector3.Dot(Vector3.Normalize(lightSourceAt), Vector3.Normalize(normal)), 0, 1);
+                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()), 0, 1);
 
                 var modelV0 = v0.TransformHomogeneus(modelMatrix);
                 modelV0 /= modelV0.W;

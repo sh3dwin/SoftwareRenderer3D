@@ -37,8 +37,6 @@ namespace SoftwareRenderer3D.ViewModels
 
             _mesh = FileReaderFactory.GetFileReader(filepath).ReadFile(filepath);
 
-            //_mesh = Globals.TestMesh;
-
             var camera = new ArcBallCamera(new Vector3(0, 0, 100), Vector3.Zero);
 
             _renderContext = new RenderContext((int)width, (int)height, 100, camera);

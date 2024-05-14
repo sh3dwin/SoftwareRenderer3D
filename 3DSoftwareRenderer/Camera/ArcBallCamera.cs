@@ -51,8 +51,8 @@ namespace SoftwareRenderer3D.Camera
             var ndcSecond = ConvertToNdc(width, height, firstPixel);
             var ndcFirst = ConvertToNdc(width, height, secondPixel);
 
-            var angle = -(float)Math.Acos(Math.Min(1, Vector3.Dot(Vector3.Normalize(ndcFirst), Vector3.Normalize(ndcSecond))));
-            var axis = Vector3.Normalize(Vector3.Cross(ndcFirst, ndcSecond));
+            var angle = -(float)Math.Acos(Math.Min(1, Vector3.Dot(ndcFirst.Normalize(), ndcSecond.Normalize())));
+            var axis = Vector3.Cross(ndcFirst, ndcSecond).Normalize();
 
             var rotation = MathUtils.RotateAroundAxis(angle, axis);
 
@@ -76,10 +76,10 @@ namespace SoftwareRenderer3D.Camera
 
         private void CalculateView()
         {
-            var forward = -Vector3.Normalize(GetForwardVector());
+            var forward = -GetForwardVector().Normalize();
             var upDir = Vector3.UnitY;
-            var left = Vector3.Normalize(Vector3.Cross(forward, upDir));
-            var up = Vector3.Normalize(Vector3.Cross(forward, left));
+            var left = Vector3.Cross(forward, upDir).Normalize();
+            var up = Vector3.Cross(forward, left).Normalize();
 
             var rotationMatrix = new Matrix4x4(
                 left.X, left.Y, left.Z, 0,
