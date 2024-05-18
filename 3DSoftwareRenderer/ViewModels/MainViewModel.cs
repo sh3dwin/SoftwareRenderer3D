@@ -1,4 +1,5 @@
 ﻿using SoftwareRenderer3D.Camera;
+using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.Factories;
@@ -33,13 +34,17 @@ namespace SoftwareRenderer3D.ViewModels
             _width = width;
             _height = height;
 
-            var filepath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\cowboy.dae";
-
-            _mesh = FileReaderFactory.GetFileReader(filepath).ReadFile(filepath);
+            var filepathCollada = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\cowboy.dae";
+            var filepathStl = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\stl\bunny.stl";
+            _mesh = FileReaderFactory.GetFileReader(filepathCollada).ReadFile(filepathCollada);
 
             var camera = new ArcBallCamera(new Vector3(0, 0, 100), Vector3.Zero);
 
             _renderContext = new RenderContext((int)width, (int)height, 100, camera);
+
+            var texturePath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\textures\cowboy.bmp";
+            var texture = new Texture(new Bitmap(texturePath), true);
+            _renderContext.BindTexture(texture);
         }
 
         /// <summary>
@@ -118,7 +123,10 @@ namespace SoftwareRenderer3D.ViewModels
 
         public void Render()
         {
-            var bitmap = SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera);
+
+            var bitmap = (_renderContext.Texture != null) 
+                ? SimpleTextureRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
+                : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera);
             RenderTarget = BitmapToImageSource(bitmap);
         }
 

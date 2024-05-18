@@ -35,19 +35,7 @@ namespace SoftwareRenderer3D.FrameBuffers
             return result;
         }
 
-        private float[] GetEmptyFloatBuffer(int width, int height)
-        {
-            var result = new float[height * width];
-            for (var i = 0; i < height; i++)
-            {
-                for (var j = 0; j < width; j++)
-                {
-                    int index = j + i * width;
-                    result[index] = int.MaxValue;
-                }
-            }
-            return result;
-        }
+        
 
         public void ColorPixel(int x, int y, float z, Color color)
         {
@@ -79,6 +67,19 @@ namespace SoftwareRenderer3D.FrameBuffers
 
             _colorBuffer = GetEmptyIntBuffer(_width, _height);
             _depthBuffer = GetEmptyFloatBuffer(_width, _height);
+        }
+        private float[] GetEmptyFloatBuffer(int width, int height)
+        {
+            var result = new float[height * width];
+            for (var i = 0; i < height; i++)
+            {
+                for (var j = 0; j < width; j++)
+                {
+                    int index = j + i * width;
+                    result[index] = int.MaxValue;
+                }
+            }
+            return result;
         }
     }
 }

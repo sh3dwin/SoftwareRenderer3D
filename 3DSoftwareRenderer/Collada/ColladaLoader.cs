@@ -5,6 +5,10 @@ using System.Xml.Linq;
 
 namespace SoftwareRenderer3D.Collada
 {
+    /// <summary>
+    /// Adapted from:
+    /// https://github.com/larsjarlvik/collada-parser/tree/master
+    /// </summary>
     public static class ColladaLoader
 	{
 		private static XNamespace ns = "{http://www.collada.org/2005/11/COLLADASchema}";

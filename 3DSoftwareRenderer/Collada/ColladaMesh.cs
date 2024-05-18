@@ -6,7 +6,11 @@ namespace SoftwareRenderer3D.Collada
 {
     public class ColladaMesh
 	{
-		public List<Mesh<IVertex>> Geometries { get; set; }
+        /// <summary>
+        /// Adapted from:
+        /// https://github.com/larsjarlvik/collada-parser/tree/master
+        /// </summary>
+        public List<Mesh<IVertex>> Geometries { get; set; }
 
 		public ColladaMesh()
 		{

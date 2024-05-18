@@ -8,6 +8,9 @@ namespace SoftwareRenderer3D.Utils
 {
     public static class Globals
     {
+        public static Enums.TextureInterpolation TextureInterpolation = Enums.TextureInterpolation.NEAREST;
+
+
         private static Dictionary<int, IVertex> testVertices = new Dictionary<int, IVertex>
             {
                 {0,  new StandardVertex(new Vector3(-1.0f,  1.0f, 1.0f)) },

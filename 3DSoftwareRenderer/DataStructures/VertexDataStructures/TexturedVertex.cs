@@ -1,5 +1,4 @@
 ﻿using SoftwareRenderer3D.Utils.GeneralUtils;
-using System;
 using System.Drawing;
 using System.Numerics;
 

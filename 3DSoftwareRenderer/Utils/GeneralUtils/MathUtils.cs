@@ -15,6 +15,16 @@ namespace SoftwareRenderer3D.Utils.GeneralUtils
             return Math.Min(max, Math.Max(x, min));
         }
 
+        public static byte Clamp(this byte x, byte min = 0, byte max = 255)
+        {
+            return Math.Min(max, Math.Max(x, min));
+        }
+
+        public static int Clamp(this int x, int min = 0, int max = int.MaxValue)
+        {
+            return Math.Min(max, Math.Max(x, min));
+        }
+
         public static Vector3 Normalize(this Vector3 vector)
         {
             return Vector3.Normalize(vector);

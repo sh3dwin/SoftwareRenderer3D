@@ -1,4 +1,5 @@
 ﻿using SoftwareRenderer3D.Camera;
+using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.FrameBuffers;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System.Drawing;
@@ -15,6 +16,7 @@ namespace SoftwareRenderer3D.RenderContexts
 
         private FrameBuffer _frameBuffer;
         private ArcBallCamera _camera;
+        private Texture _texture = null;
 
         public RenderContext(int width, int height, float fov) 
         {
@@ -49,6 +51,7 @@ namespace SoftwareRenderer3D.RenderContexts
 
         public ArcBallCamera Camera => _camera;
         public FrameBuffer FrameBuffer => _frameBuffer;
+        public Texture Texture => _texture;
 
         public Matrix4x4 GetProjectionMatrix()
         {
@@ -86,9 +89,15 @@ namespace SoftwareRenderer3D.RenderContexts
             _camera.Zoom(width, height, _fov);
             _frameBuffer.Update(width, height);
         }
+        public void BindTexture(Texture texture)
+        {
+            _texture = texture;
+        }
 
-        
-
+        public void UnbindTexture()
+        {
+            _texture = null;
+        }
         public void Zoom(bool zoomOut)
         {
             _fov *= zoomOut ? 1.1f : 0.9f;

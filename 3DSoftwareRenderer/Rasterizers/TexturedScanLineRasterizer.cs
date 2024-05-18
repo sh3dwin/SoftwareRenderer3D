@@ -1,17 +1,29 @@
-﻿using SoftwareRenderer3D.FrameBuffers;
+﻿using SoftwareRenderer3D.DataStructures;
+using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+using SoftwareRenderer3D.FrameBuffers;
+using SoftwareRenderer3D.Utils;
+using SoftwareRenderer3D.Utils.GeneralUtils;
+using System;
+using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System;
-using SoftwareRenderer3D.Utils.GeneralUtils;
-using System.Drawing;
 
 namespace SoftwareRenderer3D.Rasterizers
 {
-    public static class ScanLineRasterizer
+    public static class TexturedScanLineRasterizer
     {
-        public static void ScanLineTriangle(FrameBuffer frameBuffer, Vector3 v0, Vector3 v1, Vector3 v2, float diffuse)
+        private static Texture _texture;
+
+        public static void BindTexture(Texture texture)
         {
-            var (p0, p1, p2) = SortIndices(v0, v1, v2);
+            _texture = texture;
+        }
+        public static void UnbindTexture() {
+            _texture = null;
+        }
+        public static void ScanLineTriangle(FrameBuffer frameBuffer, Vector3 v0, Vector3 v1, Vector3 v2, TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
+        {
+            var (p0, p1, p2, vertex0, vertex1, vertex2) = SortIndices(v0, v1, v2, ve0, ve1, ve2);
             if (p0 == p1 || p1 == p2 || p2 == p0)
                 return;
 
@@ -29,8 +41,8 @@ namespace SoftwareRenderer3D.Rasterizers
                 // P0
                 //   P1
                 // P2
-                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, p0, p1, p2, diffuse);
-                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, p2, p1, p0, diffuse);
+                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, p0, p1, p2, vertex0, vertex1, vertex2, diffuse);
+                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, p2, p1, p0, vertex2, vertex1, vertex0, diffuse);
             }
             else
             {
@@ -38,8 +50,8 @@ namespace SoftwareRenderer3D.Rasterizers
                 // P1 
                 //   P2
 
-                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, p0, p2, p1, diffuse);
-                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, p2, p0, p1, diffuse);
+                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, p0, p2, p1, vertex0, vertex2, vertex1, diffuse);
+                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, p2, p0, p1, vertex2, vertex0, vertex1, diffuse);
             }
         }
 
@@ -50,7 +62,9 @@ namespace SoftwareRenderer3D.Rasterizers
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ScanLineHalfTriangleBottomFlat(FrameBuffer frameBuffer, int yStart, int yEnd,
-            Vector3 anchor, Vector3 vRight, Vector3 vLeft, float diffuse)
+            Vector3 anchor, Vector3 vRight, Vector3 vLeft,
+            TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, 
+            float diffuse)
         {
             var deltaY1 = Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
             var deltaY2 = Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
@@ -69,7 +83,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 start.Y = y;
                 end.Y = y;
 
-                ScanSingleLine(frameBuffer, start, end, diffuse);
+                ScanSingleLine(frameBuffer, start, end, anchor, vRight, vLeft, ve0, ve1, ve2, diffuse);
             }
         }
 
@@ -80,7 +94,8 @@ namespace SoftwareRenderer3D.Rasterizers
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ScanLineHalfTriangleTopFlat(FrameBuffer frameBuffer, int yStart, int yEnd,
-            Vector3 anchor, Vector3 vRight, Vector3 vLeft, float diffuse)
+            Vector3 anchor, Vector3 vRight, Vector3 vLeft,
+            TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
         {
             var deltaY1 = Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
             var deltaY2 = Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
@@ -99,7 +114,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 start.Y = y;
                 end.Y = y;
 
-                ScanSingleLine(frameBuffer, start, end, diffuse);
+                ScanSingleLine(frameBuffer, start, end, anchor, vRight, vLeft, ve0, ve1, ve2, diffuse);
             }
         }
 
@@ -110,7 +125,9 @@ namespace SoftwareRenderer3D.Rasterizers
         /// <param name="end">Scan line end</param>
         /// <param name="faId">Facet id</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ScanSingleLine(FrameBuffer frameBuffer, Vector3 start, Vector3 end, float diffuse)
+        private static void ScanSingleLine(FrameBuffer frameBuffer, Vector3 start, Vector3 end,
+            Vector3 screenCoords0, Vector3 screenCoords1, Vector3 screenCoords2,
+            TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
         {
             var minX = Math.Max(start.X, 0);
             var maxX = Math.Min(end.X, frameBuffer.Width);
@@ -124,7 +141,14 @@ namespace SoftwareRenderer3D.Rasterizers
                 var xInt = (int)x;
                 var yInt = (int)point.Y;
 
-                frameBuffer.ColorPixel(xInt, yInt, point.Z, Color.FromArgb((int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse)));
+                var barycentric = Barycentric.CalculateBarycentricCoordinates(xInt, yInt, screenCoords0.XY(), screenCoords1.XY(), screenCoords2.XY());
+
+                var u = MathUtils.Clamp(ve0.TextureCoordinates.X * barycentric.X + ve1.TextureCoordinates.X * barycentric.Y + ve2.TextureCoordinates.X * barycentric.Z);
+                var v = MathUtils.Clamp(ve0.TextureCoordinates.Y * barycentric.X + ve1.TextureCoordinates.Y * barycentric.Y + ve2.TextureCoordinates.Y * barycentric.Z);
+
+                var color = _texture.GetTextureColor(u, v, Globals.TextureInterpolation);
+
+                frameBuffer.ColorPixel(xInt, yInt, point.Z, color.Mult(diffuse));
             }
         }
 
@@ -142,7 +166,7 @@ namespace SoftwareRenderer3D.Rasterizers
             return (p1.X - p0.X) * (p2.Y - p1.Y) - (p1.Y - p0.Y) * (p2.X - p1.X);
         }
 
-        public static (Vector3 i0, Vector3 i1, Vector3 i2) SortIndices(Vector3 p0, Vector3 p1, Vector3 p2)
+        public static (Vector3 i0, Vector3 i1, Vector3 i2, TexturedVertex v0, TexturedVertex v1, TexturedVertex v2) SortIndices(Vector3 p0, Vector3 p1, Vector3 p2, TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2)
         {
             var c0 = p0.Y;
             var c1 = p1.Y;
@@ -151,17 +175,17 @@ namespace SoftwareRenderer3D.Rasterizers
             if (c0 < c1)
             {
                 if (c2 < c0)
-                    return (p2, p0, p1);
+                    return (p2, p0, p1, ve2, ve0, ve1);
                 if (c1 < c2)
-                    return (p0, p1, p2);
-                return (p0, p2, p1);
+                    return (p0, p1, p2, ve0, ve1, ve2);
+                return (p0, p2, p1, ve0, ve2, ve1);
             }
 
             if (c2 < c1)
-                return (p2, p1, p0);
+                return (p2, p1, p0, ve2, ve1, ve0);
             if (c0 < c2)
-                return (p1, p0, p2);
-            return (p1, p2, p0);
+                return (p1, p0, p2, ve1, ve0, ve2);
+            return (p1, p2, p0, ve1, ve2, ve0);
 
         }
     }

@@ -3,7 +3,11 @@ using System.Reflection;
 
 namespace SoftwareRenderer3D.Collada
 {
-	public static class SourceLoader
+    /// <summary>
+    /// Adapted from:
+    /// https://github.com/larsjarlvik/collada-parser/tree/master
+    /// </summary>
+    public static class SourceLoader
 	{
 		public static Stream AsStream(string path)
 		{

@@ -2,7 +2,11 @@ using System.Numerics;
 
 namespace SoftwareRenderer3D.Collada
 {
-	public class ColladaVertex 
+    /// <summary>
+    /// Adapted from:
+    /// https://github.com/larsjarlvik/collada-parser/tree/master
+    /// </summary>
+    public class ColladaVertex 
 	{	
 		private const int NO_INDEX = -1;
 		
