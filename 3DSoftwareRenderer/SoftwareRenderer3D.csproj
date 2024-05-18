@@ -63,6 +63,13 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Camera\ArcBallCamera.cs" />
+    <Compile Include="Collada\ArrayParsers.cs" />
+    <Compile Include="Collada\ColladaLoader.cs" />
+    <Compile Include="Collada\ColladaMesh.cs" />
+    <Compile Include="Collada\Geometry.cs" />
+    <Compile Include="Collada\GeometryLoader.cs" />
+    <Compile Include="Collada\SourceLoader.cs" />
+    <Compile Include="Collada\ColladaVertex.cs" />
     <Compile Include="FrameBuffers\FrameBuffer.cs" />
     <Compile Include="DataStructures\Buffers\IVertexBuffer.cs" />
     <Compile Include="DataStructures\Buffers\StandardVertexBuffer.cs" />
@@ -119,10 +126,19 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Models\bunny.stl">
+    <None Include="Models\dae\skull.dae">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Models\sphere.stl">
+    <None Include="Models\stl\bunny.stl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Models\dae\cowboy.dae">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Models\dae\Dragon 2.5_dae.dae">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Models\stl\sphere.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
@@ -134,6 +150,37 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Models\dae\textures\Ani_Fire_A.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\cowboy.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\Dragon_Bump_Col2.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\Dragon_ground_color.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\Dragon_Nor.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\Dragon_Nor_mirror2.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\Fire_A_2.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\Floor_C.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\Floor_N.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Models\dae\textures\Floor_S.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

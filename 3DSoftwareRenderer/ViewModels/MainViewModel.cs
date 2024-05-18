@@ -33,7 +33,7 @@ namespace SoftwareRenderer3D.ViewModels
             _width = width;
             _height = height;
 
-            var filepath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\bunny.stl";
+            var filepath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\cowboy.dae";
 
             _mesh = FileReaderFactory.GetFileReader(filepath).ReadFile(filepath);
 

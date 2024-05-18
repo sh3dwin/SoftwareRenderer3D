@@ -77,7 +77,7 @@ namespace SoftwareRenderer3D.Camera
         private void CalculateView()
         {
             var forward = -GetForwardVector().Normalize();
-            var upDir = Vector3.UnitY;
+            var upDir = (Vector3.Dot(Vector3.UnitY, forward) > 0.95) ? Vector3.UnitZ : Vector3.UnitY;
             var left = Vector3.Cross(forward, upDir).Normalize();
             var up = Vector3.Cross(forward, left).Normalize();
 

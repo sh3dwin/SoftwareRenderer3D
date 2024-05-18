@@ -29,7 +29,7 @@ namespace SoftwareRenderer3D.Renderers
             var facets = mesh.GetFacets().Where((x, i) => 
             Vector3.Dot(
                 (mesh.GetFacetMidpoint(i) - camera.Position).Normalize(), 
-                x.Normal.Normalize()) <= 0.3);
+                x.Normal.Normalize()) <= 10.3);
 
             Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1} ,facet =>
             {
