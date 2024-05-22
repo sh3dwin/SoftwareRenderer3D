@@ -16,12 +16,12 @@ namespace SoftwareRenderer3D.Renderers
 {
     public static class SimpleTextureRenderer
     {
-        public static Bitmap Render(Mesh<IVertex> mesh, FrameBuffer frameBuffer, ArcBallCamera camera, Texture texture)
+        public static Bitmap Render(Mesh<IVertex> mesh, FrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
             TexturedScanLineRasterizer.BindTexture(texture);
 
-            var width = frameBuffer.Width;
-            var height = frameBuffer.Height;
+            var width = frameBuffer.GetSize().Width;
+            var height = frameBuffer.GetSize().Height;
 
             var viewMatrix = camera.ViewMatrix;
             var projectionMatrix = camera.ProjectionMatrix;

@@ -3,28 +3,32 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Windows.Media.Media3D;
 
 namespace SoftwareRenderer3D.FrameBuffers
 {
-    public class FrameBuffer : IFrameBuffer
+    public class DepthPeelingBuffer : IFrameBuffer
     {
         private int[] _colorBuffer;
+
         private float[] _depthBuffer;
+        private float[] _minDepthBuffer;
 
         private int _width;
         private int _height;
 
-        public FrameBuffer(int width, int height)
+        public DepthPeelingBuffer(int width, int height)
         {
-            _colorBuffer = GetEmptyIntBuffer(width, height);
-            _depthBuffer = GetEmptyFloatBuffer(width, height);
+            _colorBuffer = GetEmptyIntBuffer(width, height, int.MaxValue);
+            _depthBuffer = GetEmptyFloatBuffer(width, height, float.MaxValue);
+            _minDepthBuffer = GetEmptyFloatBuffer(width, height, float.MinValue);
 
             _width = width;
             _height = height;
 
         }
 
-        public FrameBuffer(FrameBuffer otherFrameBuffer)
+        public DepthPeelingBuffer(DepthPeelingBuffer otherFrameBuffer)
         {
             _width = otherFrameBuffer._width;
             _height = otherFrameBuffer._height;
@@ -38,36 +42,27 @@ namespace SoftwareRenderer3D.FrameBuffers
             return (_width, _height);
         }
 
-        private int[] GetEmptyIntBuffer(int width, int height)
-        {
-            var result = new int[height * width];
-            for (var row = 0; row < height; row++)
-            {
-                for (var col = 0; col < width; col++)
-                {
-                    int index = col + row * width;
-                    result[index] = int.MaxValue;
-                }
-            }
-            return result;
-        }
-
-        
-
         public void ColorPixel(int x, int y, float z, Color color)
         {
             int index = x + y * _width;
-            if (z >= _depthBuffer[index])
+            if (z >= _depthBuffer[index] || z <= _minDepthBuffer[index])
                 return;
 
+            Color blendedColor;
+
+            // Something has been drawn in the previous pass
+            if (_minDepthBuffer[index] != float.MinValue)
+                blendedColor = Color.FromArgb(_colorBuffer[index]).Blend(color);
+            else
+                blendedColor = color.Blend(Color.Transparent);
+
             _depthBuffer[index] = z;
-            _colorBuffer[index] = color.ToArgb();
+            _colorBuffer[index] = blendedColor.ToArgb();
         }
 
         public Bitmap GetFrame()
         {
-            var colorBuffer = BlendColorBuffers(this, new FrameBuffer(_width, _height));
-            var bitsHandle = GCHandle.Alloc(colorBuffer, GCHandleType.Pinned);
+            var bitsHandle = GCHandle.Alloc(_colorBuffer, GCHandleType.Pinned);
             var bitmap = new Bitmap(_width, _height, _width * 4, PixelFormat.Format32bppPArgb, bitsHandle.AddrOfPinnedObject());
 
             bitsHandle.Free();
@@ -80,25 +75,64 @@ namespace SoftwareRenderer3D.FrameBuffers
             _width = width;
             _height = height;
 
-            _colorBuffer = GetEmptyIntBuffer(_width, _height);
-            _depthBuffer = GetEmptyFloatBuffer(_width, _height);
+            _colorBuffer = GetEmptyIntBuffer(width, height, int.MaxValue);
+            _depthBuffer = GetEmptyFloatBuffer(width, height, float.MaxValue);
+            _minDepthBuffer = GetEmptyFloatBuffer(width, height, float.MinValue);
         }
-        private float[] GetEmptyFloatBuffer(int width, int height)
+
+        public void DepthPeel()
+        {
+
+            var count = 0;
+
+            for (var row = 0; row < _height; row++)
+            {
+                for (var col = 0; col < _width; col++)
+                {
+                    var index = row * _width + col;
+
+                    if (_depthBuffer[index] != float.MaxValue)
+                    {
+                        _minDepthBuffer[index] = _depthBuffer[index];
+                        count++;
+                    }
+                }
+            }
+
+            _depthBuffer = GetEmptyFloatBuffer(_width, _height, float.MaxValue);
+
+        }
+
+        private float[] GetEmptyFloatBuffer(int width, int height, float value)
         {
             var result = new float[height * width];
-            for (var row = 0; row < height; row++)
+            for (var i = 0; i < height; i++)
             {
-                for (var col = 0; col < width; col++)
+                for (var j = 0; j < width; j++)
                 {
-                    int index = col + row * width;
-                    result[index] = int.MaxValue;
+                    int index = j + i * width;
+                    result[index] = value;
+                }
+            }
+            return result;
+        }
+
+        private int[] GetEmptyIntBuffer(int width, int height, int value)
+        {
+            var result = new int[height * width];
+            for (var i = 0; i < height; i++)
+            {
+                for (var j = 0; j < width; j++)
+                {
+                    int index = j + i * width;
+                    result[index] = value;
                 }
             }
             return result;
         }
 
 
-        public static int[] BlendColorBuffers(FrameBuffer first, FrameBuffer second)
+        public static int[] BlendColorBuffers(DepthPeelingBuffer first, DepthPeelingBuffer second)
         {
             if (first == null || second == null)
                 return null;
@@ -137,7 +171,5 @@ namespace SoftwareRenderer3D.FrameBuffers
 
             return blendedColorBuffer;
         }
-
-        
     }
 }

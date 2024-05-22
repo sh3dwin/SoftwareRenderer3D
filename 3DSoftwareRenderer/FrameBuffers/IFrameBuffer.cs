@@ -1,7 +1,12 @@
-﻿namespace SoftwareRenderer3D.FrameBuffers
+﻿using System.Drawing;
+
+namespace SoftwareRenderer3D.FrameBuffers
 {
     public interface IFrameBuffer
     {
-        int[,] GetFrame();
+        (int Width, int Height) GetSize();
+        void Update(int width, int height);
+        void ColorPixel(int x, int y, float depth, Color color);
+        Bitmap GetFrame();
     }
 }

@@ -4,19 +4,20 @@ using System.Runtime.CompilerServices;
 using System;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System.Drawing;
+using SoftwareRenderer3D.Utils;
 
 namespace SoftwareRenderer3D.Rasterizers
 {
     public static class ScanLineRasterizer
     {
-        public static void ScanLineTriangle(FrameBuffer frameBuffer, Vector3 v0, Vector3 v1, Vector3 v2, float diffuse)
+        public static void ScanLineTriangle(IFrameBuffer frameBuffer, Vector3 v0, Vector3 v1, Vector3 v2, float diffuse)
         {
             var (p0, p1, p2) = SortIndices(v0, v1, v2);
             if (p0 == p1 || p1 == p2 || p2 == p0)
                 return;
 
             var yStart = (int)Math.Max(p0.Y, 0);
-            var yEnd = (int)Math.Min(p2.Y, frameBuffer.Height - 1);
+            var yEnd = (int)Math.Min(p2.Y, frameBuffer.GetSize().Height - 1);
 
             // Out if clipped
             if (yStart > yEnd)
@@ -49,7 +50,7 @@ namespace SoftwareRenderer3D.Rasterizers
         //   .................P1
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ScanLineHalfTriangleBottomFlat(FrameBuffer frameBuffer, int yStart, int yEnd,
+        private static void ScanLineHalfTriangleBottomFlat(IFrameBuffer frameBuffer, int yStart, int yEnd,
             Vector3 anchor, Vector3 vRight, Vector3 vLeft, float diffuse)
         {
             var deltaY1 = Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
@@ -79,7 +80,7 @@ namespace SoftwareRenderer3D.Rasterizers
         //          .....
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ScanLineHalfTriangleTopFlat(FrameBuffer frameBuffer, int yStart, int yEnd,
+        private static void ScanLineHalfTriangleTopFlat(IFrameBuffer frameBuffer, int yStart, int yEnd,
             Vector3 anchor, Vector3 vRight, Vector3 vLeft, float diffuse)
         {
             var deltaY1 = Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
@@ -110,10 +111,10 @@ namespace SoftwareRenderer3D.Rasterizers
         /// <param name="end">Scan line end</param>
         /// <param name="faId">Facet id</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ScanSingleLine(FrameBuffer frameBuffer, Vector3 start, Vector3 end, float diffuse)
+        private static void ScanSingleLine(IFrameBuffer frameBuffer, Vector3 start, Vector3 end, float diffuse)
         {
             var minX = Math.Max(start.X, 0);
-            var maxX = Math.Min(end.X, frameBuffer.Width);
+            var maxX = Math.Min(end.X, frameBuffer.GetSize().Width);
 
             var deltaX = 1 / (end.X - start.X);
 
@@ -124,7 +125,10 @@ namespace SoftwareRenderer3D.Rasterizers
                 var xInt = (int)x;
                 var yInt = (int)point.Y;
 
-                frameBuffer.ColorPixel(xInt, yInt, point.Z, Color.FromArgb((int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse)));
+                var opacity = Globals.Opacity.Clamp(0, 255);
+                var color = Color.FromArgb((int)(opacity * 255), (int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse));
+
+                frameBuffer.ColorPixel(xInt, yInt, point.Z, color);
             }
         }
 

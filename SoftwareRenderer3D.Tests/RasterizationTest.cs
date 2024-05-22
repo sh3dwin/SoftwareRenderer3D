@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SoftwareRenderer3D.Utils;
 
 namespace SoftwareRenderer3D.Tests
 {
@@ -8,7 +9,6 @@ namespace SoftwareRenderer3D.Tests
         [TestMethod]
         public void TriangleRasterizationTest()
         {
-            
         }
     }
 }

@@ -24,6 +24,9 @@ namespace SoftwareRenderer3D.Utils
                 {8,  new StandardVertex(new Vector3(-0.0f, -2.0f, 10.0f)) },
             };
 
+        public static uint DepthPeelingPasses = 3;
+        public static double Opacity = 0.5;
+
         private static Dictionary<int, Facet> testFacets = new Dictionary<int, Facet>
             {
                 {0, new Facet(0, 1, 2, Vector3.Cross(Vector3.Normalize(testVertices[2].GetVertexPoint() - testVertices[0].GetVertexPoint()), Vector3.Normalize(testVertices[1].GetVertexPoint() - testVertices[0].GetVertexPoint()))) },

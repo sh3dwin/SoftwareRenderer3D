@@ -18,8 +18,13 @@
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1">
-            <Image x:Name="RenderTarget" Source="{Binding RenderTarget}"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="80" />
+            </Grid.RowDefinitions>
             <Label x:Name="OpenedFile" Content="{Binding OpenedFileName}"/>
+            <Image Grid.Row="0"  x:Name="RenderTarget" Source="{Binding RenderTarget}"/>
+            <Slider Grid.Row="1" x:Name="OpacitySlider" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="10, 10, 10, 10" MaxHeight="50" MinHeight="50" MaxWidth="400" MinWidth="400" Minimum="1" Maximum="10" Value="{Binding Opacity}"/>
         </Grid>
     </Grid>
 </Window>

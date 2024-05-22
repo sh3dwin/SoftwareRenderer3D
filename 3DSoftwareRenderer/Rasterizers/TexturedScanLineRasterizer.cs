@@ -16,19 +16,20 @@ namespace SoftwareRenderer3D.Rasterizers
 
         public static void BindTexture(Texture texture)
         {
-            _texture = texture;
+            if(texture != null)
+                _texture = texture;
         }
         public static void UnbindTexture() {
             _texture = null;
         }
-        public static void ScanLineTriangle(FrameBuffer frameBuffer, Vector3 v0, Vector3 v1, Vector3 v2, TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
+        public static void ScanLineTriangle(IFrameBuffer frameBuffer, Vector3 v0, Vector3 v1, Vector3 v2, TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
         {
             var (p0, p1, p2, vertex0, vertex1, vertex2) = SortIndices(v0, v1, v2, ve0, ve1, ve2);
             if (p0 == p1 || p1 == p2 || p2 == p0)
                 return;
 
             var yStart = (int)Math.Max(p0.Y, 0);
-            var yEnd = (int)Math.Min(p2.Y, frameBuffer.Height - 1);
+            var yEnd = (int)Math.Min(p2.Y, frameBuffer.GetSize().Height - 1);
 
             // Out if clipped
             if (yStart > yEnd)
@@ -61,7 +62,7 @@ namespace SoftwareRenderer3D.Rasterizers
         //   .................P1
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ScanLineHalfTriangleBottomFlat(FrameBuffer frameBuffer, int yStart, int yEnd,
+        private static void ScanLineHalfTriangleBottomFlat(IFrameBuffer frameBuffer, int yStart, int yEnd,
             Vector3 anchor, Vector3 vRight, Vector3 vLeft,
             TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, 
             float diffuse)
@@ -93,7 +94,7 @@ namespace SoftwareRenderer3D.Rasterizers
         //          .....
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ScanLineHalfTriangleTopFlat(FrameBuffer frameBuffer, int yStart, int yEnd,
+        private static void ScanLineHalfTriangleTopFlat(IFrameBuffer frameBuffer, int yStart, int yEnd,
             Vector3 anchor, Vector3 vRight, Vector3 vLeft,
             TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
         {
@@ -125,12 +126,12 @@ namespace SoftwareRenderer3D.Rasterizers
         /// <param name="end">Scan line end</param>
         /// <param name="faId">Facet id</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ScanSingleLine(FrameBuffer frameBuffer, Vector3 start, Vector3 end,
+        private static void ScanSingleLine(IFrameBuffer frameBuffer, Vector3 start, Vector3 end,
             Vector3 screenCoords0, Vector3 screenCoords1, Vector3 screenCoords2,
             TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
         {
             var minX = Math.Max(start.X, 0);
-            var maxX = Math.Min(end.X, frameBuffer.Width);
+            var maxX = Math.Min(end.X, frameBuffer.GetSize().Width);
 
             var deltaX = 1 / (end.X - start.X);
 
@@ -144,9 +145,15 @@ namespace SoftwareRenderer3D.Rasterizers
                 var barycentric = Barycentric.CalculateBarycentricCoordinates(xInt, yInt, screenCoords0.XY(), screenCoords1.XY(), screenCoords2.XY());
 
                 var u = MathUtils.Clamp(ve0.TextureCoordinates.X * barycentric.X + ve1.TextureCoordinates.X * barycentric.Y + ve2.TextureCoordinates.X * barycentric.Z);
-                var v = MathUtils.Clamp(ve0.TextureCoordinates.Y * barycentric.X + ve1.TextureCoordinates.Y * barycentric.Y + ve2.TextureCoordinates.Y * barycentric.Z);
+                var v = MathUtils.Clamp(ve0.TextureCoordinates.Y * barycentric.X + ve1.TextureCoordinates.Y * barycentric.Y + ve2.TextureCoordinates.Y * barycentric.Z); 
+
+                if(u == float.NaN || v == float.NaN)
+                    continue;
 
                 var color = _texture.GetTextureColor(u, v, Globals.TextureInterpolation);
+
+                var opacity = Globals.Opacity.Clamp(0, 255);
+                color = Color.FromArgb((int)(opacity * 255), color.R, color.G, color.B);
 
                 frameBuffer.ColorPixel(xInt, yInt, point.Z, color.Mult(diffuse));
             }

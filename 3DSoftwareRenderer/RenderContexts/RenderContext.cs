@@ -14,7 +14,7 @@ namespace SoftwareRenderer3D.RenderContexts
 
         private float _fov;
 
-        private FrameBuffer _frameBuffer;
+        private IFrameBuffer _frameBuffer;
         private ArcBallCamera _camera;
         private Texture _texture = null;
 
@@ -36,7 +36,7 @@ namespace SoftwareRenderer3D.RenderContexts
 
             _fov = fov;
 
-            _frameBuffer = new FrameBuffer(width, height);
+            _frameBuffer = new DepthPeelingBuffer(width, height);
             _camera = camera;
         }
 
@@ -50,23 +50,8 @@ namespace SoftwareRenderer3D.RenderContexts
         public float Height => _height;
 
         public ArcBallCamera Camera => _camera;
-        public FrameBuffer FrameBuffer => _frameBuffer;
+        public IFrameBuffer FrameBuffer => _frameBuffer;
         public Texture Texture => _texture;
-
-        public Matrix4x4 GetProjectionMatrix()
-        {
-            return _camera.ProjectionMatrix;
-        }
-
-        public Bitmap GetFrame()
-        {
-            return _frameBuffer.GetFrame();
-        }
-
-        public void ColorPixel(int xInt, int yInt, float z, Color color)
-        {
-            _frameBuffer.ColorPixel(xInt, yInt, z, color);
-        }
 
         public void Rotate(float width, float height, Vector3 previousMouseCoords, Vector3 newMouseCoords)
         {
@@ -74,11 +59,7 @@ namespace SoftwareRenderer3D.RenderContexts
             _height = height;
 
             _camera.Rotate(width, height, _fov, previousMouseCoords, newMouseCoords);
-            _frameBuffer.Update(width, height);
-        }
-        public void Rotate(Vector3 previousMouseCoords, Vector3 mouseCoords)
-        {
-            _camera.Rotate(_width, _height, previousMouseCoords, mouseCoords);
+            _frameBuffer.Update((int)width, (int)height);
         }
 
         public void Resize(float width, float height)
@@ -87,7 +68,7 @@ namespace SoftwareRenderer3D.RenderContexts
             _height = height;
 
             _camera.Zoom(width, height, _fov);
-            _frameBuffer.Update(width, height);
+            _frameBuffer.Update((int)width, (int)height);
         }
         public void BindTexture(Texture texture)
         {
@@ -103,7 +84,7 @@ namespace SoftwareRenderer3D.RenderContexts
             _fov *= zoomOut ? 1.1f : 0.9f;
             _fov = MathUtils.Clamp(_fov, 1, 160);
             _camera.Zoom(_width, _height, _fov);
-            _frameBuffer.Update(_width, _height);
+            _frameBuffer.Update((int)_width, (int)_height);
         }
     }
 }

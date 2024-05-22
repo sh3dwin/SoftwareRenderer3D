@@ -70,6 +70,7 @@
     <Compile Include="Collada\SourceLoader.cs" />
     <Compile Include="Collada\ColladaVertex.cs" />
     <Compile Include="Enums\FileName.cs" />
+    <Compile Include="FrameBuffers\DepthPeelingBuffer.cs" />
     <Compile Include="FrameBuffers\FrameBuffer.cs" />
     <Compile Include="DataStructures\Buffers\IVertexBuffer.cs" />
     <Compile Include="DataStructures\Buffers\StandardVertexBuffer.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="RenderContexts\RenderContext.cs" />
     <Compile Include="Renderers\SimpleRenderer.cs" />
     <Compile Include="Renderers\SimpleTextureRenderer.cs" />
+    <Compile Include="Renderers\TransparencyRenderer.cs" />
     <Compile Include="Utils\Barycentric.cs" />
     <Compile Include="Utils\ColorUtils.cs" />
     <Compile Include="Utils\Constants.cs" />

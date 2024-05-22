@@ -5,6 +5,7 @@ using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.Factories;
 using SoftwareRenderer3D.RenderContexts;
 using SoftwareRenderer3D.Renderers;
+using SoftwareRenderer3D.Utils;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -70,6 +71,17 @@ namespace SoftwareRenderer3D.ViewModels
             }
         }
 
+        public int Opacity
+        {
+            get => (int)(Globals.Opacity * 10);
+            set
+            {
+                Globals.Opacity = value / 10.0;
+                RaisePropertyChanged(nameof(Opacity));
+                Render();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void RaisePropertyChanged([CallerMemberName] string propertyName = null)
@@ -79,9 +91,14 @@ namespace SoftwareRenderer3D.ViewModels
 
         private BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
+            var tempBitmap = new Bitmap(bitmap);
             using (MemoryStream memory = new MemoryStream())
             {
-                bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                try
+                {
+                    tempBitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                }
+                catch { }
                 memory.Position = 0;
                 BitmapImage bitmapImage = new BitmapImage();
                 bitmapImage.BeginInit();
@@ -125,7 +142,7 @@ namespace SoftwareRenderer3D.ViewModels
         {
 
             var bitmap = (_renderContext.Texture != null) 
-                ? SimpleTextureRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
+                ? TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
                 : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera);
             RenderTarget = BitmapToImageSource(bitmap);
         }
