@@ -51,7 +51,7 @@ namespace SoftwareRenderer3D.Renderers
 
             var facets = mesh.GetFacets();
 
-            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, facet =>
+            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 10 }, facet =>
             {
                 var v0 = mesh.GetVertexPoint(facet.V0);
                 var v1 = mesh.GetVertexPoint(facet.V1);
@@ -59,8 +59,8 @@ namespace SoftwareRenderer3D.Renderers
 
                 var normal = facet.Normal;
 
-                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()), 0, 1);
-                lightContribution = 1;
+                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()), 0.3f, 1f);
+                //lightContribution = 1;
 
                 var modelV0 = v0.TransformHomogeneus(modelMatrix);
                 modelV0 /= modelV0.W;
