@@ -23,7 +23,7 @@ namespace SoftwareRenderer3D.ViewModels
         private BitmapImage _renderTarget;
         private Mesh<IVertex> _mesh;
 
-        private RenderContext _renderContext;
+        private readonly RenderContext _renderContext;
 
         private int _lastX;
         private int _lastY;
@@ -35,9 +35,10 @@ namespace SoftwareRenderer3D.ViewModels
             _width = width;
             _height = height;
 
-            var filepathCollada = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\cowboy.dae";
-            var filepathStl = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\stl\bunny.stl";
-            _mesh = FileReaderFactory.GetFileReader(filepathCollada).ReadFile(filepathCollada);
+            var colladaMesh = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\cowboy.dae";
+            var stlMesh = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\stl\bunny.stl";
+
+            LoadMesh(stlMesh);
 
             var camera = new ArcBallCamera(new Vector3(0, 0, 100), Vector3.Zero);
 
@@ -46,6 +47,11 @@ namespace SoftwareRenderer3D.ViewModels
             var texturePath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\textures\cowboy.bmp";
             var texture = new Texture(new Bitmap(texturePath), true);
             _renderContext.BindTexture(texture);
+        }
+
+        private void LoadMesh(string filePath)
+        {
+            _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
         }
 
         /// <summary>
@@ -141,8 +147,8 @@ namespace SoftwareRenderer3D.ViewModels
         public void Render()
         {
 
-            var bitmap = (_renderContext.Texture != null) 
-                ? TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
+            var bitmap = (true) 
+                ? SubsurfaceScatteringRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
                 : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera);
             RenderTarget = BitmapToImageSource(bitmap);
         }
@@ -152,7 +158,5 @@ namespace SoftwareRenderer3D.ViewModels
             _lastX = (int) x;
             _lastY = (int) y;
         }
-
-
     }
 }

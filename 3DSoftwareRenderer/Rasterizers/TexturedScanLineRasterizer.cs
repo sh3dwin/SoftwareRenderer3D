@@ -153,9 +153,9 @@ namespace SoftwareRenderer3D.Rasterizers
                 var color = _texture.GetTextureColor(u, v, Globals.TextureInterpolation);
 
                 var opacity = Globals.Opacity.Clamp(0, 255);
-                color = Color.FromArgb((int)(opacity * 255), color.R, color.G, color.B);
+                color = Color.FromArgb((int)(opacity * 255), color.R, color.G, color.B).Mult(diffuse);
 
-                frameBuffer.ColorPixel(xInt, yInt, point.Z, color.Mult(diffuse));
+                frameBuffer.ColorPixel(xInt, yInt, point.Z, color);
             }
         }
 

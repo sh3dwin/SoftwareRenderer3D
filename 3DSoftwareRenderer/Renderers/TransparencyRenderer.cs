@@ -8,7 +8,6 @@ using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
 using System.Drawing;
-using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -51,7 +50,7 @@ namespace SoftwareRenderer3D.Renderers
 
             var facets = mesh.GetFacets();
 
-            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 10 }, facet =>
+            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, facet =>
             {
                 var v0 = mesh.GetVertexPoint(facet.V0);
                 var v1 = mesh.GetVertexPoint(facet.V1);

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using g3;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SoftwareRenderer3D.Utils.GeneralUtils
 {
@@ -20,6 +16,16 @@ namespace SoftwareRenderer3D.Utils.GeneralUtils
         public static Vector2 YZ(this Vector3 vector)
         {
             return new Vector2(vector.Y, vector.Z);
+        }
+
+        public static Vector3f ToVector3f(this Vector3 vector) 
+        {
+            return new Vector3f(vector.X, vector.Y, vector.Z);    
+        }
+
+        public static Vector3d ToVector3d(this Vector3 vector)
+        {
+            return new Vector3d(vector.X, vector.Y, vector.Z);
         }
     }
 }

@@ -12,16 +12,16 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
     public class Mesh<V>
         where V : IVertex
     {
-        private Dictionary<int, V> Vertices { get; set; }
-        private Dictionary<int, Facet> Facets { get; set; }
+        private Dictionary<int, V> _vertices { get; set; }
+        private Dictionary<int, Facet> _facets { get; set; }
         private Vector3 _center;
         private Matrix4x4 _modelMatrix;
 
 
 
         public Mesh(Dictionary<int, V> vertices, Dictionary<int, Facet> facets) {
-            Vertices = vertices;
-            Facets = facets;
+            _vertices = vertices;
+            _facets = facets;
 
             _center = GetCenterOfMass();
             _modelMatrix = Matrix4x4.Transpose(Matrix4x4.CreateTranslation(_center));
@@ -29,61 +29,65 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 
         public Mesh(Mesh<V> otherMesh)
         {
-            Vertices = otherMesh.Vertices;
-            Facets = otherMesh.Facets;
+            _vertices = otherMesh._vertices;
+            _facets = otherMesh._facets;
         }
-        public int VertexCount => Vertices.Count;
-        public int FacetCount => Facets.Count;
+
+        public IEnumerable<V> Vertices => _vertices.Values;
+        public IEnumerable<Facet> Facets => _facets.Values;
+
+        public int VertexCount => _vertices.Count;
+        public int FacetCount => _facets.Count;
         public Matrix4x4 ModelMatrix => _modelMatrix;
 
         public IEnumerable<Facet> GetFacets()
         {
-            return Facets.Values;
+            return _facets.Values;
         }
 
         public Vector3 GetVertexPoint(int index)
         {
-            return Vertices[index].GetVertexPoint();
+            return _vertices[index].GetVertexPoint();
         }
 
         public Vector3 GetFacetMidpoint(int index)
         {
-            return (GetVertexPoint(Facets[index].V0) + GetVertexPoint(Facets[index].V1) + GetVertexPoint(Facets[index].V2)) / 3.0f;
+            return (GetVertexPoint(_facets[index].V0) + GetVertexPoint(_facets[index].V1) + GetVertexPoint(_facets[index].V2)) / 3.0f;
         }
 
         public Facet GetFacet(int index)
         {
-            return Facets[index];
+            return _facets[index];
         }
 
         public Vector3 GetFacetNormal(int index)
         {
-            return Facets[index].Normal;
+            return _facets[index].Normal;
         }
         public V GetVertex(int index)
         {
-            return Vertices[index];
+            return _vertices[index];
         }
 
         public Vector3 GetCenterOfMass()
         {
             var sum = Vector3.Zero;
 
-            foreach(var vertex in Vertices.Values)
+            foreach(var vertex in _vertices.Values)
             {
                 sum += vertex.GetVertexPoint();
             }
 
-            return sum / Vertices.Count;
+            return sum / _vertices.Count;
         }
 
         public void RecalculateNormals()
         {
-            foreach(var facet in Facets.Values)
+            foreach(var facet in _facets.Values)
             {
-                var v0 = Vertices[facet.V0].GetVertexPoint();
-                var v1 = Vertices[facet.V1].GetVertexPoint();
-                var v2 = Vertices[facet.V2].GetVertexPoint();
+                var v0 = _vertices[facet.V0].GetVertexPoint();
+                var v1 = _vertices[facet.V1].GetVertexPoint();
+                var v2 = _vertices[facet.V2].GetVertexPoint();
 
                 var normal = Vector3.Cross(Vector3.Normalize(v2 - v0), Vector3.Normalize(v1 - v0));
 

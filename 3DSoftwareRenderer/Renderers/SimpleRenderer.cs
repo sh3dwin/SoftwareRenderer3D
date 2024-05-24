@@ -1,4 +1,5 @@
 ﻿using SoftwareRenderer3D.Camera;
+using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.FrameBuffers;
@@ -15,8 +16,10 @@ namespace SoftwareRenderer3D.Renderers
 {
     public static class SimpleRenderer
     {
-        public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera)
+        public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
+            TexturedScanLineRasterizer.BindTexture(texture);
+
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
 
@@ -25,14 +28,14 @@ namespace SoftwareRenderer3D.Renderers
 
             Matrix4x4.Invert(mesh.ModelMatrix, out var modelMatrix);
 
-            var lightSourceAt = new Vector3(0, 100, 1);
+            var lightSourceAt = new Vector3(0, 100, 100);
 
-            var facets = mesh.GetFacets().Where((x, i) => 
+            var facets = mesh.GetFacets().Where((x, i) =>
             Vector3.Dot(
-                (mesh.GetFacetMidpoint(i) - camera.Position).Normalize(), 
+                (mesh.GetFacetMidpoint(i) - camera.Position).Normalize(),
                 x.Normal.Normalize()) <= 0.3);
 
-            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1} ,facet =>
+            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, facet =>
             {
                 var v0 = mesh.GetVertexPoint(facet.V0);
                 var v1 = mesh.GetVertexPoint(facet.V1);
@@ -40,7 +43,7 @@ namespace SoftwareRenderer3D.Renderers
 
                 var normal = facet.Normal;
 
-                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()), 0.3f, 1f);
+                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()), 0, 1);
 
                 var modelV0 = v0.TransformHomogeneus(modelMatrix);
                 modelV0 /= modelV0.W;
@@ -67,9 +70,21 @@ namespace SoftwareRenderer3D.Renderers
                 var screenV1 = new Vector3((ndcV1.X + 1) * width / 2.0f, (-ndcV1.Y + 1) * height / 2.0f, ndcV1.Z);
                 var screenV2 = new Vector3((ndcV2.X + 1) * width / 2.0f, (-ndcV2.Y + 1) * height / 2.0f, ndcV2.Z);
 
-                if(RendererUtils.IsTriangleWithinScreen(width, height, screenV0, screenV1, screenV2))
-                    ScanLineRasterizer.ScanLineTriangle(frameBuffer, screenV0, screenV1, screenV2, lightContribution);
+                if (RendererUtils.IsTriangleWithinScreen(width, height, screenV0, screenV1, screenV2))
+                {
+                    if (mesh.GetVertex(facet.V0).GetType().IsAssignableFrom(typeof(TexturedVertex)))
+                    {
+                        TexturedScanLineRasterizer.ScanLineTriangle(frameBuffer, screenV0, screenV1, screenV2,
+                            mesh.GetVertex(facet.V0) as TexturedVertex, mesh.GetVertex(facet.V1) as TexturedVertex, mesh.GetVertex(facet.V2) as TexturedVertex, lightContribution);
+                    }
+                    else
+                    {
+                        ScanLineRasterizer.ScanLineTriangle(frameBuffer, screenV0, screenV1, screenV2, lightContribution);
+                    }
+                }
             });
+
+            TexturedScanLineRasterizer.UnbindTexture();
 
             return frameBuffer.GetFrame();
         }

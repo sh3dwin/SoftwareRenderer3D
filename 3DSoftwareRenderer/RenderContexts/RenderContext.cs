@@ -2,7 +2,6 @@
 using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.FrameBuffers;
 using SoftwareRenderer3D.Utils.GeneralUtils;
-using System.Drawing;
 using System.Numerics;
 
 namespace SoftwareRenderer3D.RenderContexts
@@ -36,7 +35,7 @@ namespace SoftwareRenderer3D.RenderContexts
 
             _fov = fov;
 
-            _frameBuffer = new DepthPeelingBuffer(width, height);
+            _frameBuffer = new FrameBuffer(width, height);
             _camera = camera;
         }
 

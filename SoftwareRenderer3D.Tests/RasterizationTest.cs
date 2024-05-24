@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SoftwareRenderer3D.Utils;
 
 namespace SoftwareRenderer3D.Tests
 {

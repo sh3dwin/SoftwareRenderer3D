@@ -93,7 +93,7 @@
     <Compile Include="Rasterizers\TexturedScanLineRasterizer.cs" />
     <Compile Include="RenderContexts\RenderContext.cs" />
     <Compile Include="Renderers\SimpleRenderer.cs" />
-    <Compile Include="Renderers\SimpleTextureRenderer.cs" />
+    <Compile Include="Renderers\SubsurfaceScatteringRenderer.cs" />
     <Compile Include="Renderers\TransparencyRenderer.cs" />
     <Compile Include="Utils\Barycentric.cs" />
     <Compile Include="Utils\ColorUtils.cs" />
