@@ -39,7 +39,7 @@ namespace SoftwareRenderer3D.ViewModels
             var colladaMesh = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\cowboy.dae";
             var stlMesh = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\stl\bunny.stl";
 
-            LoadMesh(stlMesh);
+            LoadMesh(colladaMesh);
 
             var camera = new ArcBallCamera(new Vector3(0, 0, 100), Vector3.Zero);
 
@@ -150,7 +150,7 @@ namespace SoftwareRenderer3D.ViewModels
             System.Diagnostics.Debug.WriteLine($"=========================================");
 
             var startTime = DateTime.Now;
-            var bitmap = (true) 
+            var bitmap = (false) 
                 ? TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
                 : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
 
