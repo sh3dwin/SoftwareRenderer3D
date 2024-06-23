@@ -18,9 +18,19 @@ namespace SoftwareRenderer3D.Renderers
 {
     public static class SubsurfaceScatteringRenderer
     {
+        private static Mesh<IVertex> _lastRenderedMesh;
+        private static Dictionary<int, double> _lastRenderedMeshSubsurfaceScatteringMapping;
         public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
-            var lightContributions = CalculateSubsurfaceScattering(mesh);
+            
+            var startTime = DateTime.Now;
+            if (_lastRenderedMesh == null || !_lastRenderedMesh.Equals(mesh))
+            {
+                _lastRenderedMesh = mesh;
+                _lastRenderedMeshSubsurfaceScatteringMapping = CalculateSubsurfaceScattering(mesh);
+            }
+            _lastRenderedMesh.Equals(mesh);
+            System.Diagnostics.Debug.WriteLine($"Subsurface scattering calculation time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
             TexturedScanLineRasterizer.BindTexture(texture);
 
@@ -34,12 +44,15 @@ namespace SoftwareRenderer3D.Renderers
 
             var lightSourceAt = new Vector3(0, 100, 100);
 
+            startTime = DateTime.Now;
             var facets = mesh.GetFacets().Where((x, i) =>
             Vector3.Dot(
                 (mesh.GetFacetMidpoint(i) - camera.Position).Normalize(),
                 x.Normal.Normalize()) <= 0.3);
+            System.Diagnostics.Debug.WriteLine($"Back-face culling time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
-            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, facet =>
+            startTime = DateTime.Now;
+            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 10 }, facet =>
             {
                 var v0 = mesh.GetVertexPoint(facet.V0);
                 var v1 = mesh.GetVertexPoint(facet.V1);
@@ -47,8 +60,8 @@ namespace SoftwareRenderer3D.Renderers
 
                 var normal = facet.Normal;
 
-                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()) + (float)lightContributions[facet.V0], 0, 1);
-                lightContribution = (float)lightContributions[facet.V0].Clamp();
+                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()) + (float)_lastRenderedMeshSubsurfaceScatteringMapping[facet.V0], 0, 1);
+                lightContribution = (float)_lastRenderedMeshSubsurfaceScatteringMapping[facet.V0].Clamp();
 
                 var modelV0 = v0.TransformHomogeneus(modelMatrix);
                 modelV0 /= modelV0.W;
@@ -88,6 +101,9 @@ namespace SoftwareRenderer3D.Renderers
                     }
                 }
             });
+
+
+            System.Diagnostics.Debug.WriteLine($"Rasterization time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
             TexturedScanLineRasterizer.UnbindTexture();
 

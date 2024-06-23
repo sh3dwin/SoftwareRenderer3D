@@ -55,6 +55,7 @@
     <Compile Include="FileReaderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RasterizationTest.cs" />
+    <Compile Include="RenderingPerformanceTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

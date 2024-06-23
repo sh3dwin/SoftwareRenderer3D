@@ -66,11 +66,15 @@ namespace SoftwareRenderer3D.FrameBuffers
 
         public Bitmap GetFrame()
         {
-            var colorBuffer = BlendColorBuffers(this, new FrameBuffer(_width, _height));
+            var startTime = DateTime.Now;
+            //var colorBuffer = BlendColorBuffers(this, new FrameBuffer(_width, _height));
+            var colorBuffer = _colorBuffer;
             var bitsHandle = GCHandle.Alloc(colorBuffer, GCHandleType.Pinned);
             var bitmap = new Bitmap(_width, _height, _width * 4, PixelFormat.Format32bppPArgb, bitsHandle.AddrOfPinnedObject());
 
             bitsHandle.Free();
+
+            System.Diagnostics.Debug.WriteLine($"GetFrame time: {((DateTime.Now - startTime).TotalMilliseconds) / 1000}");
 
             return bitmap;
         }

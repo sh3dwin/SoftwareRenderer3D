@@ -6,6 +6,7 @@ using SoftwareRenderer3D.Factories;
 using SoftwareRenderer3D.RenderContexts;
 using SoftwareRenderer3D.Renderers;
 using SoftwareRenderer3D.Utils;
+using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -146,11 +147,21 @@ namespace SoftwareRenderer3D.ViewModels
 
         public void Render()
         {
+            System.Diagnostics.Debug.WriteLine($"=========================================");
 
-            var bitmap = (true) 
+            var startTime = DateTime.Now;
+            var bitmap = (false) 
                 ? SubsurfaceScatteringRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
-                : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera);
+                : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+
+            var renderTime = (DateTime.Now - startTime).TotalMilliseconds;
+            System.Diagnostics.Debug.WriteLine($"Rendering time: { renderTime / 1000.0}");
+            System.Diagnostics.Debug.WriteLine($"FPS: {1.0 / (renderTime / 1000.0)}");
+            
+            startTime = DateTime.Now;
             RenderTarget = BitmapToImageSource(bitmap);
+            var drawTime = (DateTime.Now - startTime).TotalMilliseconds;
+            System.Diagnostics.Debug.WriteLine($"Drawing time: {drawTime / 1000.0}");
         }
 
         public void SetMouse(float x, float y)

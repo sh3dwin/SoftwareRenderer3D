@@ -1,5 +1,6 @@
 ﻿using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 
@@ -9,7 +10,7 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
     /// Describes the base class for the Mesh data structure
     /// </summary>
     /// <typeparam name="V"></typeparam>
-    public class Mesh<V>
+    public class Mesh<V>: IEquatable<Mesh<V>>
         where V : IVertex
     {
         private Dictionary<int, V> _vertices { get; set; }
@@ -93,6 +94,15 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 
                 facet.UpdateNormal(normal);
             }
+        }
+
+        bool IEquatable<Mesh<V>>.Equals(Mesh<V> other)
+        {
+            if(other == null) return false;
+            if(other.FacetCount != FacetCount) return false;
+            if(other.VertexCount != VertexCount) return false;
+
+            return true;
         }
     }
 }

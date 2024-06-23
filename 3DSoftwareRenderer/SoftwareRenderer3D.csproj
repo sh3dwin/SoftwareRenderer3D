@@ -70,6 +70,7 @@
     <Compile Include="Collada\SourceLoader.cs" />
     <Compile Include="Collada\ColladaVertex.cs" />
     <Compile Include="Enums\FileName.cs" />
+    <Compile Include="Enums\FrameBufferCombineType.cs" />
     <Compile Include="FrameBuffers\DepthPeelingBuffer.cs" />
     <Compile Include="FrameBuffers\FrameBuffer.cs" />
     <Compile Include="DataStructures\Buffers\IVertexBuffer.cs" />
