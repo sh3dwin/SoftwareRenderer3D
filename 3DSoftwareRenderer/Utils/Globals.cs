@@ -35,5 +35,7 @@ namespace SoftwareRenderer3D.Utils
             };
 
         public static Mesh<IVertex> TestMesh = new Mesh<IVertex>(testVertices, testFacets);
+
+        public static bool BackfaceCulling = false;
     }
 }

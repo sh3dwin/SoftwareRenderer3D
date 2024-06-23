@@ -34,10 +34,10 @@ namespace SoftwareRenderer3D.Renderers
             var lightSourceAt = new Vector3(0, 100, 100);
 
             startTime = DateTime.Now;
-            var facets = mesh.GetFacets().Where((x, i) =>
-            Vector3.Dot(
-                (mesh.GetFacetMidpoint(i) - camera.Position).Normalize(),
-                x.Normal.Normalize()) <= 0.3);
+            var facets = Globals.BackfaceCulling
+                ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.Position).Normalize(), x.Normal.Normalize()) <= 0.1)
+                : mesh.GetFacets();
+
             System.Diagnostics.Debug.WriteLine($"Back-face culling time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
             startTime = DateTime.Now;

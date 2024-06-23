@@ -150,8 +150,8 @@ namespace SoftwareRenderer3D.ViewModels
             System.Diagnostics.Debug.WriteLine($"=========================================");
 
             var startTime = DateTime.Now;
-            var bitmap = (false) 
-                ? SubsurfaceScatteringRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
+            var bitmap = (true) 
+                ? TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
                 : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
 
             var renderTime = (DateTime.Now - startTime).TotalMilliseconds;

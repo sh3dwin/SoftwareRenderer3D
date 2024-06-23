@@ -1,5 +1,6 @@
 ﻿using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures;
+using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.FrameBuffers;
@@ -7,7 +8,9 @@ using SoftwareRenderer3D.Rasterizers;
 using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -23,21 +26,27 @@ namespace SoftwareRenderer3D.Renderers
 
             var depthPasses = 2;
 
+            var startTime = DateTime.Now;
+            var facets = Globals.BackfaceCulling
+                ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.Position).Normalize(), x.Normal.Normalize()) <= 0.1)
+                : mesh.GetFacets();
+            System.Diagnostics.Debug.WriteLine($"Back-face culling time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
+
             for (var i = 0; i < depthPasses; i++) {
-                RenderPass(mesh, peelingBuffer, camera, texture);
+                RenderPass(mesh, facets, peelingBuffer, camera, texture);
                 peelingBuffer.DepthPeel();
             }
 
-            RenderPass(mesh, peelingBuffer, camera, texture);
+            RenderPass(mesh, facets,peelingBuffer, camera, texture);
 
             TexturedScanLineRasterizer.UnbindTexture();
 
             return peelingBuffer.GetFrame();
         }
 
-        private static void RenderPass(Mesh<IVertex> mesh, DepthPeelingBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
+        private static void RenderPass(Mesh<IVertex> mesh, IEnumerable<Facet> facets, DepthPeelingBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
-
+            var startTime = DateTime.Now;
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
 
@@ -48,9 +57,10 @@ namespace SoftwareRenderer3D.Renderers
 
             var lightSourceAt = new Vector3(0, 100, 100);
 
-            var facets = mesh.GetFacets();
+            startTime = DateTime.Now;
+            
 
-            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, facet =>
+            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 12 }, facet =>
             {
                 var v0 = mesh.GetVertexPoint(facet.V0);
                 var v1 = mesh.GetVertexPoint(facet.V1);
