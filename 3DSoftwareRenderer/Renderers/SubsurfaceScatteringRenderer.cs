@@ -101,7 +101,6 @@ namespace SoftwareRenderer3D.Renderers
                 }
             });
 
-
             System.Diagnostics.Debug.WriteLine($"Rasterization time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
             TexturedScanLineRasterizer.UnbindTexture();

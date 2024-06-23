@@ -11,7 +11,7 @@ namespace SoftwareRenderer3D.Utils
         public static Enums.TextureInterpolation TextureInterpolation = Enums.TextureInterpolation.NEAREST;
 
 
-        private static Dictionary<int, IVertex> testVertices = new Dictionary<int, IVertex>
+        private static readonly Dictionary<int, IVertex> testVertices = new Dictionary<int, IVertex>
             {
                 {0,  new StandardVertex(new Vector3(-1.0f,  1.0f, 1.0f)) },
                 {1,  new StandardVertex(new Vector3(-1.0f, -1.0f, 1.0f)) },
@@ -27,7 +27,7 @@ namespace SoftwareRenderer3D.Utils
         public static uint DepthPeelingPasses = 3;
         public static double Opacity = 0.5;
 
-        private static Dictionary<int, Facet> testFacets = new Dictionary<int, Facet>
+        private static readonly Dictionary<int, Facet> testFacets = new Dictionary<int, Facet>
             {
                 {0, new Facet(0, 1, 2, Vector3.Cross(Vector3.Normalize(testVertices[2].GetVertexPoint() - testVertices[0].GetVertexPoint()), Vector3.Normalize(testVertices[1].GetVertexPoint() - testVertices[0].GetVertexPoint()))) },
                 {1, new Facet(3, 4, 5, Vector3.Cross(Vector3.Normalize(testVertices[5].GetVertexPoint() - testVertices[3].GetVertexPoint()), Vector3.Normalize(testVertices[4].GetVertexPoint() - testVertices[3].GetVertexPoint()))) },
@@ -36,6 +36,6 @@ namespace SoftwareRenderer3D.Utils
 
         public static Mesh<IVertex> TestMesh = new Mesh<IVertex>(testVertices, testFacets);
 
-        public static bool BackfaceCulling = false;
+        public static bool BackfaceCulling = true;
     }
 }

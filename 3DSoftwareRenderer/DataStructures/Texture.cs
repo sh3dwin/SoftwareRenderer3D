@@ -8,13 +8,19 @@ namespace SoftwareRenderer3D.DataStructures
 {
     public class Texture
     {
-        private Bitmap _texture;
-        private int[,] _rawImageData;
-        private bool _flipY = false;
-        public Texture(Bitmap texture, bool flipY = false) { 
-            _texture = texture;
+        private readonly Bitmap _bitmap;
+        private readonly int[,] _rawImageData;
+        private readonly bool _flipY = false;
+
+        private readonly int _width;
+        private readonly int _height;
+        public Texture(Bitmap texture, bool flipY = false) {
+            _bitmap = texture;
             _rawImageData = ExtractColorInformation(texture);
             _flipY = flipY;
+
+            _width = texture.Width;
+            _height = texture.Height;
         }
 
         public Color GetTextureColor(float u, float v, TextureInterpolation textureInterpolation)
@@ -26,13 +32,13 @@ namespace SoftwareRenderer3D.DataStructures
         private Color GetLinearlyInterpolatedColor(float u, float v)
         {
             if (u == 1 || v == 1)
-                return _texture.GetPixel(_texture.Width - 1, _texture.Height - 1);
+                return Color.FromArgb(GetPixelColor(_width - 1, _height - 1));
 
-            var xWhole = (int)(u * (_texture.Width - 1));
-            var xFraction = u * (_texture.Width - 1) - xWhole;
+            var xWhole = (int)(u * (_width - 1));
+            var xFraction = u * (_height - 1) - xWhole;
 
-            var yWhole = (int)(v * (_texture.Height - 1));
-            var yFraction = v * (_texture.Height - 1) - yWhole;
+            var yWhole = (int)(v * (_height - 1));
+            var yFraction = v * (_height - 1) - yWhole;
 
             var topLeft = Color.FromArgb(_rawImageData[xWhole, yWhole]);
             var topRight = Color.FromArgb(_rawImageData[xWhole + 1, yWhole]);
@@ -45,14 +51,17 @@ namespace SoftwareRenderer3D.DataStructures
             return top.Add(bottom);
         }
 
-        public Bitmap AsImage => _texture;
+        public Bitmap AsImage => _bitmap;
 
         private Color GetNearestNeighborColor(float u, float v)
         {
-            var x = (int)MathUtils.Clamp(u * _texture.Width - 1, 0, _texture.Width - 1);
-            var y = (int)MathUtils.Clamp(v * _texture.Height - 1, 0, _texture.Height - 1);
+            lock (this)
+            {
+                var x = (int)MathUtils.Clamp(u * _width - 1, 0, _width - 1);
+                var y = (int)MathUtils.Clamp(v * _height - 1, 0, _height - 1);
 
-            return Color.FromArgb(_rawImageData[x, y]);
+                return Color.FromArgb(_rawImageData[x, y]);
+            }
         }
         private static int[,] ExtractColorInformation(Bitmap bitmap)
         {
@@ -97,11 +106,15 @@ namespace SoftwareRenderer3D.DataStructures
                     }
                 }
             }
-
             // Unlock the bits.
             bitmap.UnlockBits(bmpData);
 
             return colorArray;
+        }
+
+        private int GetPixelColor(int x, int y)
+        {
+            return _rawImageData[x, y];
         }
     }
 }

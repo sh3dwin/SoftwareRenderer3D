@@ -39,7 +39,7 @@ namespace SoftwareRenderer3D.ViewModels
             var colladaMesh = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\cowboy.dae";
             var stlMesh = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\stl\bunny.stl";
 
-            LoadMesh(stlMesh);
+            LoadMesh(colladaMesh);
 
             var camera = new ArcBallCamera(new Vector3(0, 0, 100), Vector3.Zero);
 

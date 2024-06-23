@@ -1,6 +1,5 @@
 ﻿using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures;
-using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.FrameBuffers;
@@ -8,7 +7,6 @@ using SoftwareRenderer3D.Rasterizers;
 using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;

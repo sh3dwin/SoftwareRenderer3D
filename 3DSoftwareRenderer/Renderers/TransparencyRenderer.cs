@@ -33,18 +33,18 @@ namespace SoftwareRenderer3D.Renderers
             System.Diagnostics.Debug.WriteLine($"Back-face culling time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
             for (var i = 0; i < depthPasses; i++) {
-                RenderPass(mesh, facets, peelingBuffer, camera, texture);
+                RenderPass(mesh, facets, peelingBuffer, camera);
                 peelingBuffer.DepthPeel();
             }
 
-            RenderPass(mesh, facets,peelingBuffer, camera, texture);
+            RenderPass(mesh, facets,peelingBuffer, camera);
 
             TexturedScanLineRasterizer.UnbindTexture();
 
             return peelingBuffer.GetFrame();
         }
 
-        private static void RenderPass(Mesh<IVertex> mesh, IEnumerable<Facet> facets, DepthPeelingBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
+        private static void RenderPass(Mesh<IVertex> mesh, IEnumerable<Facet> facets, DepthPeelingBuffer frameBuffer, ArcBallCamera camera)
         {
             var startTime = DateTime.Now;
             var width = frameBuffer.GetSize().Width;
@@ -69,7 +69,6 @@ namespace SoftwareRenderer3D.Renderers
                 var normal = facet.Normal;
 
                 var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()), 0.3f, 1f);
-                //lightContribution = 1;
 
                 var modelV0 = v0.TransformHomogeneus(modelMatrix);
                 modelV0 /= modelV0.W;
