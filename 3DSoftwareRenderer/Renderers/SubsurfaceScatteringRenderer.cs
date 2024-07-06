@@ -196,7 +196,7 @@ namespace SoftwareRenderer3D.Renderers
 
         private static double CalculateLightDecay(double distance)
         {
-            return Math.Pow(Math.E, -2.0 * distance);
+            return System.Math.Pow(System.Math.E, -2.0 * distance);
         }
     }
 }

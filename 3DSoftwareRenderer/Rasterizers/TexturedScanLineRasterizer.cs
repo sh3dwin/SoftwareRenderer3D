@@ -3,7 +3,6 @@ using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.FrameBuffers;
 using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
-using System;
 using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -28,8 +27,8 @@ namespace SoftwareRenderer3D.Rasterizers
             if (p0 == p1 || p1 == p2 || p2 == p0)
                 return;
 
-            var yStart = (int)Math.Max(p0.Y, 0);
-            var yEnd = (int)Math.Min(p2.Y, frameBuffer.GetSize().Height - 1);
+            var yStart = (int)System.Math.Max(p0.Y, 0);
+            var yEnd = (int)System.Math.Min(p2.Y, frameBuffer.GetSize().Height - 1);
 
             // Out if clipped
             if (yStart > yEnd)
@@ -67,8 +66,8 @@ namespace SoftwareRenderer3D.Rasterizers
             TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, 
             float diffuse)
         {
-            var deltaY1 = Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
-            var deltaY2 = Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
+            var deltaY1 = System.Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
+            var deltaY2 = System.Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
 
             for (var y = yStart; y <= yEnd; y++)
             {
@@ -98,8 +97,8 @@ namespace SoftwareRenderer3D.Rasterizers
             Vector3 anchor, Vector3 vRight, Vector3 vLeft,
             TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
         {
-            var deltaY1 = Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
-            var deltaY2 = Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
+            var deltaY1 = System.Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
+            var deltaY2 = System.Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
 
             for (var y = yStart; y <= yEnd; y++)
             {
@@ -130,8 +129,8 @@ namespace SoftwareRenderer3D.Rasterizers
             Vector3 screenCoords0, Vector3 screenCoords1, Vector3 screenCoords2,
             TexturedVertex ve0, TexturedVertex ve1, TexturedVertex ve2, float diffuse)
         {
-            var minX = Math.Max(start.X, 0);
-            var maxX = Math.Min(end.X, frameBuffer.GetSize().Width);
+            var minX = System.Math.Max(start.X, 0);
+            var maxX = System.Math.Min(end.X, frameBuffer.GetSize().Width);
 
             var deltaX = 1 / (end.X - start.X);
 

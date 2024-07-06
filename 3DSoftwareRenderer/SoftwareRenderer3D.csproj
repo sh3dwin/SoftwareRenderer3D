@@ -90,6 +90,9 @@
     <Compile Include="FileReaders\IMeshFileReader.cs" />
     <Compile Include="FileReaders\STLReader.cs" />
     <Compile Include="FrameBuffers\IFrameBuffer.cs" />
+    <Compile Include="Maths\LinearAlgebra.cs" />
+    <Compile Include="Maths\Quaternion.cs" />
+    <Compile Include="Maths\QuaternionExtensions.cs" />
     <Compile Include="Rasterizers\ScanLineRasterizer.cs" />
     <Compile Include="Rasterizers\TexturedScanLineRasterizer.cs" />
     <Compile Include="RenderContexts\RenderContext.cs" />
