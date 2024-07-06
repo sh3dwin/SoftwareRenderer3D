@@ -13,7 +13,7 @@ namespace SoftwareRenderer3D.Maths
 
             var vectorQuaternion = new Quaternion(0, vector);
 
-            var q = new Quaternion(Math.Cos(theta / 2), normalizedAxis);
+            var q = new Quaternion(Math.Cos(theta / 2.0), (float)Math.Sin(theta / 2.0) * normalizedAxis);
 
             return (q * vectorQuaternion * q.Conjugate()).Imaginary;
         }

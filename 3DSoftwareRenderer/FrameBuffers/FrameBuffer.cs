@@ -46,7 +46,7 @@ namespace SoftwareRenderer3D.FrameBuffers
                 for (var col = 0; col < width; col++)
                 {
                     int index = col + row * width;
-                    result[index] = int.MaxValue;
+                    result[index] = Globals.BackgroundColor.ToArgb();
                 }
             }
             return result;

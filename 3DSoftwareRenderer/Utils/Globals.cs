@@ -2,6 +2,7 @@
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Numerics;
 
 namespace SoftwareRenderer3D.Utils
@@ -24,7 +25,7 @@ namespace SoftwareRenderer3D.Utils
                 {8,  new StandardVertex(new Vector3(-0.0f, -2.0f, 10.0f)) },
             };
 
-        public static uint DepthPeelingPasses = 3;
+        public static uint DepthPeelingPasses = 2;
         public static double Opacity = 0.5;
 
         private static readonly Dictionary<int, Facet> testFacets = new Dictionary<int, Facet>
@@ -37,5 +38,7 @@ namespace SoftwareRenderer3D.Utils
         public static Mesh<IVertex> TestMesh = new Mesh<IVertex>(testVertices, testFacets);
 
         public static bool BackfaceCulling = true;
+
+        public static Color BackgroundColor = Color.FromArgb(128, 128, 128, 128);
     }
 }

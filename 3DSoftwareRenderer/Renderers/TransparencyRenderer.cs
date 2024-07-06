@@ -24,7 +24,7 @@ namespace SoftwareRenderer3D.Renderers
 
             TexturedScanLineRasterizer.BindTexture(texture);
 
-            var depthPasses = 2;
+            var depthPasses = Globals.DepthPeelingPasses;
 
             var startTime = DateTime.Now;
             var facets = Globals.BackfaceCulling

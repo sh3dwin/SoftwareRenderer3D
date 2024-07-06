@@ -120,11 +120,8 @@ namespace SoftwareRenderer3D.ViewModels
         public void Rotate(Vector3 mouseCoords)
         {
             var previousMouseCoords = new Vector3(_lastX, _lastY, 0);
-            _lastX = (int)mouseCoords.X;
-            _lastY = (int)mouseCoords.Y;
-
             _renderContext.Rotate(_width, _height, previousMouseCoords, mouseCoords);
-
+            SetMouse(mouseCoords.X, mouseCoords.Y);
             Render();
         }
 

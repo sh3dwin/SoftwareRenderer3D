@@ -1,6 +1,7 @@
 ﻿using SoftwareRenderer3D.ViewModels;
 using System;
 using System.Numerics;
+using System.Security.Principal;
 using System.Windows;
 using System.Windows.Input;
 
@@ -18,28 +19,43 @@ namespace SoftwareRenderer3D
         {
             InitializeComponent();
 
-            _viewModel = new MainViewModel(800, 200);
+            _viewModel = new MainViewModel(800, 800);
 
             OpacitySlider.Value = _viewModel.Opacity;
 
             DataContext = _viewModel;
 
+            //RenderTarget.MouseDown += SetRotationStart;
             RenderTarget.MouseMove += Rotate;
             SizeChanged += Resize;
             RenderTarget.MouseWheel += Zoom;
         }
 
-        private void Rotate(object sender, MouseEventArgs e)
+        private void SetRotationStart(object sender, MouseEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed)
             {
-                _viewModel.SetMouse((float)e.GetPosition(RenderTarget).X, (float)e.GetPosition(RenderTarget).Y);
                 return;
             }
+            var pos = e.GetPosition(RenderTarget);
+            var mousePos = new Vector3((float)pos.X, (float)pos.Y, 0);
 
-            var mousePos = new Vector3((float)e.GetPosition(RenderTarget).X, (float)e.GetPosition(RenderTarget).Y, 0);
+            _viewModel.SetMouse(mousePos.X, mousePos.Y);
+        }
 
+        private void Rotate(object sender, MouseEventArgs e)
+        {
+            var pos = e.GetPosition(RenderTarget);
+            var mousePos = new Vector3((float)pos.X, (float)pos.Y, 0);
+            
+            if (e.LeftButton != MouseButtonState.Pressed)
+            {
+                _viewModel.SetMouse(mousePos.X, mousePos.Y);
+                return;
+            }
+            
             _viewModel.Rotate(mousePos);
+            _viewModel.SetMouse(mousePos.X, mousePos.Y);
         }
 
         private void Zoom(object sender, MouseWheelEventArgs e)
@@ -58,8 +74,14 @@ namespace SoftwareRenderer3D
         private void Resize(object sender, EventArgs e)
         {
 
-            var width = (float)ActualWidth;
-            var height = (float)ActualHeight;
+            var width = (float)RenderTarget.ActualWidth;
+            var height = (float)RenderTarget.ActualHeight;
+
+            if(width == 0  || height == 0 || true)
+            {
+                width = (float)ActualWidth;
+                height = (float)ActualHeight;
+            }    
 
             _viewModel.Resize(width, height);
         }

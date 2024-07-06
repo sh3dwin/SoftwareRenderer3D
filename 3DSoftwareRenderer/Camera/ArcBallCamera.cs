@@ -1,7 +1,11 @@
-﻿using SoftwareRenderer3D.Utils;
+﻿using SoftwareRenderer3D.Maths;
+using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
+using System.Diagnostics;
 using System.Numerics;
+using System.Security.Principal;
+using System.Windows.Input;
 
 namespace SoftwareRenderer3D.Camera
 {
@@ -48,10 +52,10 @@ namespace SoftwareRenderer3D.Camera
         /// </summary>
         public void Rotate(float width, float height, Vector3 firstPixel, Vector3 secondPixel)
         {
-            var ndcSecond = ConvertToNdc(width, height, firstPixel);
-            var ndcFirst = ConvertToNdc(width, height, secondPixel);
+            var ndcSecond = ProjectOnArcBall(width, height, firstPixel);
+            var ndcFirst = ProjectOnArcBall(width, height, secondPixel);
 
-            var angle = -(float)System.Math.Acos(System.Math.Min(1, Vector3.Dot(ndcFirst.Normalize(), ndcSecond.Normalize())));
+            var angle = -(float)Math.Acos(Math.Min(1, Vector3.Dot(ndcFirst.Normalize(), ndcSecond.Normalize())));
             var axis = Vector3.Cross(ndcFirst, ndcSecond).Normalize();
 
             var rotation = MathUtils.RotateAroundAxis(angle, axis);
@@ -60,10 +64,33 @@ namespace SoftwareRenderer3D.Camera
             CalculateView();
         }
 
+        public void RotateUsingQuaternions(float width, float height, Vector3 firstPixel, Vector3 secondPixel)
+        {
+            var ndcFirst = ProjectOnArcBall(width, height, firstPixel).Normalize();
+            var ndcSecond = ProjectOnArcBall(width, height, secondPixel).Normalize();
+
+            var angle = Math.Acos(Vector3.Dot(ndcFirst, ndcSecond)).Clamp(0, Math.PI);
+            var axis = Vector3.Cross(ndcFirst, ndcSecond);
+
+            Debug.WriteLine($"First point on inverted trumpet: {ndcFirst}");
+            Debug.WriteLine($"Second point on inverted trumpet: {ndcSecond}");
+
+            Debug.WriteLine($"Rotation angle: {angle}");
+            Debug.WriteLine($"Camera position: {_position}");
+
+            var newPos = _position.RotateAroundAxis(axis, angle);
+
+            _position = newPos;
+            CalculateView();
+        }
+
 
         public void Rotate(float width, float height, float fov, Vector3 previousMouseCoords, Vector3 newMouseCoords)
         {
-            Rotate(width, height, previousMouseCoords, newMouseCoords);
+            Debug.WriteLine($"Pivot mouse coordinates: ({previousMouseCoords.X}, {previousMouseCoords.Y})");
+            Debug.WriteLine($"New mouse coordinates: ({newMouseCoords.X}, {newMouseCoords.Y})");
+
+            RotateUsingQuaternions(width, height, previousMouseCoords, newMouseCoords);
             UpdateProjectionMatrix(width, height, fov);
         }
 
@@ -96,29 +123,39 @@ namespace SoftwareRenderer3D.Camera
             _viewMatrix = rotationMatrix * translationMatrix;
         }
 
-        private Vector3 ConvertToNdc(float width, float height, Vector3 screenCoordinates)
+        /// <summary>
+        /// Reference:
+        /// https://raw.org/code/trackball-rotation-using-quaternions/
+        /// </summary>
+        private Vector3 ProjectOnArcBall(float width, float height, Vector3 screenCoordinates)
         {
-            var ndcCoordinates = new Vector3((screenCoordinates.X - width / 2.0f) / (width / 2.0f), -(screenCoordinates.Y - height / 2.0f) / (height / 2.0f), 0);
+            var scale = width > height ? height / 2.0f : width / 2.0f;
+            var arcBallRadius = 1.0f;
 
+            var px = (2 * screenCoordinates.X - width + 1) / scale;
+            var py = (2 * screenCoordinates.Y - height + 1) / scale;
 
-            if ((ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y) <= 1)
-                ndcCoordinates.Z = (float)System.Math.Abs(System.Math.Sqrt(1 - ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y));
+            var ndcCoordinates = new Vector3(px, py, 0);
+            var d = ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y;
+
+            if (2 * d <= arcBallRadius * arcBallRadius)
+                ndcCoordinates.Z = (float)Math.Sqrt(arcBallRadius * arcBallRadius - d);
             else
-                ndcCoordinates.Z = (1.0f / 2.0f) / (float)(System.Math.Sqrt(ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y));
+                ndcCoordinates.Z = (float)(arcBallRadius * arcBallRadius / 2.0 / Math.Sqrt(d));
 
             return ndcCoordinates;
         }
 
         private Vector3 GetForwardVector()
         {
-            return (_lookAt - _position);
+            return _lookAt - _position;
         }
 
         private void CalculateProjection()
         {
             _projectionMatrix = new Matrix4x4(
-                (2.0f * _nearPlane) / (_right - _left), 0, (_right + _left) / (_right - _left), 0,
-                0, (2.0f * _nearPlane) / (_top - _bottom), (_top + _bottom) / (_top - _bottom), 0,
+                2.0f * _nearPlane / (_right - _left), 0, (_right + _left) / (_right - _left), 0,
+                0, 2.0f * _nearPlane / (_top - _bottom), (_top + _bottom) / (_top - _bottom), 0,
                 0, 0, (-(_farPlane + _nearPlane)) / (_farPlane - _nearPlane), (-(20.0f * _farPlane * _nearPlane)) / (_farPlane - _nearPlane),
                 0, 0, -1, 0
                 );
@@ -127,9 +164,9 @@ namespace SoftwareRenderer3D.Camera
         private void UpdateProjectionMatrix(float width, float height, float fov)
         {
 
-            var degToRad = System.Math.Acos(-1.0f) / 180.0;
+            var degToRad = Math.Acos(-1.0f) / 180.0;
 
-            var tangent = (float)System.Math.Tan(fov / 2.0f * degToRad);
+            var tangent = (float)Math.Tan(fov / 2.0f * degToRad);
 
             _right = _nearPlane * tangent;
             _top = _right * (height / width);

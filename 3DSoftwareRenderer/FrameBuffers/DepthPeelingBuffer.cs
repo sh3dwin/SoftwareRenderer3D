@@ -9,6 +9,7 @@ namespace SoftwareRenderer3D.FrameBuffers
     public class DepthPeelingBuffer : IFrameBuffer
     {
         private int[] _colorBuffer;
+        private int[] _minColorBuffer;
 
         private float[] _depthBuffer;
         private float[] _minDepthBuffer;
@@ -18,7 +19,9 @@ namespace SoftwareRenderer3D.FrameBuffers
 
         public DepthPeelingBuffer(int width, int height)
         {
-            _colorBuffer = GetEmptyIntBuffer(width, height, int.MaxValue);
+            _colorBuffer = GetEmptyIntBuffer(width, height, Globals.BackgroundColor.ToArgb());
+            _minColorBuffer = GetEmptyIntBuffer(width, height, Globals.BackgroundColor.ToArgb());
+
             _depthBuffer = GetEmptyFloatBuffer(width, height, float.MaxValue);
             _minDepthBuffer = GetEmptyFloatBuffer(width, height, float.MinValue);
 
@@ -51,9 +54,9 @@ namespace SoftwareRenderer3D.FrameBuffers
 
             // Something has been drawn in the previous pass
             if (_minDepthBuffer[index] != float.MinValue)
-                blendedColor = Color.FromArgb(_colorBuffer[index]).Blend(color);
+                blendedColor = Color.FromArgb(_minColorBuffer[index]).Blend(color);
             else
-                blendedColor = color.Blend(Color.Transparent);
+                blendedColor = color.Blend(Globals.BackgroundColor);
 
             _depthBuffer[index] = z;
             _colorBuffer[index] = blendedColor.ToArgb();
@@ -93,6 +96,7 @@ namespace SoftwareRenderer3D.FrameBuffers
                     if (_depthBuffer[index] != float.MaxValue)
                     {
                         _minDepthBuffer[index] = _depthBuffer[index];
+                        _minColorBuffer[index] = _colorBuffer[index];
                         count++;
                     }
                 }
