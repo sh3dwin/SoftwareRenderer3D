@@ -147,7 +147,7 @@ namespace SoftwareRenderer3D.ViewModels
             System.Diagnostics.Debug.WriteLine($"=========================================");
 
             var startTime = DateTime.Now;
-            var bitmap = (true) 
+            var bitmap = (false) 
                 ? TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
                 : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
 

@@ -1,14 +1,19 @@
-﻿using SoftwareRenderer3D.Maths;
-using SoftwareRenderer3D.Utils;
+﻿using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
-using System.Diagnostics;
 using System.Numerics;
-using System.Security.Principal;
-using System.Windows.Input;
 
 namespace SoftwareRenderer3D.Camera
 {
+    /// <summary>
+    /// Class defining an arcball camera with rotation and zoom using quaternions.
+    /// </summary>
+    /// Implemented with help from:
+    /// http://asliceofrendering.com/camera/2019/11/30/ArcballCamera/
+    /// https://raw.org/code/trackball-rotation-using-quaternions/
+    /// https://oguz81.github.io/ArcballCamera/
+    /// http://courses.cms.caltech.edu/cs171/assignments/hw3/hw3-notes/notes-hw3.html
+    /// https://www.khronos.org/opengl/wiki/Object_Mouse_Trackball
     public class ArcBallCamera
     {
         private Vector3 _position;
@@ -21,10 +26,17 @@ namespace SoftwareRenderer3D.Camera
         private float _nearPlane;
         private float _farPlane;
 
+
+        /// <summary>
+        /// Defining the frustum.
+        /// </summary>
         private float _right;
         private float _left;
         private float _top;
         private float _bottom;
+
+        private Maths.Quaternion _rotation = Maths.Quaternion.Identity;
+        private Maths.Quaternion _prevRotation = Maths.Quaternion.Identity;
 
         public ArcBallCamera(Vector3 initialPosition, Vector3 lookAt)
         {
@@ -38,59 +50,31 @@ namespace SoftwareRenderer3D.Camera
             CalculateView();
         }
 
-        public Matrix4x4 ViewMatrix => _viewMatrix;
-        public Matrix4x4 ProjectionMatrix => _projectionMatrix;
-
         /// <summary>
         /// Returns the view matrix of the camera looking at world origin.
         /// </summary>
         /// <returns></returns>
+        public Matrix4x4 ViewMatrix => _viewMatrix;
+        public Matrix4x4 ProjectionMatrix => _projectionMatrix;
+        public Matrix4x4 RotationMatrix => _rotation.RotationMatrix();
+        public Maths.Quaternion Rotation => _rotation;
 
-        /// <summary>
-        /// Updates the camera position by rotating by delta X and delta Y
-        /// http://asliceofrendering.com/camera/2019/11/30/ArcballCamera/
-        /// </summary>
         public void Rotate(float width, float height, Vector3 firstPixel, Vector3 secondPixel)
-        {
-            var ndcSecond = ProjectOnArcBall(width, height, firstPixel);
-            var ndcFirst = ProjectOnArcBall(width, height, secondPixel);
-
-            var angle = -(float)Math.Acos(Math.Min(1, Vector3.Dot(ndcFirst.Normalize(), ndcSecond.Normalize())));
-            var axis = Vector3.Cross(ndcFirst, ndcSecond).Normalize();
-
-            var rotation = MathUtils.RotateAroundAxis(angle, axis);
-
-            _position = _position.TransformHomogeneus(rotation).ToVector3();
-            CalculateView();
-        }
-
-        public void RotateUsingQuaternions(float width, float height, Vector3 firstPixel, Vector3 secondPixel)
         {
             var ndcFirst = ProjectOnArcBall(width, height, firstPixel).Normalize();
             var ndcSecond = ProjectOnArcBall(width, height, secondPixel).Normalize();
 
-            var angle = Math.Acos(Vector3.Dot(ndcFirst, ndcSecond)).Clamp(0, Math.PI);
-            var axis = Vector3.Cross(ndcFirst, ndcSecond);
+            _rotation = Maths.Quaternion.FromBetweenVectors(ndcFirst, ndcSecond);
+            _rotation *= _prevRotation;
+            _prevRotation = _rotation;
 
-            Debug.WriteLine($"First point on inverted trumpet: {ndcFirst}");
-            Debug.WriteLine($"Second point on inverted trumpet: {ndcSecond}");
-
-            Debug.WriteLine($"Rotation angle: {angle}");
-            Debug.WriteLine($"Camera position: {_position}");
-
-            var newPos = _position.RotateAroundAxis(axis, angle);
-
-            _position = newPos;
             CalculateView();
         }
 
 
         public void Rotate(float width, float height, float fov, Vector3 previousMouseCoords, Vector3 newMouseCoords)
         {
-            Debug.WriteLine($"Pivot mouse coordinates: ({previousMouseCoords.X}, {previousMouseCoords.Y})");
-            Debug.WriteLine($"New mouse coordinates: ({newMouseCoords.X}, {newMouseCoords.Y})");
-
-            RotateUsingQuaternions(width, height, previousMouseCoords, newMouseCoords);
+            Rotate(width, height, previousMouseCoords, newMouseCoords);
             UpdateProjectionMatrix(width, height, fov);
         }
 
@@ -99,28 +83,18 @@ namespace SoftwareRenderer3D.Camera
             UpdateProjectionMatrix(width, height, fov);
         }
 
-        public Vector3 Position => _position;
+        public Vector3 EyePosition => Vector4.Transform(_position, _rotation.RotationMatrix()).ToVector3();
 
         private void CalculateView()
         {
-            var forward = -GetForwardVector().Normalize();
-            var upDir = (Vector3.Dot(Vector3.UnitY, forward) > 0.95) ? Vector3.UnitZ : Vector3.UnitY;
-            var left = Vector3.Cross(forward, upDir).Normalize();
-            var up = Vector3.Cross(forward, left).Normalize();
-
-            var rotationMatrix = new Matrix4x4(
-                left.X, left.Y, left.Z, 0,
-                up.X, up.Y, up.Z, 0,
-                forward.X, forward.Y, forward.Z, 0,
+            var rotationMatrix = _rotation.RotationMatrix();
+            var viewMatrix = new Matrix4x4(
+                rotationMatrix.M11, rotationMatrix.M12, rotationMatrix.M13, -_position.X + _lookAt.X,
+                rotationMatrix.M21, rotationMatrix.M22, rotationMatrix.M23, -_position.Y + _lookAt.Y,
+                rotationMatrix.M31, rotationMatrix.M32, rotationMatrix.M33, -_position.Z + _lookAt.Z,
                 0, 0, 0, 1);
 
-            var translationMatrix = new Matrix4x4(
-                1, 0, 0, -_position.X,
-                0, 1, 0, -_position.Y,
-                0, 0, 1, -_position.Z,
-                0, 0, 0, 1);
-
-            _viewMatrix = rotationMatrix * translationMatrix;
+            _viewMatrix = viewMatrix;
         }
 
         /// <summary>
@@ -135,7 +109,7 @@ namespace SoftwareRenderer3D.Camera
             var px = (2 * screenCoordinates.X - width + 1) / scale;
             var py = (2 * screenCoordinates.Y - height + 1) / scale;
 
-            var ndcCoordinates = new Vector3(px, py, 0);
+            var ndcCoordinates = new Vector3(px, -py, 0);
             var d = ndcCoordinates.X * ndcCoordinates.X + ndcCoordinates.Y * ndcCoordinates.Y;
 
             if (2 * d <= arcBallRadius * arcBallRadius)
@@ -146,24 +120,17 @@ namespace SoftwareRenderer3D.Camera
             return ndcCoordinates;
         }
 
-        private Vector3 GetForwardVector()
-        {
-            return _lookAt - _position;
-        }
-
         private void CalculateProjection()
         {
             _projectionMatrix = new Matrix4x4(
                 2.0f * _nearPlane / (_right - _left), 0, (_right + _left) / (_right - _left), 0,
                 0, 2.0f * _nearPlane / (_top - _bottom), (_top + _bottom) / (_top - _bottom), 0,
                 0, 0, (-(_farPlane + _nearPlane)) / (_farPlane - _nearPlane), (-(20.0f * _farPlane * _nearPlane)) / (_farPlane - _nearPlane),
-                0, 0, -1, 0
-                );
+                0, 0, -1, 0);
         }
 
         private void UpdateProjectionMatrix(float width, float height, float fov)
         {
-
             var degToRad = Math.Acos(-1.0f) / 180.0;
 
             var tangent = (float)Math.Tan(fov / 2.0f * degToRad);

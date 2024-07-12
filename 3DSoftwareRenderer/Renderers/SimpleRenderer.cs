@@ -33,7 +33,7 @@ namespace SoftwareRenderer3D.Renderers
 
             startTime = DateTime.Now;
             var facets = Globals.BackfaceCulling
-                ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.Position).Normalize(), x.Normal.Normalize()) <= 0.1)
+                ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.EyePosition).Normalize(), x.Normal.Normalize()) <= 0.1)
                 : mesh.GetFacets();
 
             System.Diagnostics.Debug.WriteLine($"Back-face culling time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
