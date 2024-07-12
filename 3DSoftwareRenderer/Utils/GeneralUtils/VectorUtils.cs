@@ -27,5 +27,10 @@ namespace SoftwareRenderer3D.Utils.GeneralUtils
         {
             return new Vector3d(vector.X, vector.Y, vector.Z);
         }
+
+        public static Vector3 Transform(this Matrix4x4 matrix, Vector3 vector)
+        {
+            return Vector3.Transform(vector, matrix);
+        }
     }
 }

@@ -33,7 +33,7 @@ namespace SoftwareRenderer3D
 
         private void SetRotationStart(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton != MouseButtonState.Pressed)
+            if (e.RightButton != MouseButtonState.Pressed)
             {
                 return;
             }
@@ -48,7 +48,7 @@ namespace SoftwareRenderer3D
             var pos = e.GetPosition(RenderTarget);
             var mousePos = new Vector3((float)pos.X, (float)pos.Y, 0);
             
-            if (e.LeftButton != MouseButtonState.Pressed)
+            if (e.RightButton != MouseButtonState.Pressed)
             {
                 _viewModel.SetMouse(mousePos.X, mousePos.Y);
                 return;
