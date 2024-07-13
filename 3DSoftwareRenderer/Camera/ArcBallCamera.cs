@@ -71,7 +71,6 @@ namespace SoftwareRenderer3D.Camera
             CalculateView();
         }
 
-
         public void Rotate(float width, float height, float fov, Vector3 previousMouseCoords, Vector3 newMouseCoords)
         {
             Rotate(width, height, previousMouseCoords, newMouseCoords);
@@ -120,15 +119,6 @@ namespace SoftwareRenderer3D.Camera
             return ndcCoordinates;
         }
 
-        private void CalculateProjection()
-        {
-            _projectionMatrix = new Matrix4x4(
-                2.0f * _nearPlane / (_right - _left), 0, (_right + _left) / (_right - _left), 0,
-                0, 2.0f * _nearPlane / (_top - _bottom), (_top + _bottom) / (_top - _bottom), 0,
-                0, 0, (-(_farPlane + _nearPlane)) / (_farPlane - _nearPlane), (-(20.0f * _farPlane * _nearPlane)) / (_farPlane - _nearPlane),
-                0, 0, -1, 0);
-        }
-
         private void UpdateProjectionMatrix(float width, float height, float fov)
         {
             var degToRad = Math.Acos(-1.0f) / 180.0;
@@ -142,6 +132,15 @@ namespace SoftwareRenderer3D.Camera
             _bottom = -_top;
 
             CalculateProjection();
+        }
+
+        private void CalculateProjection()
+        {
+            _projectionMatrix = new Matrix4x4(
+                2.0f * _nearPlane / (_right - _left), 0, (_right + _left) / (_right - _left), 0,
+                0, 2.0f * _nearPlane / (_top - _bottom), (_top + _bottom) / (_top - _bottom), 0,
+                0, 0, (-(_farPlane + _nearPlane)) / (_farPlane - _nearPlane), (-(20.0f * _farPlane * _nearPlane)) / (_farPlane - _nearPlane),
+                0, 0, -1, 0);
         }
     }
 }

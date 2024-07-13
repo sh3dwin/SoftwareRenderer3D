@@ -6,7 +6,8 @@ namespace SoftwareRenderer3D.FrameBuffers
     {
         (int Width, int Height) GetSize();
         void Update(int width, int height);
-        void ColorPixel(int x, int y, float depth, Color color);
+        void SetPixelColor(int x, int y, float depth, Color color);
         Bitmap GetFrame();
+
     }
 }

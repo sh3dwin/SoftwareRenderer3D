@@ -20,24 +20,26 @@ namespace SoftwareRenderer3D.Renderers
     {
         public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
+            if (mesh == null)
+                return frameBuffer.GetFrame();
+
             var peelingBuffer = new DepthPeelingBuffer(frameBuffer.GetSize().Width, frameBuffer.GetSize().Height);
 
             TexturedScanLineRasterizer.BindTexture(texture);
 
             var depthPasses = Globals.DepthPeelingPasses;
 
-            var startTime = DateTime.Now;
             var facets = Globals.BackfaceCulling
-                ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.EyePosition).Normalize(), x.Normal.Normalize()) <= 0.1)
+                ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.EyePosition).Normalize(), x.Normal.Normalize()) <= 0.3)
                 : mesh.GetFacets();
-            System.Diagnostics.Debug.WriteLine($"Back-face culling time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
-            for (var i = 0; i < depthPasses; i++) {
+            for (var i = 0; i < depthPasses; i++)
+            {
                 RenderPass(mesh, facets, peelingBuffer, camera);
                 peelingBuffer.DepthPeel();
             }
 
-            RenderPass(mesh, facets,peelingBuffer, camera);
+            RenderPass(mesh, facets, peelingBuffer, camera);
 
             TexturedScanLineRasterizer.UnbindTexture();
 
@@ -58,7 +60,7 @@ namespace SoftwareRenderer3D.Renderers
             var lightSourceAt = new Vector3(0, 100, 100);
 
             startTime = DateTime.Now;
-            
+
 
             Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 12 }, facet =>
             {

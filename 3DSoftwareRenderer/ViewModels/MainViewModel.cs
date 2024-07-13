@@ -1,4 +1,5 @@
-﻿using SoftwareRenderer3D.Camera;
+﻿using Microsoft.Win32;
+using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
@@ -7,9 +8,11 @@ using SoftwareRenderer3D.RenderContexts;
 using SoftwareRenderer3D.Renderers;
 using SoftwareRenderer3D.Utils;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
@@ -26,22 +29,21 @@ namespace SoftwareRenderer3D.ViewModels
 
         private readonly RenderContext _renderContext;
 
+        private Queue<double> _fps = new Queue<double>();
+
         private int _lastX;
         private int _lastY;
 
         private string _openedFileName;
+
+        private bool _visualizationUpToDate = false;
 
         public MainViewModel(float width, float height)
         {
             _width = width;
             _height = height;
 
-            var colladaMesh = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\cowboy.dae";
-            var stlMesh = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\stl\bunny.stl";
-
-            LoadMesh(colladaMesh);
-
-            var camera = new ArcBallCamera(new Vector3(0, 0, 100), Vector3.Zero);
+            var camera = new ArcBallCamera(new Vector3(0, 0, 3), Vector3.Zero);
 
             _renderContext = new RenderContext((int)width, (int)height, 100, camera);
 
@@ -50,9 +52,24 @@ namespace SoftwareRenderer3D.ViewModels
             _renderContext.BindTexture(texture);
         }
 
-        private void LoadMesh(string filePath)
+        public void LoadModel()
         {
-            _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "All files|*.stl;*.dae|STL Files (*.stl)|*.stl| Collada files (*.dae)|*.dae",
+                FilterIndex = 1
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                var filePath = openFileDialog.FileName;
+                var fileName = openFileDialog.SafeFileName;
+
+                OpenedFileName = fileName;
+
+                _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
+            }
+            UpToDate = false;
         }
 
         /// <summary>
@@ -68,6 +85,18 @@ namespace SoftwareRenderer3D.ViewModels
             }
         }
 
+        public bool UpToDate
+        {
+            get => _visualizationUpToDate;
+            set
+            {
+                _visualizationUpToDate = value;
+                RaisePropertyChanged(nameof(UpToDate));
+                if(!value)
+                    Render();
+            }
+        }
+
         public string OpenedFileName
         {
             get => _openedFileName ?? "No model selected";
@@ -78,6 +107,19 @@ namespace SoftwareRenderer3D.ViewModels
             }
         }
 
+        public string FPS
+        {
+            get => $"FPS: {(_fps.Sum() / _fps.Count):#.##}";
+            set
+            {
+                if (_fps.Count == 15)
+                    _fps.Dequeue();
+                _fps.Enqueue(double.Parse(value));
+
+                RaisePropertyChanged(nameof(FPS));
+            }
+        }
+
         public int Opacity
         {
             get => (int)(Globals.Opacity * 10);
@@ -85,7 +127,7 @@ namespace SoftwareRenderer3D.ViewModels
             {
                 Globals.Opacity = value / 10.0;
                 RaisePropertyChanged(nameof(Opacity));
-                Render();
+                UpToDate = false;
             }
         }
 
@@ -122,43 +164,37 @@ namespace SoftwareRenderer3D.ViewModels
             var previousMouseCoords = new Vector3(_lastX, _lastY, 0);
             _renderContext.Rotate(_width, _height, previousMouseCoords, mouseCoords);
             SetMouse(mouseCoords.X, mouseCoords.Y);
-            Render();
+            UpToDate = false;
         }
 
         public void Resize(float width, float height)
         {
             _width = width;
             _height = height;
-
             _renderContext.Resize(width, height);
 
-            Render();
+            UpToDate = false;
         }
 
         public void UpdateZoom(bool reduce)
         {
             _renderContext.Zoom(reduce);
-
-            Render();
+            UpToDate = false;
         }
 
         public void Render()
         {
-            System.Diagnostics.Debug.WriteLine($"=========================================");
-
             var startTime = DateTime.Now;
+            _renderContext.FrameBuffer.Update((int)_width, (int)_height);
             var bitmap = (false) 
                 ? TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
                 : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
 
-            var renderTime = (DateTime.Now - startTime).TotalMilliseconds;
-            System.Diagnostics.Debug.WriteLine($"Rendering time: { renderTime / 1000.0}");
-            System.Diagnostics.Debug.WriteLine($"FPS: {1.0 / (renderTime / 1000.0)}");
-            
-            startTime = DateTime.Now;
             RenderTarget = BitmapToImageSource(bitmap);
-            var drawTime = (DateTime.Now - startTime).TotalMilliseconds;
-            System.Diagnostics.Debug.WriteLine($"Drawing time: {drawTime / 1000.0}");
+
+            var renderTime = (DateTime.Now - startTime).TotalMilliseconds;
+            FPS = (1.0 / (renderTime / 1000.0)).ToString();
+            UpToDate = true;
         }
 
         public void SetMouse(float x, float y)

@@ -22,15 +22,15 @@ namespace SoftwareRenderer3D.Renderers
         private static Dictionary<int, double> _lastRenderedMeshSubsurfaceScatteringMapping;
         public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
+            if (mesh == null)
+                return frameBuffer.GetFrame();
             
-            var startTime = DateTime.Now;
             if (_lastRenderedMesh == null || !_lastRenderedMesh.Equals(mesh))
             {
                 _lastRenderedMesh = mesh;
                 _lastRenderedMeshSubsurfaceScatteringMapping = CalculateSubsurfaceScattering(mesh);
             }
             _lastRenderedMesh.Equals(mesh);
-            System.Diagnostics.Debug.WriteLine($"Subsurface scattering calculation time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
             TexturedScanLineRasterizer.BindTexture(texture);
 
@@ -44,13 +44,10 @@ namespace SoftwareRenderer3D.Renderers
 
             var lightSourceAt = new Vector3(0, 100, 100);
 
-            startTime = DateTime.Now;
             var facets = Globals.BackfaceCulling
                 ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.EyePosition).Normalize(), x.Normal.Normalize()) <= 0.1)
                 : mesh.GetFacets();
-            System.Diagnostics.Debug.WriteLine($"Back-face culling time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
-            startTime = DateTime.Now;
             Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 10 }, facet =>
             {
                 var v0 = mesh.GetVertexPoint(facet.V0);
@@ -100,8 +97,6 @@ namespace SoftwareRenderer3D.Renderers
                     }
                 }
             });
-
-            System.Diagnostics.Debug.WriteLine($"Rasterization time: {(DateTime.Now - startTime).TotalMilliseconds / 1000.0}");
 
             TexturedScanLineRasterizer.UnbindTexture();
 

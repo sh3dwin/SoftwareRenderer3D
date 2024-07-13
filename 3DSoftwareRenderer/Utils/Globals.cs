@@ -2,7 +2,6 @@
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Numerics;
 
 namespace SoftwareRenderer3D.Utils
@@ -37,8 +36,7 @@ namespace SoftwareRenderer3D.Utils
 
         public static Mesh<IVertex> TestMesh = new Mesh<IVertex>(testVertices, testFacets);
 
-        public static bool BackfaceCulling = true;
+        public static bool BackfaceCulling = false;
 
-        public static Color BackgroundColor = Color.FromArgb(128, 128, 128, 128);
     }
 }

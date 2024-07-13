@@ -104,9 +104,21 @@ namespace SoftwareRenderer3D.FileReaders
             var result = new Dictionary<int, IVertex>();
 
             var index = 0;
+
+            var maxLength = 0.0f;
+            foreach(var key in  veIds.Keys)
+            {
+                var length = key.Length();
+                if (length > maxLength)
+                {
+                    maxLength = length;
+                }
+            }
+
             foreach (var veId in veIds)
             {
-                result.Add(index++, new StandardVertex(veId.Key));
+                var position = veId.Key / maxLength;
+                result.Add(index++, new StandardVertex(position));
             }
 
             return result;

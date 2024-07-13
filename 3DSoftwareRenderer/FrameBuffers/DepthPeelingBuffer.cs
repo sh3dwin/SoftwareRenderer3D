@@ -8,22 +8,23 @@ namespace SoftwareRenderer3D.FrameBuffers
 {
     public class DepthPeelingBuffer : IFrameBuffer
     {
+        private const double DepthTestEpsilon = 1e-5;
         private int[] _colorBuffer;
         private int[] _minColorBuffer;
 
-        private float[] _depthBuffer;
-        private float[] _minDepthBuffer;
+        private double[] _depthBuffer;
+        private double[] _minDepthBuffer;
 
         private int _width;
         private int _height;
 
         public DepthPeelingBuffer(int width, int height)
         {
-            _colorBuffer = GetEmptyIntBuffer(width, height, Globals.BackgroundColor.ToArgb());
-            _minColorBuffer = GetEmptyIntBuffer(width, height, Globals.BackgroundColor.ToArgb());
+            _colorBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, Constants.BackgroundColor);
+            _minColorBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, Constants.BackgroundColor);
 
-            _depthBuffer = GetEmptyFloatBuffer(width, height, float.MaxValue);
-            _minDepthBuffer = GetEmptyFloatBuffer(width, height, float.MinValue);
+            _depthBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height, double.MaxValue);
+            _minDepthBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height, double.MinValue);
 
             _width = width;
             _height = height;
@@ -44,10 +45,10 @@ namespace SoftwareRenderer3D.FrameBuffers
             return (_width, _height);
         }
 
-        public void ColorPixel(int x, int y, float z, Color color)
+        public void SetPixelColor(int x, int y, float z, Color color)
         {
             int index = x + y * _width;
-            if (z >= _depthBuffer[index] || z <= _minDepthBuffer[index])
+            if (z + DepthTestEpsilon >= _depthBuffer[index] || z - DepthTestEpsilon <= _minDepthBuffer[index])
                 return;
 
             Color blendedColor;
@@ -56,7 +57,7 @@ namespace SoftwareRenderer3D.FrameBuffers
             if (_minDepthBuffer[index] != float.MinValue)
                 blendedColor = Color.FromArgb(_minColorBuffer[index]).Blend(color);
             else
-                blendedColor = color.Blend(Globals.BackgroundColor);
+                blendedColor = color.Blend(Color.FromArgb(Constants.BackgroundColor));
 
             _depthBuffer[index] = z;
             _colorBuffer[index] = blendedColor.ToArgb();
@@ -77,9 +78,9 @@ namespace SoftwareRenderer3D.FrameBuffers
             _width = width;
             _height = height;
 
-            _colorBuffer = GetEmptyIntBuffer(width, height, int.MaxValue);
-            _depthBuffer = GetEmptyFloatBuffer(width, height, float.MaxValue);
-            _minDepthBuffer = GetEmptyFloatBuffer(width, height, float.MinValue);
+            _colorBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, int.MaxValue);
+            _depthBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height, double.MaxValue);
+            _minDepthBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height, double.MinValue);
         }
 
         public void DepthPeel()
@@ -93,7 +94,7 @@ namespace SoftwareRenderer3D.FrameBuffers
                 {
                     var index = row * _width + col;
 
-                    if (_depthBuffer[index] != float.MaxValue)
+                    if (_depthBuffer[index] != double.MaxValue)
                     {
                         _minDepthBuffer[index] = _depthBuffer[index];
                         _minColorBuffer[index] = _colorBuffer[index];
@@ -102,38 +103,9 @@ namespace SoftwareRenderer3D.FrameBuffers
                 }
             }
 
-            _depthBuffer = GetEmptyFloatBuffer(_width, _height, float.MaxValue);
+            _depthBuffer = ArrayUtils.GetEmptyDoubleBuffer(_width, _height, double.MaxValue);
 
         }
-
-        private float[] GetEmptyFloatBuffer(int width, int height, float value)
-        {
-            var result = new float[height * width];
-            for (var i = 0; i < height; i++)
-            {
-                for (var j = 0; j < width; j++)
-                {
-                    int index = j + i * width;
-                    result[index] = value;
-                }
-            }
-            return result;
-        }
-
-        private int[] GetEmptyIntBuffer(int width, int height, int value)
-        {
-            var result = new int[height * width];
-            for (var i = 0; i < height; i++)
-            {
-                for (var j = 0; j < width; j++)
-                {
-                    int index = j + i * width;
-                    result[index] = value;
-                }
-            }
-            return result;
-        }
-
 
         public static int[] BlendColorBuffers(DepthPeelingBuffer first, DepthPeelingBuffer second)
         {

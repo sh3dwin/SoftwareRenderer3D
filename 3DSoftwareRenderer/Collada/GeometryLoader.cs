@@ -227,12 +227,14 @@ namespace SoftwareRenderer3D.Collada
                 if (colorsArray != null) colorsArray[i] = Colors[currentVertex.ColorIndex];
             }
 
+            var maxLength = verticesArray.Max(x => x.Length());
+
             var facets = new Dictionary<int, Facet>(Vertices.Count);
             var vertices = new Dictionary<int, IVertex>(Vertices.Count);
 
             for (var i = 0; i < Vertices.Count; i++)
             {
-                var vertex = new TexturedVertex(verticesArray[i], texturesArray[i], colorsArray[i]);
+                var vertex = new TexturedVertex(verticesArray[i] / maxLength, texturesArray[i], colorsArray[i]);
                 vertices[vertices.Count] = vertex;
             }
 

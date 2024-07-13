@@ -84,5 +84,10 @@ namespace SoftwareRenderer3D
 
             _viewModel.Resize(width, height);
         }
+
+        private void OpenFile_Click(object sender, EventArgs e)
+        {
+            _viewModel.LoadModel();
+        }
     }
 }

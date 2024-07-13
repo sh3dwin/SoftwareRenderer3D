@@ -99,6 +99,7 @@
     <Compile Include="Renderers\SimpleRenderer.cs" />
     <Compile Include="Renderers\SubsurfaceScatteringRenderer.cs" />
     <Compile Include="Renderers\TransparencyRenderer.cs" />
+    <Compile Include="Utils\ArrayUtils.cs" />
     <Compile Include="Utils\Barycentric.cs" />
     <Compile Include="Utils\ColorUtils.cs" />
     <Compile Include="Utils\Constants.cs" />

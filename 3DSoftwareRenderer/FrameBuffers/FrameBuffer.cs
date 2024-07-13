@@ -16,8 +16,8 @@ namespace SoftwareRenderer3D.FrameBuffers
 
         public FrameBuffer(int width, int height)
         {
-            _colorBuffer = GetEmptyIntBuffer(width, height);
-            _depthBuffer = GetEmptyFloatBuffer(width, height);
+            _colorBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, Constants.BackgroundColor);
+            _depthBuffer = ArrayUtils.GetEmptyFloatBuffer(width, height);
 
             _width = width;
             _height = height;
@@ -38,23 +38,7 @@ namespace SoftwareRenderer3D.FrameBuffers
             return (_width, _height);
         }
 
-        private int[] GetEmptyIntBuffer(int width, int height)
-        {
-            var result = new int[height * width];
-            for (var row = 0; row < height; row++)
-            {
-                for (var col = 0; col < width; col++)
-                {
-                    int index = col + row * width;
-                    result[index] = Globals.BackgroundColor.ToArgb();
-                }
-            }
-            return result;
-        }
-
-        
-
-        public void ColorPixel(int x, int y, float z, Color color)
+        public void SetPixelColor(int x, int y, float z, Color color)
         {
             int index = x + y * _width;
             if (z >= _depthBuffer[index])
@@ -66,15 +50,11 @@ namespace SoftwareRenderer3D.FrameBuffers
 
         public Bitmap GetFrame()
         {
-            var startTime = DateTime.Now;
-            //var colorBuffer = BlendColorBuffers(this, new FrameBuffer(_width, _height));
             var colorBuffer = _colorBuffer;
             var bitsHandle = GCHandle.Alloc(colorBuffer, GCHandleType.Pinned);
             var bitmap = new Bitmap(_width, _height, _width * 4, PixelFormat.Format32bppPArgb, bitsHandle.AddrOfPinnedObject());
 
             bitsHandle.Free();
-
-            System.Diagnostics.Debug.WriteLine($"GetFrame time: {((DateTime.Now - startTime).TotalMilliseconds) / 1000}");
 
             return bitmap;
         }
@@ -84,22 +64,10 @@ namespace SoftwareRenderer3D.FrameBuffers
             _width = width;
             _height = height;
 
-            _colorBuffer = GetEmptyIntBuffer(_width, _height);
-            _depthBuffer = GetEmptyFloatBuffer(_width, _height);
+            _colorBuffer = ArrayUtils.GetEmptyIntBuffer(_width, _height, Constants.BackgroundColor);
+            _depthBuffer = ArrayUtils.GetEmptyFloatBuffer(_width, _height);
         }
-        private float[] GetEmptyFloatBuffer(int width, int height)
-        {
-            var result = new float[height * width];
-            for (var row = 0; row < height; row++)
-            {
-                for (var col = 0; col < width; col++)
-                {
-                    int index = col + row * width;
-                    result[index] = int.MaxValue;
-                }
-            }
-            return result;
-        }
+        
 
 
         public static int[] BlendColorBuffers(FrameBuffer first, FrameBuffer second)

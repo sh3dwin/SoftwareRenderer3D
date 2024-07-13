@@ -154,7 +154,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 var opacity = Globals.Opacity.Clamp(0, 255);
                 color = Color.FromArgb((int)(opacity * 255), color.R, color.G, color.B).Mult(diffuse);
 
-                frameBuffer.ColorPixel(xInt, yInt, point.Z, color);
+                frameBuffer.SetPixelColor(xInt, yInt, point.Z, color);
             }
         }
 
