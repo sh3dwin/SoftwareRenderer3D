@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_3DSoftwareRenderer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="890" Width="800">
+        Title="MainWindow" Height="930" Width="800">
     
     <Grid>
         <Grid.RowDefinitions>
@@ -21,10 +21,8 @@
                 <MenuItem Header="Open" Click="OpenFile_Click"/>
             </MenuItem>
         </Menu>
-        <Grid Grid.Row="1">
-            <Image x:Name="RenderTarget" Width="Auto"  Height="Auto" Source="{Binding RenderTarget}"/>
-        </Grid>
-        <Label Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="14" Content="{Binding FPS}"/>
+        <Image Grid.Row="1" Stretch="Fill" x:Name="RenderTarget" Source="{Binding RenderTarget}"/>
+        <Label Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="14" Content="{Binding FPS}"/>
         <Label Grid.Row="2" x:Name="OpenedFile" Content="{Binding OpenedFileName}"/>
         <Slider Grid.Row="2" x:Name="OpacitySlider" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="10, 10, 10, 10" MaxHeight="50" MinHeight="50" MaxWidth="400" MinWidth="400" Minimum="1" Maximum="10" Value="{Binding Opacity}"/>
     </Grid>
