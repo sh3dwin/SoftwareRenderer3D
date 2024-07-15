@@ -68,6 +68,14 @@ namespace SoftwareRenderer3D.Camera
             
             _rotation *= _prevRotation;
             _prevRotation = _rotation;
+            if (_rotation.Real.Equals(double.NaN))
+            {
+
+            }
+            if (_prevRotation.Real.Equals(double.NaN))
+            {
+
+            }
 
             CalculateView();
         }
