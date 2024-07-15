@@ -24,7 +24,7 @@ namespace SoftwareRenderer3D.Utils
                 {8,  new StandardVertex(new Vector3(-0.0f, -2.0f, 10.0f)) },
             };
 
-        public static uint DepthPeelingPasses = 2;
+        public static uint DepthPeelingPasses = 4;
         public static double Opacity = 0.5;
 
         private static readonly Dictionary<int, Facet> testFacets = new Dictionary<int, Facet>

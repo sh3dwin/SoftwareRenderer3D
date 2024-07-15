@@ -12,6 +12,9 @@ namespace SoftwareRenderer3D.FrameBuffers
         private int[] _colorBuffer;
         private int[] _minColorBuffer;
 
+        private int[] _emptyIntBuffer;
+        private double[] _emptyDoubleBuffer;
+
         private double[] _depthBuffer;
         private double[] _minDepthBuffer;
 
@@ -20,11 +23,18 @@ namespace SoftwareRenderer3D.FrameBuffers
 
         public DepthPeelingBuffer(int width, int height)
         {
-            _colorBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, Constants.BackgroundColor);
-            _minColorBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, Constants.BackgroundColor);
+            _emptyIntBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, Constants.BackgroundColor);
+            _emptyDoubleBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height);
 
-            _depthBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height, double.MaxValue);
-            _minDepthBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height, double.MinValue);
+            _colorBuffer = new int[width * height];
+            _minColorBuffer = new int[width * height];
+            _depthBuffer = new double[width * height];
+            _minDepthBuffer = new double[width * height];
+
+            _emptyIntBuffer.CopyTo(_colorBuffer, 0);
+            _emptyIntBuffer.CopyTo(_minColorBuffer, 0);
+            _emptyDoubleBuffer.CopyTo(_depthBuffer, 0);
+            _emptyDoubleBuffer.CopyTo(_minDepthBuffer, 0);
 
             _width = width;
             _height = height;
@@ -54,7 +64,7 @@ namespace SoftwareRenderer3D.FrameBuffers
             Color blendedColor;
 
             // Something has been drawn in the previous pass
-            if (_minDepthBuffer[index] != float.MinValue)
+            if (_minDepthBuffer[index] != _emptyDoubleBuffer[index])
                 blendedColor = Color.FromArgb(_minColorBuffer[index]).Blend(color);
             else
                 blendedColor = color.Blend(Color.FromArgb(Constants.BackgroundColor));
@@ -75,12 +85,23 @@ namespace SoftwareRenderer3D.FrameBuffers
 
         public void Update(int width, int height)
         {
-            _width = width;
-            _height = height;
+            if (width != _width || height != _height)
+            {
+                _width = width;
+                _height = height;
 
-            _colorBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, int.MaxValue);
-            _depthBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height, double.MaxValue);
-            _minDepthBuffer = ArrayUtils.GetEmptyDoubleBuffer(width, height, double.MinValue);
+                _emptyIntBuffer = ArrayUtils.GetEmptyIntBuffer(_width, _height, Constants.BackgroundColor);
+                _emptyDoubleBuffer = ArrayUtils.GetEmptyDoubleBuffer(_width, _height);
+
+                _colorBuffer = new int[width * height];
+                _minColorBuffer = new int[width * height];
+                _depthBuffer = new double[width * height];
+                _minDepthBuffer = new double[width * height];
+            }
+            _emptyIntBuffer.CopyTo(_colorBuffer, 0);
+            _emptyIntBuffer.CopyTo(_minColorBuffer, 0);
+            _emptyDoubleBuffer.CopyTo(_depthBuffer, 0);
+            _emptyDoubleBuffer.CopyTo(_minDepthBuffer, 0);
         }
 
         public void DepthPeel()
@@ -103,7 +124,7 @@ namespace SoftwareRenderer3D.FrameBuffers
                 }
             }
 
-            _depthBuffer = ArrayUtils.GetEmptyDoubleBuffer(_width, _height, double.MaxValue);
+            _emptyDoubleBuffer.CopyTo(_depthBuffer, 0);
 
         }
 

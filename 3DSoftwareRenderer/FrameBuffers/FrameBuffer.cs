@@ -11,13 +11,19 @@ namespace SoftwareRenderer3D.FrameBuffers
         private int[] _colorBuffer;
         private float[] _depthBuffer;
 
+        private int[] _emptyIntBuffer;
+        private float[] _emptyFloatBuffer;
+
         private int _width;
         private int _height;
 
         public FrameBuffer(int width, int height)
         {
-            _colorBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, Constants.BackgroundColor);
-            _depthBuffer = ArrayUtils.GetEmptyFloatBuffer(width, height);
+            _emptyIntBuffer = ArrayUtils.GetEmptyIntBuffer(width, height, Constants.BackgroundColor);
+            _emptyFloatBuffer = ArrayUtils.GetEmptyFloatBuffer(width, height);
+
+            _colorBuffer = _emptyIntBuffer;
+            _depthBuffer = _emptyFloatBuffer;
 
             _width = width;
             _height = height;
@@ -61,11 +67,19 @@ namespace SoftwareRenderer3D.FrameBuffers
 
         public void Update(int width, int height)
         {
-            _width = width;
-            _height = height;
+            if (width != _width || height != _height)
+            {
+                _width = width;
+                _height = height;
 
-            _colorBuffer = ArrayUtils.GetEmptyIntBuffer(_width, _height, Constants.BackgroundColor);
-            _depthBuffer = ArrayUtils.GetEmptyFloatBuffer(_width, _height);
+                _emptyIntBuffer = ArrayUtils.GetEmptyIntBuffer(_width, _height, Constants.BackgroundColor);
+                _emptyFloatBuffer = ArrayUtils.GetEmptyFloatBuffer(_width, _height);
+
+                _colorBuffer = new int[width * height];
+                _depthBuffer = new float[width * height];
+            }
+            _emptyIntBuffer.CopyTo(_colorBuffer, 0);
+            _emptyFloatBuffer.CopyTo(_depthBuffer, 0);
         }
         
 
