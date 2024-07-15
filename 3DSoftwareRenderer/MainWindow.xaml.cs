@@ -20,11 +20,10 @@ namespace SoftwareRenderer3D
 
             _viewModel = new MainViewModel(800, 800);
 
-            OpacitySlider.Value = _viewModel.Opacity;
+            //OpacitySlider.Value = _viewModel.Opacity;
 
             DataContext = _viewModel;
 
-            //RenderTarget.MouseDown += SetRotationStart;
             RenderTarget.MouseMove += Rotate;
             SizeChanged += Resize;
             RenderTarget.MouseWheel += Zoom;

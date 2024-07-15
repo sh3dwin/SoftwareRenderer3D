@@ -71,7 +71,7 @@ namespace SoftwareRenderer3D.Maths
 
         public static Quaternion FromBetweenVectors(Vector3 a, Vector3 b)
         {
-            var angle = Math.Acos(Vector3.Dot(a.Normalize(), b.Normalize())).Clamp(0, Math.PI);
+            var angle = Math.Acos(Vector3.Dot(a.Normalize(), b.Normalize()).Clamp(0, 1)).Clamp(0, Math.PI);
             var axis = Vector3.Cross(a.Normalize(), b.Normalize());
 
             return new Quaternion(Math.Cos(angle / 2.0), (float)Math.Sin(angle / 2.0) * axis.Normalize());

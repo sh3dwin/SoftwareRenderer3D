@@ -65,6 +65,7 @@ namespace SoftwareRenderer3D.Camera
             var ndcSecond = ProjectOnArcBall(width, height, secondPixel).Normalize();
 
             _rotation = Maths.Quaternion.FromBetweenVectors(ndcFirst, ndcSecond);
+            
             _rotation *= _prevRotation;
             _prevRotation = _rotation;
 
