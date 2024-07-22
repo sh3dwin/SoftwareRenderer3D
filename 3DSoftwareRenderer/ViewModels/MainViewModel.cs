@@ -3,6 +3,7 @@ using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+using SoftwareRenderer3D.Enums;
 using SoftwareRenderer3D.Factories;
 using SoftwareRenderer3D.RenderContexts;
 using SoftwareRenderer3D.Renderers;
@@ -38,6 +39,11 @@ namespace SoftwareRenderer3D.ViewModels
 
         private bool _visualizationUpToDate = false;
 
+        private bool _simpleRendering = true;
+        private bool _transparentRendering = true;
+        private bool _subsurfaceScatteringRendering = true;
+
+        private RenderType _renderType;
         public MainViewModel(float width, float height)
         {
             _width = width;
@@ -50,6 +56,156 @@ namespace SoftwareRenderer3D.ViewModels
             var texturePath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\textures\cowboy.bmp";
             var texture = new Texture(new Bitmap(texturePath), true);
             _renderContext.BindTexture(texture);
+
+            _renderType = RenderType.None;
+        }
+
+        /// <summary>
+        /// The image to be rendered on screen
+        /// </summary>
+        public BitmapImage RenderTarget
+        {
+            get => _renderTarget;
+
+            set
+            {
+                _renderTarget = value;
+                RaisePropertyChanged(nameof(RenderTarget));
+            }
+        }
+
+        /// <summary>
+        /// Stores the information whether the visualization is UpToDate.
+        /// If set to false, will render a new frame.
+        /// </summary>
+        public bool UpToDate
+        {
+            get => _visualizationUpToDate;
+            set
+            {
+                _visualizationUpToDate = value;
+                RaisePropertyChanged(nameof(UpToDate));
+                if (!value)
+                    Render();
+            }
+        }
+
+        /// <summary>
+        /// The name of the 3d model file that is open.
+        /// </summary>
+        public string OpenedFileName
+        {
+            get => _openedFileName ?? "No model selected";
+            set
+            {
+                _openedFileName = value;
+                RaisePropertyChanged(nameof(OpenedFileName));
+            }
+        }
+
+        /// <summary>
+        /// Frames per second.
+        /// </summary>
+        public string FPS
+        {
+            get => $"FPS: {(_fps.Sum() / _fps.Count):#.##}";
+            set
+            {
+                if (_fps.Count == 15)
+                    _fps.Dequeue();
+                _fps.Enqueue(double.Parse(value));
+
+                RaisePropertyChanged(nameof(FPS));
+            }
+        }
+
+        /// <summary>
+        /// Opacity of the model.
+        /// Used to control the opacity when rendering transparency.
+        /// </summary>
+        public int Opacity
+        {
+            get => (int)(Globals.Opacity * 10);
+            set
+            {
+                Globals.Opacity = value / 10.0;
+                RaisePropertyChanged(nameof(Opacity));
+                UpToDate = false;
+            }
+        }
+
+        /// <summary>
+        /// Whether the application is in simple rendering mode.
+        /// </summary>
+        public bool SimpleRendering
+        {
+            get => _simpleRendering;
+
+            set
+            {
+                _simpleRendering = value;
+                if (value)
+                {
+                    _renderType = RenderType.Simple;
+                    Opacity = 10;
+                    SubsurfaceScatteringRendering = false;
+                    TransparentRendering = false;
+                }
+                RaisePropertyChanged(nameof(SimpleRendering));
+                UpToDate = false;
+            }
+        }
+
+        /// <summary>
+        /// Whether the application is in subsurface scattering rendering mode.
+        /// </summary>
+        public bool SubsurfaceScatteringRendering
+        {
+            get => _subsurfaceScatteringRendering;
+
+            set
+            {
+                _subsurfaceScatteringRendering = value;
+
+                if (value)
+                {
+                    _renderType = RenderType.SubsurfaceScattering;
+                    Opacity = 10;
+                    SimpleRendering = false;
+                    TransparentRendering = false;
+                }
+                RaisePropertyChanged(nameof(SubsurfaceScatteringRendering));
+                UpToDate = false;
+            }
+        }
+
+        /// <summary>
+        /// Whether the application is in transparent rendering mode.
+        /// </summary>
+        public bool TransparentRendering
+        {
+            get => _transparentRendering;
+
+            set
+            {
+                _transparentRendering = value;
+
+                if (value)
+                {
+                    _renderType = RenderType.Transparent;
+                    SubsurfaceScatteringRendering = false;
+                    SimpleRendering = false;
+                }
+                RaisePropertyChanged(nameof(TransparentRendering));
+                UpToDate = false;
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void RaisePropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public void LoadModel()
@@ -70,93 +226,6 @@ namespace SoftwareRenderer3D.ViewModels
                 _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
             }
             UpToDate = false;
-        }
-
-        /// <summary>
-        /// The image to be rendered on screen
-        /// </summary>
-        public BitmapImage RenderTarget
-        {
-            get => _renderTarget;
-
-            set  {
-                _renderTarget = value;
-                RaisePropertyChanged(nameof(RenderTarget));
-            }
-        }
-
-        public bool UpToDate
-        {
-            get => _visualizationUpToDate;
-            set
-            {
-                _visualizationUpToDate = value;
-                RaisePropertyChanged(nameof(UpToDate));
-                if(!value)
-                    Render();
-            }
-        }
-
-        public string OpenedFileName
-        {
-            get => _openedFileName ?? "No model selected";
-            set
-            {
-                _openedFileName = value;
-                RaisePropertyChanged(nameof(OpenedFileName));
-            }
-        }
-
-        public string FPS
-        {
-            get => $"FPS: {(_fps.Sum() / _fps.Count):#.##}";
-            set
-            {
-                if (_fps.Count == 15)
-                    _fps.Dequeue();
-                _fps.Enqueue(double.Parse(value));
-
-                RaisePropertyChanged(nameof(FPS));
-            }
-        }
-
-        public int Opacity
-        {
-            get => (int)(Globals.Opacity * 10);
-            set
-            {
-                Globals.Opacity = value / 10.0;
-                RaisePropertyChanged(nameof(Opacity));
-                UpToDate = false;
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private BitmapImage BitmapToImageSource(Bitmap bitmap)
-        {
-            var tempBitmap = new Bitmap(bitmap);
-            using (MemoryStream memory = new MemoryStream())
-            {
-                try
-                {
-                    tempBitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
-                }
-                catch { }
-                memory.Position = 0;
-                BitmapImage bitmapImage = new BitmapImage();
-                bitmapImage.BeginInit();
-                bitmapImage.StreamSource = memory;
-                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                bitmapImage.EndInit();
-
-                return bitmapImage;
-            }
         }
 
         public void Rotate(Vector3 mouseCoords)
@@ -181,14 +250,43 @@ namespace SoftwareRenderer3D.ViewModels
             _renderContext.Zoom(reduce);
             UpToDate = false;
         }
+        public void SetMouse(float x, float y)
+        {
+            _lastX = (int)x;
+            _lastY = (int)y;
+        }
 
-        public void Render()
+        private void Render()
         {
             var startTime = DateTime.Now;
             _renderContext.FrameBuffer.Update((int)_width, (int)_height);
-            var bitmap = (false) 
-                ? TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture)
-                : SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+
+
+            Bitmap bitmap;
+
+            switch (_renderType)
+            {
+                case RenderType.Simple:
+                    {
+                        bitmap = SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+                        break;
+                    }
+                case RenderType.Transparent:
+                    {
+                        bitmap = TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+                        break;
+                    }
+                case RenderType.SubsurfaceScattering:
+                    {
+                        bitmap = SubsurfaceScatteringRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+                        break;
+                    }
+                default:
+                    {
+                        bitmap = _renderContext.FrameBuffer.GetFrame();
+                        break;
+                    }
+            }
 
             RenderTarget = BitmapToImageSource(bitmap);
 
@@ -197,10 +295,26 @@ namespace SoftwareRenderer3D.ViewModels
             UpToDate = true;
         }
 
-        public void SetMouse(float x, float y)
+        private BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
-            _lastX = (int) x;
-            _lastY = (int) y;
+            var tempBitmap = new Bitmap(bitmap);
+            using (MemoryStream memory = new MemoryStream())
+            {
+                try
+                {
+                    tempBitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                }
+                catch { }
+                memory.Position = 0;
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memory;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+
+                return bitmapImage;
+            }
         }
+
     }
 }
