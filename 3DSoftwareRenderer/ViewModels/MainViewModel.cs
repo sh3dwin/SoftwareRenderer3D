@@ -16,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace SoftwareRenderer3D.ViewModels
@@ -36,6 +37,7 @@ namespace SoftwareRenderer3D.ViewModels
         private int _lastY;
 
         private string _openedFileName;
+        private bool _fileLoaded;
 
         private bool _visualizationUpToDate = false;
 
@@ -58,6 +60,11 @@ namespace SoftwareRenderer3D.ViewModels
             _renderContext.BindTexture(texture);
 
             _renderType = RenderType.None;
+            SimpleRendering = false;
+            SubsurfaceScatteringRendering = false;
+            TransparentRendering = false;
+
+            IsFileLoaded = false;
         }
 
         /// <summary>
@@ -104,6 +111,19 @@ namespace SoftwareRenderer3D.ViewModels
         }
 
         /// <summary>
+        /// Is there a loaded file containing a 3d model.
+        /// </summary>
+        public bool IsFileLoaded
+        {
+            get => _fileLoaded;
+            set
+            {
+                _fileLoaded = value;
+                RaisePropertyChanged(nameof(IsFileLoaded));
+            }
+        }
+
+        /// <summary>
         /// Frames per second.
         /// </summary>
         public string FPS
@@ -125,10 +145,10 @@ namespace SoftwareRenderer3D.ViewModels
         /// </summary>
         public int Opacity
         {
-            get => (int)(Globals.Opacity * 10);
+            get => (int)(Globals.NormalizedOpacity * 10);
             set
             {
-                Globals.Opacity = value / 10.0;
+                Globals.NormalizedOpacity = value / 10.0;
                 RaisePropertyChanged(nameof(Opacity));
                 UpToDate = false;
             }
@@ -147,7 +167,7 @@ namespace SoftwareRenderer3D.ViewModels
                 if (value)
                 {
                     _renderType = RenderType.Simple;
-                    Opacity = 10;
+                    Opacity = Constants.MaximumOpacity;
                     SubsurfaceScatteringRendering = false;
                     TransparentRendering = false;
                 }
@@ -170,7 +190,7 @@ namespace SoftwareRenderer3D.ViewModels
                 if (value)
                 {
                     _renderType = RenderType.SubsurfaceScattering;
-                    Opacity = 10;
+                    Opacity = Constants.MaximumOpacity;
                     SimpleRendering = false;
                     TransparentRendering = false;
                 }
@@ -224,7 +244,11 @@ namespace SoftwareRenderer3D.ViewModels
                 OpenedFileName = fileName;
 
                 _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
+
+                if (_mesh != null)
+                    IsFileLoaded = true;
             }
+            SimpleRendering = true;
             UpToDate = false;
         }
 

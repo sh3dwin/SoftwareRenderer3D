@@ -124,7 +124,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 var xInt = (int)x;
                 var yInt = (int)point.Y;
 
-                var opacity = Globals.Opacity.Clamp(0, 255);
+                var opacity = Globals.NormalizedOpacity.Clamp(0, 255);
                 var color = Color.FromArgb((int)(opacity * 255), (int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse));
 
                 frameBuffer.SetPixelColor(xInt, yInt, point.Z, color);

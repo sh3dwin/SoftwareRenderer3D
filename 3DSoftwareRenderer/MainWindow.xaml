@@ -27,7 +27,7 @@
         
         <Image Grid.Row="1" Stretch="Fill" x:Name="RenderTarget" Source="{Binding RenderTarget}"/>
         <Label Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="14" Content="{Binding FPS}"/>
-        <StackPanel Grid.Row="1" Width="200" HorizontalAlignment="Left">
+        <StackPanel Grid.Row="1" Width="200" HorizontalAlignment="Left" IsEnabled="{Binding IsFileLoaded}">
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Simple" IsChecked="{Binding SimpleRendering}" />
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Transparency"  IsChecked="{Binding TransparentRendering}"/>
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Subsurface-scattering" IsChecked="{Binding SubsurfaceScatteringRendering}"/>

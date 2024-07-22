@@ -25,7 +25,7 @@ namespace SoftwareRenderer3D.Utils
             };
 
         public static uint DepthPeelingPasses = 2;
-        public static double Opacity = 0.5;
+        public static double NormalizedOpacity = 0.5;
 
         private static readonly Dictionary<int, Facet> testFacets = new Dictionary<int, Facet>
             {

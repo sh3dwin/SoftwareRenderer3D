@@ -6,5 +6,7 @@
         public const float FarFrustumPlaneDistance = 10f;
 
         public const int BackgroundColor = -2139062144;
+
+        public const int MaximumOpacity = 10;
     }
 }
