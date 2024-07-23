@@ -57,20 +57,33 @@ namespace SoftwareRenderer3D.Renderers
 
             Matrix4x4.Invert(mesh.ModelMatrix, out var modelMatrix);
 
-            var lightSourceAt = new Vector3(0, 100, 100);
-
-            startTime = DateTime.Now;
-
-
-            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 12 }, facet =>
+            var lightSources = new List<Vector3>()
             {
+                new Vector3(0, 100, 100),
+            };
+
+            var facetIds = Globals.BackfaceCulling
+                ? mesh.FacetIds.Where(faId => Vector3.Dot((mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize(), mesh.GetFacetNormal(faId)) <= 0.1)
+                : mesh.FacetIds;
+
+            Parallel.ForEach(facetIds, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, facetId =>
+            {
+                var facet = mesh.GetFacet(facetId);
+
                 var v0 = mesh.GetVertexPoint(facet.V0);
                 var v1 = mesh.GetVertexPoint(facet.V1);
                 var v2 = mesh.GetVertexPoint(facet.V2);
 
                 var normal = facet.Normal;
 
-                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()), 0.3f, 1f);
+                var lightContribution = 0.0f;
+                foreach (var lightSource in lightSources)
+                {
+                    var lightDir = (lightSource - mesh.GetFacetNormal(facetId)).Normalize();
+                    lightContribution += MathUtils.Clamp(Vector3.Dot(lightDir, normal.Normalize()).Clamp(), 0, 1);
+                }
+
+                lightContribution = lightContribution.Clamp(0, 1);
 
                 var modelV0 = v0.TransformHomogeneus(modelMatrix);
                 modelV0 /= modelV0.W;
@@ -97,12 +110,13 @@ namespace SoftwareRenderer3D.Renderers
                 var screenV1 = new Vector3((ndcV1.X + 1) * width / 2.0f, (-ndcV1.Y + 1) * height / 2.0f, ndcV1.Z);
                 var screenV2 = new Vector3((ndcV2.X + 1) * width / 2.0f, (-ndcV2.Y + 1) * height / 2.0f, ndcV2.Z);
 
-                if (RendererUtils.IsTriangleWithinScreen(width, height, screenV0, screenV1, screenV2))
+                if (RendererUtils.IsTriangleInFrustum(width, height, screenV0, screenV1, screenV2))
                 {
                     if (mesh.GetVertex(facet.V0).GetType().IsAssignableFrom(typeof(TexturedVertex)))
                     {
                         TexturedScanLineRasterizer.ScanLineTriangle(frameBuffer, screenV0, screenV1, screenV2,
-                            mesh.GetVertex(facet.V0) as TexturedVertex, mesh.GetVertex(facet.V1) as TexturedVertex, mesh.GetVertex(facet.V2) as TexturedVertex, lightContribution);
+                            mesh.GetVertex(facet.V0) as TexturedVertex, mesh.GetVertex(facet.V1) as TexturedVertex, mesh.GetVertex(facet.V2) as TexturedVertex,
+                            lightContribution);
                     }
                     else
                     {

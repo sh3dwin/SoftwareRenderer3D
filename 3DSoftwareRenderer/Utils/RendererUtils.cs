@@ -9,7 +9,7 @@ namespace SoftwareRenderer3D.Utils
             return x >= lower && x < upper;
         }
 
-        public static bool IsTriangleWithinScreen(int width, int height, Vector3 v0, Vector3 v1, Vector3 v2)
+        public static bool IsTriangleInFrustum(int width, int height, Vector3 v0, Vector3 v1, Vector3 v2)
         {
             return InInclusiveLowerExclusiveUpper(v0.X, 0, width) && InInclusiveLowerExclusiveUpper(v0.Y, 0, height) ||
                 InInclusiveLowerExclusiveUpper(v1.X, 0, width) && InInclusiveLowerExclusiveUpper(v1.Y, 0, height) ||

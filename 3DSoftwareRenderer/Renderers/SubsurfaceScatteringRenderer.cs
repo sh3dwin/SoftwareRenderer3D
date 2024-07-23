@@ -24,7 +24,7 @@ namespace SoftwareRenderer3D.Renderers
         {
             if (mesh == null)
                 return frameBuffer.GetFrame();
-            
+
             if (_lastRenderedMesh == null || !_lastRenderedMesh.Equals(mesh))
             {
                 _lastRenderedMesh = mesh;
@@ -42,22 +42,34 @@ namespace SoftwareRenderer3D.Renderers
 
             Matrix4x4.Invert(mesh.ModelMatrix, out var modelMatrix);
 
-            var lightSourceAt = new Vector3(0, 100, 100);
-
-            var facets = Globals.BackfaceCulling
-                ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.EyePosition).Normalize(), x.Normal.Normalize()) <= 0.1)
-                : mesh.GetFacets();
-
-            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = 10 }, facet =>
+            var lightSources = new List<Vector3>()
             {
+                new Vector3(0, 100, 100),
+            };
+
+            var facetIds = Globals.BackfaceCulling
+                ? mesh.FacetIds.Where(faId => Vector3.Dot((mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize(), mesh.GetFacetNormal(faId)) <= 0.1)
+                : mesh.FacetIds;
+
+            Parallel.ForEach(facetIds, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, facetId =>
+            {
+                var facet = mesh.GetFacet(facetId);
+
                 var v0 = mesh.GetVertexPoint(facet.V0);
                 var v1 = mesh.GetVertexPoint(facet.V1);
                 var v2 = mesh.GetVertexPoint(facet.V2);
 
                 var normal = facet.Normal;
 
-                var lightContribution = MathUtils.Clamp(-Vector3.Dot(lightSourceAt.Normalize(), normal.Normalize()) + (float)_lastRenderedMeshSubsurfaceScatteringMapping[facet.V0], 0, 1);
-                lightContribution = (float)_lastRenderedMeshSubsurfaceScatteringMapping[facet.V0].Clamp();
+                var lightContribution = 0.0f;
+                foreach (var lightSource in lightSources)
+                {
+                    var lightDir = (lightSource - mesh.GetFacetNormal(facetId)).Normalize();
+                    lightContribution += MathUtils.Clamp(Vector3.Dot(lightDir, normal.Normalize()).Clamp() + (float)_lastRenderedMeshSubsurfaceScatteringMapping[facet.V0], 0, 1);
+                    //lightContribution = (float)_lastRenderedMeshSubsurfaceScatteringMapping[facet.V0].Clamp();
+                }
+
+                lightContribution = lightContribution.Clamp(0, 1);
 
                 var modelV0 = v0.TransformHomogeneus(modelMatrix);
                 modelV0 /= modelV0.W;
@@ -84,12 +96,13 @@ namespace SoftwareRenderer3D.Renderers
                 var screenV1 = new Vector3((ndcV1.X + 1) * width / 2.0f, (-ndcV1.Y + 1) * height / 2.0f, ndcV1.Z);
                 var screenV2 = new Vector3((ndcV2.X + 1) * width / 2.0f, (-ndcV2.Y + 1) * height / 2.0f, ndcV2.Z);
 
-                if (RendererUtils.IsTriangleWithinScreen(width, height, screenV0, screenV1, screenV2))
+                if (RendererUtils.IsTriangleInFrustum(width, height, screenV0, screenV1, screenV2))
                 {
                     if (mesh.GetVertex(facet.V0).GetType().IsAssignableFrom(typeof(TexturedVertex)))
                     {
                         TexturedScanLineRasterizer.ScanLineTriangle(frameBuffer, screenV0, screenV1, screenV2,
-                            mesh.GetVertex(facet.V0) as TexturedVertex, mesh.GetVertex(facet.V1) as TexturedVertex, mesh.GetVertex(facet.V2) as TexturedVertex, lightContribution);
+                            mesh.GetVertex(facet.V0) as TexturedVertex, mesh.GetVertex(facet.V1) as TexturedVertex, mesh.GetVertex(facet.V2) as TexturedVertex,
+                            lightContribution);
                     }
                     else
                     {
@@ -107,14 +120,14 @@ namespace SoftwareRenderer3D.Renderers
         {
             var subsurfaceDistanceTraveled = new Dictionary<int, double>();
 
-            var vertices = mesh.Vertices;
+            var vertexIds = mesh.VertexIds;
             var facets = mesh.Facets;
 
-            var g3Vertices = vertices.Select(vertex => new Vector3f(vertex.GetVertexPoint().ToVector3f())).ToList();
+            var g3Vertices = vertexIds.Select(veId => new Vector3f(mesh.GetVertexPoint(veId).ToVector3f())).ToList();
 
 
             DMesh3 g3Mesh = new DMesh3(MeshComponents.VertexNormals);
-            for (int i = 0; i < vertices.Count(); ++i)
+            for (int i = 0; i < vertexIds.Count(); ++i)
                 g3Mesh.AppendVertex(new NewVertexInfo(g3Vertices[i]));
             foreach (var facet in facets)
                 g3Mesh.AppendTriangle(new Index3i(facet.V0, facet.V1, facet.V2));
@@ -122,43 +135,31 @@ namespace SoftwareRenderer3D.Renderers
             DMeshAABBTree3 spatial = new DMeshAABBTree3(g3Mesh);
             spatial.Build();
 
-            Parallel.ForEach(facets, new ParallelOptions {  MaxDegreeOfParallelism = 1} ,facet =>
+            Parallel.ForEach(vertexIds, new ParallelOptions { MaxDegreeOfParallelism = 10 }, vertexId =>
             {
-                var vertexIds = new int[3] { facet.V0, facet.V1, facet.V2 };
+                var containsKey = false;
 
-                foreach (var vertexId in vertexIds)
+                lock (subsurfaceDistanceTraveled)
                 {
-                    if(vertexId == 1074)
+                    if (!subsurfaceDistanceTraveled.ContainsKey(vertexId))
+                        subsurfaceDistanceTraveled.Add(vertexId, -1);
+                }
+
+                if (!containsKey)
+                {
+                    var subsurfaceDistance = CalculateVertexSubsurfaceDistanceTraveled(mesh, subsurfaceDistanceTraveled, g3Mesh, spatial, vertexId);
+                    lock (subsurfaceDistanceTraveled)
                     {
-
-                    }
-                    var containsKey = false;
-
-                    lock (subsurfaceDistanceTraveled) 
-                    {
-                         if (!subsurfaceDistanceTraveled.ContainsKey(vertexId))
-                            subsurfaceDistanceTraveled.Add(vertexId, -1);
-                    }
-
-                    if (!containsKey)
-                    {
-                        var subsurfaceDistance = CalculateVertexSubsurfaceDistanceTraveled(mesh, subsurfaceDistanceTraveled, g3Mesh, spatial, vertexId);
-                        if(subsurfaceDistance < 0)
-                        {
-
-                        }
-                        lock (subsurfaceDistanceTraveled)
-                        {
-                            subsurfaceDistanceTraveled[vertexId] = subsurfaceDistance;
-                        }
+                        subsurfaceDistanceTraveled[vertexId] = subsurfaceDistance;
                     }
                 }
+
             });
 
             var maxDistanceTraveled = subsurfaceDistanceTraveled.Values.Max();
             var subsurfaceScatteringAmounts = new Dictionary<int, double>(subsurfaceDistanceTraveled.Count);
 
-            foreach(var keyValue in subsurfaceDistanceTraveled)
+            foreach (var keyValue in subsurfaceDistanceTraveled)
             {
                 var normalizedDistance = keyValue.Value / maxDistanceTraveled;
                 subsurfaceScatteringAmounts[keyValue.Key] = CalculateLightDecay(normalizedDistance);

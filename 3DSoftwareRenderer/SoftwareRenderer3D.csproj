@@ -80,7 +80,6 @@
     <Compile Include="DataStructures\MeshDataStructures\Mesh.cs" />
     <Compile Include="DataStructures\PixelDataStructures\RasterizedPixel.cs" />
     <Compile Include="DataStructures\Texture.cs" />
-    <Compile Include="DataStructures\VertexDataStructures\ColoredVertex.cs" />
     <Compile Include="DataStructures\VertexDataStructures\IVertex.cs" />
     <Compile Include="DataStructures\VertexDataStructures\StandardVertex.cs" />
     <Compile Include="DataStructures\VertexDataStructures\TexturedVertex.cs" />

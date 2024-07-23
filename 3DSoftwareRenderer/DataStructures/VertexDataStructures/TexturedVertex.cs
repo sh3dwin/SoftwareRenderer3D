@@ -62,7 +62,11 @@ namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
         }
 
         public int ARGB => _color.ToArgb();
-        public Color Color => _color;
+        public Color Color
+        { 
+            get => _color;
+            set => _color = value;
+        }
 
         public Vector3 Position => _position;
         public Vector2 TextureCoordinates => _texCoord;

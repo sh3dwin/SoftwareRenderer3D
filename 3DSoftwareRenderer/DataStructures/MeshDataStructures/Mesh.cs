@@ -36,6 +36,8 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 
         public IEnumerable<V> Vertices => _vertices.Values;
         public IEnumerable<Facet> Facets => _facets.Values;
+        public IEnumerable<int> VertexIds => _vertices.Keys;
+        public IEnumerable<int> FacetIds => _facets.Keys;
 
         public int VertexCount => _vertices.Count;
         public int FacetCount => _facets.Count;
