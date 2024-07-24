@@ -84,18 +84,86 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
             return sum / _vertices.Count;
         }
 
-        public void RecalculateNormals()
+        public void EnsureMeshQuality()
         {
-            foreach(var facet in _facets.Values)
-            {
-                var v0 = _vertices[facet.V0].WorldPoint;
-                var v1 = _vertices[facet.V1].WorldPoint;
-                var v2 = _vertices[facet.V2].WorldPoint;
+            var vertexOccurrences = new Dictionary<Vector3, int>();
+            var positionVertexId = new Dictionary<Vector3, int>();
+            var normalsMapping = new Dictionary<Vector3, Vector3>();
 
-                var normal = Vector3.Cross(Vector3.Normalize(v2 - v0), Vector3.Normalize(v1 - v0));
+            foreach (var facet in _facets.Values)
+            {
+                var v0 = _vertices[facet.V0];
+                var v1 = _vertices[facet.V1];
+                var v2 = _vertices[facet.V2];
+
+                var normal = Vector3.Cross(Vector3.Normalize(v2.WorldPoint - v0.WorldPoint), Vector3.Normalize(v1.WorldPoint - v0.WorldPoint));
 
                 facet.UpdateNormal(normal);
+
+                if (!vertexOccurrences.ContainsKey(v0.WorldPoint))
+                {
+                    vertexOccurrences[v0.WorldPoint] = 0;
+                    normalsMapping[v0.WorldPoint] = Vector3.Zero;
+                    positionVertexId[v0.WorldPoint] = facet.V0;
+                }
+                vertexOccurrences[v0.WorldPoint]++;
+                normalsMapping[v0.WorldPoint] += facet.Normal;
+
+                if (!vertexOccurrences.ContainsKey(v1.WorldPoint))
+                {
+                    vertexOccurrences[v1.WorldPoint] = 0;
+                    normalsMapping[v1.WorldPoint] = Vector3.Zero;
+                    positionVertexId[v1.WorldPoint] = facet.V1;
+                }
+                vertexOccurrences[v1.WorldPoint]++;
+                normalsMapping[v1.WorldPoint] += facet.Normal;
+
+                if (!vertexOccurrences.ContainsKey(v2.WorldPoint))
+                {
+                    vertexOccurrences[v2.WorldPoint] = 0;
+                    normalsMapping[v2.WorldPoint] = Vector3.Zero;
+                    positionVertexId[v2.WorldPoint] = facet.V2;
+                }
+                vertexOccurrences[v2.WorldPoint]++;
+                normalsMapping[v2.WorldPoint] += facet.Normal;
             }
+
+            foreach (var veId in VertexIds)
+            {
+                var position = _vertices[veId].WorldPoint;
+                normalsMapping[position] /= vertexOccurrences[position];
+                _vertices[veId].SetNormal(normalsMapping[position]);
+            }
+
+
+            var positionToIdMapping = new Dictionary<Vector3, int>();
+
+            var index = 0;
+            foreach(var position in vertexOccurrences.Keys)
+            {
+                positionToIdMapping[position] = index++;
+            }
+
+            var newFacets = new Dictionary<int, Facet>();
+
+            index = 0;
+            foreach (var facetId in _facets.Keys)
+            {
+                var veId0 = positionToIdMapping[_vertices[_facets[facetId].V0].WorldPoint];
+                var veId1 = positionToIdMapping[_vertices[_facets[facetId].V1].WorldPoint];
+                var veId2 = positionToIdMapping[_vertices[_facets[facetId].V2].WorldPoint];
+
+                newFacets[index++] = new Facet(veId0, veId1, veId2, _facets[facetId].Normal);
+            }
+
+            var newVertices = new Dictionary<int, V>(vertexOccurrences.Count);
+            foreach(var keyValue in positionToIdMapping)
+            {
+                newVertices[keyValue.Value] = _vertices[positionVertexId[keyValue.Key]];
+            }
+
+            _vertices = newVertices;
+            _facets = newFacets;
         }
 
         bool IEquatable<Mesh<V>>.Equals(Mesh<V> other)

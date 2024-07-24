@@ -246,7 +246,10 @@ namespace SoftwareRenderer3D.ViewModels
                 _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
 
                 if (_mesh != null)
+                {
+                    _mesh.EnsureMeshQuality();
                     IsFileLoaded = true;
+                }
             }
             SimpleRendering = true;
             UpToDate = false;
