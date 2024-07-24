@@ -28,7 +28,7 @@ namespace SoftwareRenderer3D.DataStructures.Buffers
         private Dictionary<int, StandardVertex> TransformVertices(Matrix4x4 transformation)
         {
             var vertices = _vertices.Values;
-            var transformedVertices = vertices.Select(vertex => new StandardVertex(Vector3.Transform(vertex.GetVertexPoint(), transformation)));
+            var transformedVertices = vertices.Select(vertex => new StandardVertex(Vector3.Transform(vertex.WorldPoint, transformation)));
             var result = new Dictionary<int, StandardVertex>(vertices.Count);
             foreach (var vertex in transformedVertices)
             {

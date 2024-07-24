@@ -72,6 +72,7 @@
     <Compile Include="Enums\FileName.cs" />
     <Compile Include="Enums\FrameBufferCombineType.cs" />
     <Compile Include="Enums\RenderType.cs" />
+    <Compile Include="Extensions\MeshExtensions.cs" />
     <Compile Include="FrameBuffers\DepthPeelingBuffer.cs" />
     <Compile Include="FrameBuffers\FrameBuffer.cs" />
     <Compile Include="DataStructures\Buffers\IVertexBuffer.cs" />
@@ -84,7 +85,7 @@
     <Compile Include="DataStructures\VertexDataStructures\StandardVertex.cs" />
     <Compile Include="DataStructures\VertexDataStructures\TexturedVertex.cs" />
     <Compile Include="Enums\FileType.cs" />
-    <Compile Include="Extensions.cs" />
+    <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Factories\FileReaderFactory.cs" />
     <Compile Include="FileReaders\ColladaReader.cs" />
     <Compile Include="FileReaders\IMeshFileReader.cs" />
@@ -109,7 +110,7 @@
     <Compile Include="Utils\GeneralUtils\MathUtils.cs" />
     <Compile Include="Utils\GeneralUtils\VectorUtils.cs" />
     <Compile Include="Utils\Globals.cs" />
-    <Compile Include="Utils\RendererUtils.cs" />
+    <Compile Include="Utils\RenderUtils.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

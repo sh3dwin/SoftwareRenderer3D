@@ -13,6 +13,7 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 
 namespace SoftwareRenderer3D.Renderers
 {
@@ -29,26 +30,6 @@ namespace SoftwareRenderer3D.Renderers
 
             var depthPasses = Globals.DepthPeelingPasses;
 
-            var facets = Globals.BackfaceCulling
-                ? mesh.GetFacets().Where((x, i) => Vector3.Dot((mesh.GetFacetMidpoint(i) - camera.EyePosition).Normalize(), x.Normal.Normalize()) <= 0.3)
-                : mesh.GetFacets();
-
-            for (var i = 0; i < depthPasses; i++)
-            {
-                RenderPass(mesh, facets, peelingBuffer, camera);
-                peelingBuffer.DepthPeel();
-            }
-
-            RenderPass(mesh, facets, peelingBuffer, camera);
-
-            TexturedScanLineRasterizer.UnbindTexture();
-
-            return peelingBuffer.GetFrame();
-        }
-
-        private static void RenderPass(Mesh<IVertex> mesh, IEnumerable<Facet> facets, DepthPeelingBuffer frameBuffer, ArcBallCamera camera)
-        {
-            var startTime = DateTime.Now;
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
 
@@ -57,22 +38,59 @@ namespace SoftwareRenderer3D.Renderers
 
             Matrix4x4.Invert(mesh.ModelMatrix, out var modelMatrix);
 
+            var vertices = new Dictionary<int, IVertex>(mesh.VertexCount);
+
+            var vertexIds = mesh.VertexIds;
+
+            Parallel.ForEach(vertexIds, vertexId =>
+            {
+                var vertex = mesh.GetVertex(vertexId);
+                var modelV0 = vertex.WorldPoint.TransformHomogeneus(modelMatrix);
+                modelV0 /= modelV0.W;
+
+                var viewV0 = modelV0.Transform(viewMatrix);
+                viewV0 /= viewV0.W;
+
+                var clipV0 = viewV0.Transform(projectionMatrix);
+                var ndcV0 = clipV0 / clipV0.W;
+
+                vertex.NDCPosition = ndcV0.ToVector3();
+                vertex.SetScreenCoordinates(width, height);
+                vertices[vertexId] = vertex;
+            });
+
             var lightSources = new List<Vector3>()
             {
                 new Vector3(0, 100, 100),
+                new Vector3(0, -123, -242),
             };
 
             var facetIds = Globals.BackfaceCulling
                 ? mesh.FacetIds.Where(faId => Vector3.Dot((mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize(), mesh.GetFacetNormal(faId)) <= 0.1)
                 : mesh.FacetIds;
 
-            Parallel.ForEach(facetIds, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, facetId =>
+            for (var i = 0; i < depthPasses; i++)
+            {
+                RenderPass(mesh, facetIds, vertices, lightSources, peelingBuffer, camera);
+                peelingBuffer.DepthPeel();
+            }
+
+            RenderPass(mesh, facetIds, vertices, lightSources, peelingBuffer, camera);
+
+            TexturedScanLineRasterizer.UnbindTexture();
+
+            return peelingBuffer.GetFrame();
+        }
+
+        private static void RenderPass(Mesh<IVertex> mesh, IEnumerable<int> facets, Dictionary<int, IVertex> vertices, List<Vector3> lightSources, DepthPeelingBuffer frameBuffer, ArcBallCamera camera)
+        {
+            Parallel.ForEach(facets, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, facetId =>
             {
                 var facet = mesh.GetFacet(facetId);
 
-                var v0 = mesh.GetVertexPoint(facet.V0);
-                var v1 = mesh.GetVertexPoint(facet.V1);
-                var v2 = mesh.GetVertexPoint(facet.V2);
+                var v0 = mesh.GetVertex(facet.V0);
+                var v1 = mesh.GetVertex(facet.V1);
+                var v2 = mesh.GetVertex(facet.V2);
 
                 var normal = facet.Normal;
 
@@ -85,43 +103,12 @@ namespace SoftwareRenderer3D.Renderers
 
                 lightContribution = lightContribution.Clamp(0, 1);
 
-                var modelV0 = v0.TransformHomogeneus(modelMatrix);
-                modelV0 /= modelV0.W;
-                var modelV1 = v1.TransformHomogeneus(modelMatrix);
-                modelV1 /= modelV1.W;
-                var modelV2 = v2.TransformHomogeneus(modelMatrix);
-                modelV2 /= modelV2.W;
-
-                var viewV0 = modelV0.Transform(viewMatrix);
-                viewV0 /= viewV0.W;
-                var viewV1 = modelV1.Transform(viewMatrix);
-                viewV1 /= viewV1.W;
-                var viewV2 = modelV2.Transform(viewMatrix);
-                viewV2 /= viewV2.W;
-
-                var clipV0 = viewV0.Transform(projectionMatrix);
-                var ndcV0 = clipV0 / clipV0.W;
-                var clipV1 = viewV1.Transform(projectionMatrix);
-                var ndcV1 = clipV1 / clipV1.W;
-                var clipV2 = viewV2.Transform(projectionMatrix);
-                var ndcV2 = clipV2 / clipV2.W;
-
-                var screenV0 = new Vector3((ndcV0.X + 1) * width / 2.0f, (-ndcV0.Y + 1) * height / 2.0f, ndcV0.Z);
-                var screenV1 = new Vector3((ndcV1.X + 1) * width / 2.0f, (-ndcV1.Y + 1) * height / 2.0f, ndcV1.Z);
-                var screenV2 = new Vector3((ndcV2.X + 1) * width / 2.0f, (-ndcV2.Y + 1) * height / 2.0f, ndcV2.Z);
-
-                if (RendererUtils.IsTriangleInFrustum(width, height, screenV0, screenV1, screenV2))
+                if (RenderUtils.IsTriangleInFrustum(frameBuffer.GetSize().Width, frameBuffer.GetSize().Height, v0.ScreenPosition, v1.ScreenPosition, v2.ScreenPosition))
                 {
                     if (mesh.GetVertex(facet.V0).GetType().IsAssignableFrom(typeof(TexturedVertex)))
-                    {
-                        TexturedScanLineRasterizer.ScanLineTriangle(frameBuffer, screenV0, screenV1, screenV2,
-                            mesh.GetVertex(facet.V0) as TexturedVertex, mesh.GetVertex(facet.V1) as TexturedVertex, mesh.GetVertex(facet.V2) as TexturedVertex,
-                            lightContribution);
-                    }
+                        TexturedScanLineRasterizer.ScanLineTriangle(frameBuffer, v0 as TexturedVertex, v1 as TexturedVertex, v2 as TexturedVertex, lightSources);
                     else
-                    {
-                        ScanLineRasterizer.ScanLineTriangle(frameBuffer, screenV0, screenV1, screenV2, lightContribution);
-                    }
+                        ScanLineRasterizer.ScanLineTriangle(frameBuffer, v0, v1, v2, lightSources);
                 }
             });
         }

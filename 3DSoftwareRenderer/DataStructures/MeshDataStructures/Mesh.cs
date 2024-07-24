@@ -50,7 +50,7 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 
         public Vector3 GetVertexPoint(int index)
         {
-            return _vertices[index].GetVertexPoint();
+            return _vertices[index].WorldPoint;
         }
 
         public Vector3 GetFacetMidpoint(int index)
@@ -78,7 +78,7 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 
             foreach(var vertex in _vertices.Values)
             {
-                sum += vertex.GetVertexPoint();
+                sum += vertex.WorldPoint;
             }
 
             return sum / _vertices.Count;
@@ -88,9 +88,9 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
         {
             foreach(var facet in _facets.Values)
             {
-                var v0 = _vertices[facet.V0].GetVertexPoint();
-                var v1 = _vertices[facet.V1].GetVertexPoint();
-                var v2 = _vertices[facet.V2].GetVertexPoint();
+                var v0 = _vertices[facet.V0].WorldPoint;
+                var v1 = _vertices[facet.V1].WorldPoint;
+                var v2 = _vertices[facet.V2].WorldPoint;
 
                 var normal = Vector3.Cross(Vector3.Normalize(v2 - v0), Vector3.Normalize(v1 - v0));
 

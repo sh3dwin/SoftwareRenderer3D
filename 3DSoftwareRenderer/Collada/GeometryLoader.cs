@@ -234,7 +234,7 @@ namespace SoftwareRenderer3D.Collada
 
             for (var i = 0; i < Vertices.Count; i++)
             {
-                var vertex = new TexturedVertex(verticesArray[i] / maxLength, texturesArray[i], colorsArray[i]);
+                var vertex = new TexturedVertex(verticesArray[i] / maxLength, normalsArray[i], texturesArray[i], colorsArray[i]);
                 vertices[vertices.Count] = vertex;
             }
 

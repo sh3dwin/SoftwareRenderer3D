@@ -88,6 +88,46 @@ namespace SoftwareRenderer3D.FileReaders
 
                 var vertexIdDict = BuildVertexDictionary(veIds);
 
+                var vertexOccurrences = new Dictionary<int, int>();
+                var normalsMapping = new Dictionary<int, Vector3>();
+
+                foreach(var facet in faIds.Values)
+                {
+                    var v0 = facet.V0;
+                    var v1 = facet.V1;
+                    var v2 = facet.V2;
+
+                    if (!vertexOccurrences.ContainsKey(v0))
+                    {
+                        vertexOccurrences[v0] = 0;
+                        normalsMapping[v0] = Vector3.Zero;
+                    }
+                    vertexOccurrences[v0]++;
+                    normalsMapping[v0] += facet.Normal;
+
+                    if (!vertexOccurrences.ContainsKey(v1))
+                    {
+                        vertexOccurrences[v1] = 0;
+                        normalsMapping[v1] = Vector3.Zero;
+                    }
+                    vertexOccurrences[v1]++;
+                    normalsMapping[v1] += facet.Normal;
+
+                    if (!vertexOccurrences.ContainsKey(v2))
+                    {
+                        vertexOccurrences[v2] = 0;
+                        normalsMapping[v2] = Vector3.Zero;
+                    }
+                    vertexOccurrences[v2]++;
+                    normalsMapping[v2] += facet.Normal;
+                }
+
+                foreach(var veId in vertexIdDict.Keys)
+                {
+                    normalsMapping[veId] /= vertexOccurrences[veId];
+                    vertexIdDict[veId].SetNormal(normalsMapping[veId]);
+                }
+
                 return new Mesh<IVertex>(vertexIdDict, faIds);
 
             }

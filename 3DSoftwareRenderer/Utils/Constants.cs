@@ -8,5 +8,7 @@
         public const int BackgroundColor = -2139062144;
 
         public const int MaximumOpacity = 10;
+
+        public const int NumberOfThreads = 1;
     }
 }

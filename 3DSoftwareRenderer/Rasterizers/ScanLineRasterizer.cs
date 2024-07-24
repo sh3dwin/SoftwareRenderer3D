@@ -4,33 +4,35 @@ using System.Runtime.CompilerServices;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System.Drawing;
 using SoftwareRenderer3D.Utils;
+using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+using System.Collections.Generic;
 
 namespace SoftwareRenderer3D.Rasterizers
 {
     public static class ScanLineRasterizer
     {
-        public static void ScanLineTriangle(IFrameBuffer frameBuffer, Vector3 v0, Vector3 v1, Vector3 v2, float diffuse)
+        public static void ScanLineTriangle(IFrameBuffer frameBuffer, IVertex v0, IVertex v1, IVertex v2, List<Vector3> lightSources)
         {
-            var (p0, p1, p2) = SortIndices(v0, v1, v2);
-            if (p0 == p1 || p1 == p2 || p2 == p0)
+            var (sortedV0, sortedV1, sortedV2) = RenderUtils.SortIndices(v0, v1, v2);
+            if (sortedV0 == sortedV1 || sortedV1 == sortedV2 || sortedV2 == sortedV0)
                 return;
 
-            var yStart = (int)System.Math.Max(p0.Y, 0);
-            var yEnd = (int)System.Math.Min(p2.Y, frameBuffer.GetSize().Height - 1);
+            var yStart = (int)System.Math.Max(sortedV0.ScreenPosition.Y, 0);
+            var yEnd = (int)System.Math.Min(sortedV2.ScreenPosition.Y, frameBuffer.GetSize().Height - 1);
 
             // Out if clipped
             if (yStart > yEnd)
                 return;
 
-            var yMiddle = p1.Y.Clamp(yStart, yEnd);
+            var yMiddle = sortedV1.ScreenPosition.Y.Clamp(yStart, yEnd);
 
-            if (HaveClockwiseOrientation(p0, p1, p2))
+            if (RenderUtils.HaveClockwiseOrientation(sortedV0.ScreenPosition, sortedV1.ScreenPosition, sortedV2.ScreenPosition))
             {
                 // P0
                 //   P1
                 // P2
-                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, p0, p1, p2, diffuse);
-                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, p2, p1, p0, diffuse);
+                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, sortedV0, sortedV1, sortedV2, lightSources);
+                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, sortedV2, sortedV1, sortedV0, lightSources);
             }
             else
             {
@@ -38,8 +40,8 @@ namespace SoftwareRenderer3D.Rasterizers
                 // P1 
                 //   P2
 
-                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, p0, p2, p1, diffuse);
-                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, p2, p0, p1, diffuse);
+                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, sortedV0, sortedV2, sortedV1, lightSources);
+                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, sortedV2, sortedV0, sortedV1, lightSources);
             }
         }
 
@@ -50,18 +52,22 @@ namespace SoftwareRenderer3D.Rasterizers
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ScanLineHalfTriangleBottomFlat(IFrameBuffer frameBuffer, int yStart, int yEnd,
-            Vector3 anchor, Vector3 vRight, Vector3 vLeft, float diffuse)
+            IVertex anchor, IVertex vRight, IVertex vLeft, List<Vector3> lightSources)
         {
-            var deltaY1 = System.Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
-            var deltaY2 = System.Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
+            var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
+                ? 1f
+                : 1 / (vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y);
+            var deltaY2 = System.Math.Abs(vRight.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
+                ? 1f
+                : 1 / (vRight.ScreenPosition.Y - anchor.ScreenPosition.Y);
 
             for (var y = yStart; y <= yEnd; y++)
             {
-                var gradient1 = ((y - anchor.Y) * deltaY1).Clamp();
-                var gradient2 = ((vRight.Y - y) * deltaY2).Clamp();
+                var gradient1 = ((y - anchor.ScreenPosition.Y) * deltaY1).Clamp();
+                var gradient2 = ((vRight.ScreenPosition.Y - y) * deltaY2).Clamp();
 
-                var start = Vector3.Lerp(anchor, vLeft, gradient1);
-                var end = Vector3.Lerp(vRight, anchor, gradient2);
+                var start = Vector3.Lerp(anchor.ScreenPosition, vLeft.ScreenPosition, gradient1);
+                var end = Vector3.Lerp(vRight.ScreenPosition, anchor.ScreenPosition, gradient2);
 
                 if (start.X >= end.X)
                     continue;
@@ -69,7 +75,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 start.Y = y;
                 end.Y = y;
 
-                ScanSingleLine(frameBuffer, start, end, diffuse);
+                ScanSingleLine(frameBuffer, start, end, anchor, vLeft, vRight, lightSources);
             }
         }
 
@@ -80,18 +86,22 @@ namespace SoftwareRenderer3D.Rasterizers
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ScanLineHalfTriangleTopFlat(IFrameBuffer frameBuffer, int yStart, int yEnd,
-            Vector3 anchor, Vector3 vRight, Vector3 vLeft, float diffuse)
+            IVertex anchor, IVertex vRight, IVertex vLeft, List<Vector3> lightSources)
         {
-            var deltaY1 = System.Math.Abs(vLeft.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vLeft.Y - anchor.Y);
-            var deltaY2 = System.Math.Abs(vRight.Y - anchor.Y) < float.Epsilon ? 1f : 1 / (vRight.Y - anchor.Y);
+            var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
+                ? 1f
+                : 1 / (vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y);
+            var deltaY2 = System.Math.Abs(vRight.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
+                ? 1f
+                : 1 / (vRight.ScreenPosition.Y - anchor.ScreenPosition.Y);
 
             for (var y = yStart; y <= yEnd; y++)
             {
-                var gradient1 = ((vLeft.Y - y) * deltaY1).Clamp();
-                var gradient2 = ((vRight.Y - y) * deltaY2).Clamp();
+                var gradient1 = ((vLeft.ScreenPosition.Y - y) * deltaY1).Clamp();
+                var gradient2 = ((vRight.ScreenPosition.Y - y) * deltaY2).Clamp();
 
-                var start = Vector3.Lerp(vLeft, anchor, gradient1);
-                var end = Vector3.Lerp(vRight, anchor, gradient2);
+                var start = Vector3.Lerp(vLeft.ScreenPosition, anchor.ScreenPosition, gradient1);
+                var end = Vector3.Lerp(vRight.ScreenPosition, anchor.ScreenPosition, gradient2);
 
                 if (start.X >= end.X)
                     continue;
@@ -99,7 +109,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 start.Y = y;
                 end.Y = y;
 
-                ScanSingleLine(frameBuffer, start, end, diffuse);
+                ScanSingleLine(frameBuffer, start, end, anchor, vRight, vLeft, lightSources);
             }
         }
 
@@ -110,7 +120,9 @@ namespace SoftwareRenderer3D.Rasterizers
         /// <param name="end">Scan line end</param>
         /// <param name="faId">Facet id</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ScanSingleLine(IFrameBuffer frameBuffer, Vector3 start, Vector3 end, float diffuse)
+        private static void ScanSingleLine(IFrameBuffer frameBuffer, Vector3 start, Vector3 end,
+            IVertex v0, IVertex v1, IVertex v2,
+            List<Vector3> lightSources)
         {
             var minX = System.Math.Max(start.X, 0);
             var maxX = System.Math.Min(end.X, frameBuffer.GetSize().Width);
@@ -124,48 +136,27 @@ namespace SoftwareRenderer3D.Rasterizers
                 var xInt = (int)x;
                 var yInt = (int)point.Y;
 
+                var screenPoint = new Vector3(xInt, yInt, point.Z);
+                var barycentric = Barycentric.CalculateBarycentricCoordinates(screenPoint.XY(), v0.ScreenPosition.XY(), v1.ScreenPosition.XY(), v2.ScreenPosition.XY());
+
+                var diffuse = 0.0;
+
+                foreach(var lightSource in lightSources)
+                {
+                    var interpolatedNormal = (v0.Normal * barycentric.X + v1.Normal * barycentric.Y + v2.Normal * barycentric.Z).Normalize();
+                    var worldPosition = v0.WorldPoint * barycentric.X + v1.WorldPoint * barycentric.Y + v2.WorldPoint * barycentric.Z;
+                    var lightDirection = (worldPosition - lightSource).Normalize();
+
+                    diffuse += (-Vector3.Dot(interpolatedNormal, lightDirection)).Clamp();
+                }
+
+                diffuse = diffuse.Clamp(0, 1);
+
                 var opacity = Globals.NormalizedOpacity.Clamp(0, 255);
                 var color = Color.FromArgb((int)(opacity * 255), (int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse));
 
                 frameBuffer.SetPixelColor(xInt, yInt, point.Z, color);
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool HaveClockwiseOrientation(Vector3 p0, Vector3 p1, Vector3 p2)
-        {
-            return Cross2D(p0, p1, p2) > 0;
-        }
-
-        // https://www.geeksforgeeks.org/orientation-3-ordered-points/
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Cross2D(Vector3 p0, Vector3 p1, Vector3 p2)
-        {
-            return (p1.X - p0.X) * (p2.Y - p1.Y) - (p1.Y - p0.Y) * (p2.X - p1.X);
-        }
-
-        public static (Vector3 i0, Vector3 i1, Vector3 i2) SortIndices(Vector3 p0, Vector3 p1, Vector3 p2)
-        {
-            var c0 = p0.Y;
-            var c1 = p1.Y;
-            var c2 = p2.Y;
-
-            if (c0 < c1)
-            {
-                if (c2 < c0)
-                    return (p2, p0, p1);
-                if (c1 < c2)
-                    return (p0, p1, p2);
-                return (p0, p2, p1);
-            }
-
-            if (c2 < c1)
-                return (p2, p1, p0);
-            if (c0 < c2)
-                return (p1, p0, p2);
-            return (p1, p2, p0);
-
         }
     }
 }

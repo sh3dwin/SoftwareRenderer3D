@@ -40,5 +40,19 @@ namespace SoftwareRenderer3D.Utils
 
             return new Vector3(alpha, beta, gamma);
         }
+
+        public static Vector3 CalculateBarycentricCoordinates(Vector2 p, Vector2 v0, Vector2 v1, Vector2 v2)
+        {
+            var x = p.X;
+            var y = p.Y;
+
+            var alpha = (-(x - v1.X) * (v2.Y - v1.Y) + (y - v1.Y) * (v2.X - v1.X)) /
+                    (-(v0.X - v1.X) * (v2.Y - v1.Y) + (v0.Y - v1.Y) * (v2.X - v1.X));
+            var beta = (-(x - v2.X) * (v0.Y - v2.Y) + (y - v2.Y) * (v0.X - v2.X)) /
+                (-(v1.X - v2.X) * (v0.Y - v2.Y) + (v1.Y - v2.Y) * (v0.X - v2.X));
+            var gamma = 1 - alpha - beta;
+
+            return new Vector3(alpha, beta, gamma);
+        }
     }
 }
