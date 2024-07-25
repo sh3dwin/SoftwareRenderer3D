@@ -14,7 +14,7 @@ using System.Numerics;
 
 namespace SoftwareRenderer3D.Renderers
 {
-    public static class SimpleRenderer
+    public static class SimplePipeline
     {
         public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {

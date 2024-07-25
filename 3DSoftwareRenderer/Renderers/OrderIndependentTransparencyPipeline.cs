@@ -15,7 +15,7 @@ using System.Numerics;
 
 namespace SoftwareRenderer3D.Renderers
 {
-    public static class TransparencyRenderer
+    public static class OrderIndependentTransparencyPipeline
     {
         public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {

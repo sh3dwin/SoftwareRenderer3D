@@ -17,7 +17,7 @@ using SoftwareRenderer3D.FragmentShaders;
 
 namespace SoftwareRenderer3D.Renderers
 {
-    public static class SubsurfaceScatteringRenderer
+    public static class SubsurfaceScatteringPipeline
     {
         private static Mesh<IVertex> _lastRenderedMesh;
         private static Dictionary<int, double> _lastRenderedMeshSubsurfaceScatteringMapping;

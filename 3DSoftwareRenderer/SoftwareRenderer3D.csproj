@@ -100,9 +100,9 @@
     <Compile Include="Maths\QuaternionExtensions.cs" />
     <Compile Include="Rasterizers\ScanLineRasterizer.cs" />
     <Compile Include="RenderContexts\RenderContext.cs" />
-    <Compile Include="Renderers\SimpleRenderer.cs" />
-    <Compile Include="Renderers\SubsurfaceScatteringRenderer.cs" />
-    <Compile Include="Renderers\TransparencyRenderer.cs" />
+    <Compile Include="Renderers\SimplePipeline.cs" />
+    <Compile Include="Renderers\SubsurfaceScatteringPipeline.cs" />
+    <Compile Include="Renderers\OrderIndependentTransparencyPipeline.cs" />
     <Compile Include="UserControls\RenderSettingsControl.xaml.cs">
       <DependentUpon>RenderSettingsControl.xaml</DependentUpon>
     </Compile>

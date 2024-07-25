@@ -294,17 +294,17 @@ namespace SoftwareRenderer3D.ViewModels
             {
                 case RenderType.Simple:
                     {
-                        bitmap = SimpleRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+                        bitmap = SimplePipeline.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
                         break;
                     }
                 case RenderType.Transparent:
                     {
-                        bitmap = TransparencyRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+                        bitmap = OrderIndependentTransparencyPipeline.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
                         break;
                     }
                 case RenderType.SubsurfaceScattering:
                     {
-                        bitmap = SubsurfaceScatteringRenderer.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+                        bitmap = SubsurfaceScatteringPipeline.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
                         break;
                     }
                 default:
