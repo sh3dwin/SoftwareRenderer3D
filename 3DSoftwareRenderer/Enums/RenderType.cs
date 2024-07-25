@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SoftwareRenderer3D.Enums
+﻿namespace SoftwareRenderer3D.Enums
 {
     public enum RenderType
     {

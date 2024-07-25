@@ -16,7 +16,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace SoftwareRenderer3D.ViewModels
@@ -239,14 +238,14 @@ namespace SoftwareRenderer3D.ViewModels
             if (openFileDialog.ShowDialog() == true)
             {
                 var filePath = openFileDialog.FileName;
-                var fileName = openFileDialog.SafeFileName;
-
-                OpenedFileName = fileName;
 
                 _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
 
                 if (_mesh != null)
                 {
+                    var fileName = openFileDialog.SafeFileName;
+
+                    OpenedFileName = fileName;
                     _mesh.EnsureMeshQuality();
                     IsFileLoaded = true;
                 }

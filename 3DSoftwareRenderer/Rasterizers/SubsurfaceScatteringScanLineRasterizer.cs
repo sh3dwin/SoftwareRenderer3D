@@ -1,61 +1,38 @@
-﻿using System.Numerics;
+﻿using SoftwareRenderer3D.FrameBuffers;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using SoftwareRenderer3D.Utils.GeneralUtils;
+using System.Drawing;
 using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using System.Collections.Generic;
-using SoftwareRenderer3D.DataStructures.Fragment;
-using SoftwareRenderer3D.DataStructures.MeshDataStructures;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Linq;
 
 namespace SoftwareRenderer3D.Rasterizers
 {
-    public static class ScanLineRasterizer
+    public static class SubsurfaceScatteringScanLineRasterizer
     {
-        public static List<SimpleFragment> Rasterize(Mesh<IVertex> mesh, int width, int height, IEnumerable<int> facetIds)
-        {
-            var fragments = new ConcurrentBag<SimpleFragment>();
-            Parallel.ForEach(facetIds, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, facetId =>
-            {
-                var facet = mesh.GetFacet(facetId);
-
-                var v0 = mesh.GetVertex(facet.V0);
-                var v1 = mesh.GetVertex(facet.V1);
-                var v2 = mesh.GetVertex(facet.V2);
-
-                var normal = facet.Normal;
-
-                if (RenderUtils.IsTriangleInFrustum(width, height, v0.ScreenPosition, v1.ScreenPosition, v2.ScreenPosition))
-                    foreach(var fragment in RasterizeTriangle(width, height, v0, v1, v2))
-                    fragments.Add(fragment);
-            });
-            return fragments.ToList();
-        }
-        private static List<SimpleFragment> RasterizeTriangle(int width, int height, IVertex v0, IVertex v1, IVertex v2)
+        public static void ScanLineTriangle(IFrameBuffer frameBuffer, IVertex v0, IVertex v1, IVertex v2, List<Vector3> lightSources)
         {
             var (sortedV0, sortedV1, sortedV2) = RenderUtils.SortIndices(v0, v1, v2);
             if (sortedV0 == sortedV1 || sortedV1 == sortedV2 || sortedV2 == sortedV0)
-                return null;
+                return;
 
             var yStart = (int)System.Math.Max(sortedV0.ScreenPosition.Y, 0);
-            var yEnd = (int)System.Math.Min(sortedV2.ScreenPosition.Y, height - 1);
+            var yEnd = (int)System.Math.Min(sortedV2.ScreenPosition.Y, frameBuffer.GetSize().Height - 1);
 
             // Out if clipped
             if (yStart > yEnd)
-                return null;
+                return;
 
             var yMiddle = sortedV1.ScreenPosition.Y.Clamp(yStart, yEnd);
 
-            var result = new List<SimpleFragment>();
             if (RenderUtils.HaveClockwiseOrientation(sortedV0.ScreenPosition, sortedV1.ScreenPosition, sortedV2.ScreenPosition))
             {
                 // P0
                 //   P1
                 // P2
-                result.AddRange(ScanLineHalfTriangleBottomFlat(width, height, yStart, (int)yMiddle - 1, sortedV0, sortedV1, sortedV2));
-                result.AddRange(ScanLineHalfTriangleTopFlat(width, height, (int)yMiddle, yEnd, sortedV2, sortedV1, sortedV0));
+                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, sortedV0, sortedV1, sortedV2, lightSources);
+                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, sortedV2, sortedV1, sortedV0, lightSources);
             }
             else
             {
@@ -63,11 +40,9 @@ namespace SoftwareRenderer3D.Rasterizers
                 // P1 
                 //   P2
 
-                result.AddRange(ScanLineHalfTriangleBottomFlat(width, height, yStart, (int)yMiddle - 1, sortedV0, sortedV2, sortedV1));
-                result.AddRange(ScanLineHalfTriangleTopFlat(width, height, (int)yMiddle, yEnd, sortedV2, sortedV0, sortedV1));
+                ScanLineHalfTriangleBottomFlat(frameBuffer, yStart, (int)yMiddle - 1, sortedV0, sortedV2, sortedV1, lightSources);
+                ScanLineHalfTriangleTopFlat(frameBuffer, (int)yMiddle, yEnd, sortedV2, sortedV0, sortedV1, lightSources);
             }
-
-            return result;
         }
 
         //            P0
@@ -76,8 +51,8 @@ namespace SoftwareRenderer3D.Rasterizers
         //   .................P1
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<SimpleFragment> ScanLineHalfTriangleBottomFlat(int width, int height, int yStart, int yEnd,
-            IVertex anchor, IVertex vRight, IVertex vLeft)
+        private static void ScanLineHalfTriangleBottomFlat(IFrameBuffer frameBuffer, int yStart, int yEnd,
+            IVertex anchor, IVertex vRight, IVertex vLeft, List<Vector3> lightSources)
         {
             var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
                 ? 1f
@@ -86,7 +61,6 @@ namespace SoftwareRenderer3D.Rasterizers
                 ? 1f
                 : 1 / (vRight.ScreenPosition.Y - anchor.ScreenPosition.Y);
 
-            var result = new List<SimpleFragment>();
             for (var y = yStart; y <= yEnd; y++)
             {
                 var gradient1 = ((y - anchor.ScreenPosition.Y) * deltaY1).Clamp();
@@ -101,10 +75,8 @@ namespace SoftwareRenderer3D.Rasterizers
                 start.Y = y;
                 end.Y = y;
 
-                result.AddRange(ScanSingleLine(width, height, start, end, anchor, vLeft, vRight));
+                ScanSingleLine(frameBuffer, start, end, anchor, vLeft, vRight, lightSources);
             }
-
-            return result;
         }
 
         // P2
@@ -113,8 +85,8 @@ namespace SoftwareRenderer3D.Rasterizers
         //          .....
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<SimpleFragment> ScanLineHalfTriangleTopFlat(int width, int height, int yStart, int yEnd,
-            IVertex anchor, IVertex vRight, IVertex vLeft)
+        private static void ScanLineHalfTriangleTopFlat(IFrameBuffer frameBuffer, int yStart, int yEnd,
+            IVertex anchor, IVertex vRight, IVertex vLeft, List<Vector3> lightSources)
         {
             var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
                 ? 1f
@@ -123,7 +95,6 @@ namespace SoftwareRenderer3D.Rasterizers
                 ? 1f
                 : 1 / (vRight.ScreenPosition.Y - anchor.ScreenPosition.Y);
 
-            var result = new List<SimpleFragment>();
             for (var y = yStart; y <= yEnd; y++)
             {
                 var gradient1 = ((vLeft.ScreenPosition.Y - y) * deltaY1).Clamp();
@@ -138,25 +109,26 @@ namespace SoftwareRenderer3D.Rasterizers
                 start.Y = y;
                 end.Y = y;
 
-                result.AddRange(ScanSingleLine(width, height, start, end, anchor, vRight, vLeft));
+                ScanSingleLine(frameBuffer, start, end, anchor, vRight, vLeft, lightSources);
             }
-
-            return result;
         }
 
         /// <summary>
         /// Scan line on the x direction
         /// </summary>
+        /// <param name="start">Scan line start</param>
+        /// <param name="end">Scan line end</param>
+        /// <param name="faId">Facet id</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<SimpleFragment> ScanSingleLine(int width, int height, Vector3 start, Vector3 end,
-            IVertex v0, IVertex v1, IVertex v2)
+        private static void ScanSingleLine(IFrameBuffer frameBuffer, Vector3 start, Vector3 end,
+            IVertex v0, IVertex v1, IVertex v2,
+            List<Vector3> lightSources)
         {
             var minX = System.Math.Max(start.X, 0);
-            var maxX = System.Math.Min(end.X, width);
+            var maxX = System.Math.Min(end.X, frameBuffer.GetSize().Width);
 
             var deltaX = 1 / (end.X - start.X);
 
-            var result = new List<SimpleFragment>();
             for (var x = minX; x < maxX; x++)
             {
                 var gradient = (x - start.X) * deltaX;
@@ -167,11 +139,24 @@ namespace SoftwareRenderer3D.Rasterizers
                 var screenPoint = new Vector3(xInt, yInt, point.Z);
                 var barycentric = Barycentric.CalculateBarycentricCoordinates(screenPoint.XY(), v0.ScreenPosition.XY(), v1.ScreenPosition.XY(), v2.ScreenPosition.XY());
 
-                var fragment = new SimpleFragment(screenPoint.XY(), point.Z, barycentric, v0, v1, v2);
-                result.Add(fragment);
-            }
+                var diffuse = 0.0;
 
-            return result;
+                foreach (var lightSource in lightSources)
+                {
+                    var interpolatedNormal = (v0.Normal * barycentric.X + v1.Normal * barycentric.Y + v2.Normal * barycentric.Z).Normalize();
+                    var worldPosition = v0.WorldPoint * barycentric.X + v1.WorldPoint * barycentric.Y + v2.WorldPoint * barycentric.Z;
+                    var lightDirection = (worldPosition - lightSource).Normalize();
+
+                    diffuse += (-Vector3.Dot(interpolatedNormal, lightDirection)).Clamp();
+                }
+
+                diffuse = diffuse.Clamp(0, 1);
+
+                var opacity = Globals.NormalizedOpacity.Clamp(0, 255);
+                var color = Color.FromArgb((int)(opacity * 255), (int)(255 * diffuse), (int)(255 * diffuse), (int)(255 * diffuse));
+
+                frameBuffer.SetPixelColor(xInt, yInt, point.Z, color);
+            }
         }
     }
 }

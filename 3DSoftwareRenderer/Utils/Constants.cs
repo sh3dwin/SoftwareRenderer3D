@@ -9,6 +9,6 @@
 
         public const int MaximumOpacity = 10;
 
-        public const int NumberOfThreads = 1;
+        public const int NumberOfThreads = 10;
     }
 }

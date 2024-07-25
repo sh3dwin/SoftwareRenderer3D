@@ -1,8 +1,12 @@
 ﻿using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+using SoftwareRenderer3D.Utils;
+using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 {
@@ -25,7 +29,7 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
             _facets = facets;
 
             _center = GetCenterOfMass();
-            _modelMatrix = Matrix4x4.Transpose(Matrix4x4.CreateTranslation(_center));
+            Matrix4x4.Invert(Matrix4x4.Transpose(Matrix4x4.CreateTranslation(_center)), out _modelMatrix);
         }
 
         public Mesh(Mesh<V> otherMesh)
@@ -160,10 +164,30 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
             foreach(var keyValue in positionToIdMapping)
             {
                 newVertices[keyValue.Value] = _vertices[positionVertexId[keyValue.Key]];
+                newVertices[keyValue.Value].Color = Color.White;
             }
 
             _vertices = newVertices;
             _facets = newFacets;
+        }
+
+        public void TransformVertices(int width, int height, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
+        {
+            Parallel.ForEach(VertexIds, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, vertexId =>
+            {
+                var vertex = _vertices[vertexId];
+                var modelV0 = _vertices[vertexId].WorldPoint.TransformHomogeneus(ModelMatrix);
+                modelV0 /= modelV0.W;
+
+                var viewV0 = modelV0.Transform(viewMatrix);
+                viewV0 /= viewV0.W;
+
+                var clipV0 = viewV0.Transform(projectionMatrix);
+                var ndcV0 = clipV0 / clipV0.W;
+
+                _vertices[vertexId].NDCPosition = ndcV0.ToVector3();
+                _vertices[vertexId].SetScreenCoordinates(width, height);
+            });
         }
 
         bool IEquatable<Mesh<V>>.Equals(Mesh<V> other)
