@@ -58,25 +58,5 @@ namespace SoftwareRenderer3D.Utils
             return (p1, p2, p0);
 
         }
-
-        public static void TransformVertices(Mesh<IVertex> mesh, int width, int height, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix, Matrix4x4 modelMatrix, Dictionary<int, IVertex> vertices, IEnumerable<int> vertexIds)
-        {
-            Parallel.ForEach(vertexIds, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, vertexId =>
-            {
-                var vertex = mesh.GetVertex(vertexId);
-                var modelV0 = vertex.WorldPoint.TransformHomogeneus(modelMatrix);
-                modelV0 /= modelV0.W;
-
-                var viewV0 = modelV0.Transform(viewMatrix);
-                viewV0 /= viewV0.W;
-
-                var clipV0 = viewV0.Transform(projectionMatrix);
-                var ndcV0 = clipV0 / clipV0.W;
-
-                vertex.NDCPosition = ndcV0.ToVector3();
-                vertex.SetScreenCoordinates(width, height);
-                vertices[vertexId] = vertex;
-            });
-        }
     }
 }
