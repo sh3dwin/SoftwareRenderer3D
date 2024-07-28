@@ -9,8 +9,6 @@ using SoftwareRenderer3D.FrameBuffers;
 using System.Threading.Tasks;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.DataStructures;
-using System.Windows.Navigation;
-using System.Security.Cryptography;
 
 namespace SoftwareRenderer3D.FragmentShaders
 {

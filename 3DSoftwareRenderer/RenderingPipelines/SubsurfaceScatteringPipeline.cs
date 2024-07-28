@@ -14,7 +14,6 @@ using SoftwareRenderer3D.Rasterizers;
 using System.Threading.Tasks;
 using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.FragmentShaders;
-using static g3.DPolyLine2f;
 
 namespace SoftwareRenderer3D.RenderingPipelines
 {
