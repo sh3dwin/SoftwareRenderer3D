@@ -168,6 +168,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 var barycentric = Barycentric.CalculateBarycentricCoordinates(screenPoint.XY(), v0.ScreenPosition.XY(), v1.ScreenPosition.XY(), v2.ScreenPosition.XY());
 
                 var fragment = new SimpleFragment(screenPoint.XY(), point.Z, barycentric, v0, v1, v2);
+
                 result.Add(fragment);
             }
 

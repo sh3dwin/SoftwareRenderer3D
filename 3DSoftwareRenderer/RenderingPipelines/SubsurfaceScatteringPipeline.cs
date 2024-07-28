@@ -14,13 +14,14 @@ using SoftwareRenderer3D.Rasterizers;
 using System.Threading.Tasks;
 using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.FragmentShaders;
+using static g3.DPolyLine2f;
 
-namespace SoftwareRenderer3D.Renderers
+namespace SoftwareRenderer3D.RenderingPipelines
 {
     public static class SubsurfaceScatteringPipeline
     {
         private static Mesh<IVertex> _lastRenderedMesh;
-        private static Dictionary<int, double> _lastRenderedMeshSubsurfaceScatteringMapping;
+        private static Dictionary<IVertex, double> _subsurfaceScatteringAmount;
         public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
             if (mesh == null)
@@ -29,11 +30,9 @@ namespace SoftwareRenderer3D.Renderers
             if (_lastRenderedMesh == null || !_lastRenderedMesh.Equals(mesh))
             {
                 _lastRenderedMesh = mesh;
-                _lastRenderedMeshSubsurfaceScatteringMapping = CalculateSubsurfaceScattering(mesh);
+                _subsurfaceScatteringAmount = CalculateSubsurfaceScattering(mesh);
             }
             _lastRenderedMesh.Equals(mesh);
-
-            TextureShader.BindTexture(texture);
 
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
@@ -44,29 +43,26 @@ namespace SoftwareRenderer3D.Renderers
 
             mesh.TransformVertices(width, height, viewMatrix, projectionMatrix);
 
-            var lightSources = Globals.LightSources;
-
             var facetIds = Globals.BackfaceCulling
                 ? mesh.FacetIds.Where(faId => Vector3.Dot((mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize(), mesh.GetFacetNormal(faId)) <= 0.1)
                 : mesh.FacetIds;
 
             var fragments = ScanLineRasterizer.Rasterize(mesh, width, height, facetIds);
 
-            if (mesh.Vertices.First().GetType().IsAssignableFrom(typeof(TexturedVertex)))
-                TextureShader.ShadeFragments(lightSources, frameBuffer, fragments);
-            else
-                SimpleFragmentShader.ShadeFragments(frameBuffer, lightSources, fragments);
+            var lightSources = Globals.LightSources;
 
-            TextureShader.UnbindTexture();
+            SubsurfaceScatteringFragmentShader.BindTexture(texture);
+            SubsurfaceScatteringFragmentShader.ShadeFragments(frameBuffer, lightSources, fragments, _subsurfaceScatteringAmount);
+            SubsurfaceScatteringFragmentShader.UnbindTexture();
 
             return frameBuffer.GetFrame();
         }
 
-        
 
-        private static Dictionary<int, double> CalculateSubsurfaceScattering(Mesh<IVertex> mesh)
+
+        private static Dictionary<IVertex, double> CalculateSubsurfaceScattering(Mesh<IVertex> mesh)
         {
-            var subsurfaceDistanceTraveled = new Dictionary<int, double>();
+            var subsurfaceDistanceTraveled = new Dictionary<IVertex, double>();
 
             var vertexIds = mesh.VertexIds;
             var facets = mesh.Facets;
@@ -83,29 +79,18 @@ namespace SoftwareRenderer3D.Renderers
             DMeshAABBTree3 spatial = new DMeshAABBTree3(g3Mesh);
             spatial.Build();
 
-            Parallel.ForEach(vertexIds, new ParallelOptions { MaxDegreeOfParallelism = 10 }, vertexId =>
+            Parallel.ForEach(vertexIds, vertexId =>
             {
-                var containsKey = false;
-
+                var vertex = mesh.GetVertex(vertexId);
+                var subsurfaceDistance = CalculateVertexSubsurfaceDistanceTraveled(mesh, g3Mesh, spatial, vertexId);
                 lock (subsurfaceDistanceTraveled)
                 {
-                    if (!subsurfaceDistanceTraveled.ContainsKey(vertexId))
-                        subsurfaceDistanceTraveled.Add(vertexId, -1);
+                    subsurfaceDistanceTraveled[vertex] = subsurfaceDistance;
                 }
-
-                if (!containsKey)
-                {
-                    var subsurfaceDistance = CalculateVertexSubsurfaceDistanceTraveled(mesh, g3Mesh, spatial, vertexId);
-                    lock (subsurfaceDistanceTraveled)
-                    {
-                        subsurfaceDistanceTraveled[vertexId] = subsurfaceDistance;
-                    }
-                }
-
             });
 
             var maxDistanceTraveled = subsurfaceDistanceTraveled.Values.Max();
-            var subsurfaceScatteringAmounts = new Dictionary<int, double>(subsurfaceDistanceTraveled.Count);
+            var subsurfaceScatteringAmounts = new Dictionary<IVertex, double>(subsurfaceDistanceTraveled.Count);
 
             foreach (var keyValue in subsurfaceDistanceTraveled)
             {

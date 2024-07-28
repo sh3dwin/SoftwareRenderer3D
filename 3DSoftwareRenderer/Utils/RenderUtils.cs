@@ -1,10 +1,6 @@
-﻿using SoftwareRenderer3D.DataStructures.MeshDataStructures;
-using SoftwareRenderer3D.DataStructures.VertexDataStructures;
-using SoftwareRenderer3D.Utils.GeneralUtils;
-using System.Collections.Generic;
+﻿using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace SoftwareRenderer3D.Utils
 {

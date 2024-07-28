@@ -6,7 +6,7 @@ using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.Enums;
 using SoftwareRenderer3D.Factories;
 using SoftwareRenderer3D.RenderContexts;
-using SoftwareRenderer3D.Renderers;
+using SoftwareRenderer3D.RenderingPipelines;
 using SoftwareRenderer3D.Utils;
 using System;
 using System.Collections.Generic;

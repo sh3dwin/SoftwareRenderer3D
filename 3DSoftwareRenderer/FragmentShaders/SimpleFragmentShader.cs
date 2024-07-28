@@ -7,11 +7,24 @@ using System.Drawing;
 using System.Numerics;
 using SoftwareRenderer3D.FrameBuffers;
 using System.Threading.Tasks;
+using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+using SoftwareRenderer3D.DataStructures;
+using System.Windows.Navigation;
 
 namespace SoftwareRenderer3D.FragmentShaders
 {
     public static class SimpleFragmentShader
     {
+        private static Texture _texture = null;
+
+        public static void BindTexture(Texture texture)
+        {
+            _texture = texture;
+        }
+        public static void UnbindTexture()
+        {
+            _texture = null;
+        }
         public static void ShadeFragments(IFrameBuffer frameBuffer, List<Vector3> lightSources, List<SimpleFragment> fragments)
         {
             Parallel.ForEach(fragments, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, fragment =>
@@ -46,10 +59,27 @@ namespace SoftwareRenderer3D.FragmentShaders
                 .Add(fragment.V1.Color.Mult(fragment.BarycentricCoordinates.Y)
                 .Add(fragment.V2.Color.Mult(fragment.BarycentricCoordinates.Z)));
 
+            if (fragment.V0.GetType().IsAssignableFrom(typeof(TexturedVertex)) && _texture != null)
+            {
+                color = GetFragmentTextureColor(fragment);
+            }
+
             var opacity = Globals.NormalizedOpacity.Clamp(0, 255);
             var fragmentColor = Color.FromArgb((int)(opacity * 255), (int)(color.R * diffuse), (int)(color.G * diffuse), (int)(color.B * diffuse));
 
             return fragmentColor;
+        }
+
+        private static Color GetFragmentTextureColor(SimpleFragment fragment)
+        {
+            var texturePosition =
+                (fragment.V0 as TexturedVertex).TextureCoordinates * fragment.BarycentricCoordinates.X
+                + (fragment.V1 as TexturedVertex).TextureCoordinates * fragment.BarycentricCoordinates.Y
+                + (fragment.V2 as TexturedVertex).TextureCoordinates * fragment.BarycentricCoordinates.Z;
+
+            var color = _texture.GetTextureColor(texturePosition.X, texturePosition.Y, Globals.TextureInterpolation);
+
+            return color;
         }
     }
 }
