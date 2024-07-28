@@ -52,22 +52,22 @@ namespace SoftwareRenderer3D.FragmentShaders
         {
             var diffuse = 0.0;
 
-            //foreach (var lightSource in lightSources)
-            //{
-            //    var interpolatedNormal =
-            //        (fragment.V0.Normal * fragment.BarycentricCoordinates.X
-            //        + fragment.V1.Normal * fragment.BarycentricCoordinates.Y
-            //        + fragment.V2.Normal * fragment.BarycentricCoordinates.Z).Normalize();
-            //    var worldPosition =
-            //        fragment.V0.WorldPoint * fragment.BarycentricCoordinates.X
-            //        + fragment.V1.WorldPoint * fragment.BarycentricCoordinates.Y
-            //        + fragment.V2.WorldPoint * fragment.BarycentricCoordinates.Z;
-            //    var lightDirection = (worldPosition - lightSource).Normalize();
+            foreach (var lightSource in lightSources)
+            {
+                var interpolatedNormal =
+                    (fragment.V0.Normal * fragment.BarycentricCoordinates.X
+                    + fragment.V1.Normal * fragment.BarycentricCoordinates.Y
+                    + fragment.V2.Normal * fragment.BarycentricCoordinates.Z).Normalize();
+                var worldPosition =
+                    fragment.V0.WorldPoint * fragment.BarycentricCoordinates.X
+                    + fragment.V1.WorldPoint * fragment.BarycentricCoordinates.Y
+                    + fragment.V2.WorldPoint * fragment.BarycentricCoordinates.Z;
+                var lightDirection = (worldPosition - lightSource).Normalize();
 
-            //    diffuse += (-Vector3.Dot(interpolatedNormal, lightDirection)).Clamp();
-            //}
+                diffuse += (-Vector3.Dot(interpolatedNormal, lightDirection)).Clamp();
+            }
 
-            //diffuse *= 0.5;
+            diffuse *= 0.5;
 
             if (fragment.BarycentricCoordinates.X > 1 + Epsilon || fragment.BarycentricCoordinates.X < -Epsilon
                 || fragment.BarycentricCoordinates.Y > 1 + Epsilon || fragment.BarycentricCoordinates.Y < -Epsilon
