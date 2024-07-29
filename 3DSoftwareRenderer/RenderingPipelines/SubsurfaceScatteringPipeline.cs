@@ -102,7 +102,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
 
         private static double CalculateVertexSubsurfaceDistanceTraveled(Mesh<IVertex> mesh, DMesh3 g3Mesh, DMeshAABBTree3 spatial, int vertexId)
         {
-            var origin = new Vector3(0, 100, 100).ToVector3d();
+            var origin = Globals.LightSources.First().ToVector3d();
             var vertexPos = mesh.GetVertex(vertexId).WorldPoint.ToVector3d();
             var direction = (vertexPos - origin).Normalized;
 
@@ -124,7 +124,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
 
         private static double CalculateLightDecay(double distance)
         {
-            return Math.Pow(Math.E, -2.0 * distance);
+            return Math.Pow(Math.E, -1.0 * distance);
         }
     }
 }

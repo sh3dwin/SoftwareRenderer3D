@@ -9,7 +9,7 @@
     <Window.Resources>
         <!-- In your resources section of the XAML -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
-    </Window.Resources> 
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20*"/>
@@ -24,15 +24,19 @@
                 <MenuItem Header="Open" Click="OpenFile_Click"/>
             </MenuItem>
         </Menu>
-        
+
         <Image Grid.Row="1" Stretch="Fill" x:Name="RenderTarget" Source="{Binding RenderTarget}"/>
         <Label Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="14" Content="{Binding FPS}"/>
+        <StackPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Label  FontSize="12" Content="{Binding TriangleCount}"/>
+            <Label  FontSize="12" Content="{Binding VertexCount}"/>
+        </StackPanel>
         <StackPanel Grid.Row="1" Width="200" HorizontalAlignment="Left" IsEnabled="{Binding IsFileLoaded}">
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Simple" IsChecked="{Binding SimpleRendering}" />
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Transparency"  IsChecked="{Binding TransparentRendering}"/>
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Subsurface-scattering" IsChecked="{Binding SubsurfaceScatteringRendering}"/>
         </StackPanel>
-        
+
         <Label Grid.Row="2" x:Name="OpenedFile" Content="{Binding OpenedFileName}"/>
         <Slider Grid.Row="2" x:Name="OpacitySlider" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="10, 10, 10, 10" MaxHeight="50" MinHeight="50" MaxWidth="400" MinWidth="400" Minimum="1" Maximum="10" Value="{Binding Opacity}"
                 Visibility="{Binding Path=TransparentRendering, Converter={StaticResource BoolToVis}}" />

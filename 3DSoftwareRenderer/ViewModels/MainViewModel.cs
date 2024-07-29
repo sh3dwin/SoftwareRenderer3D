@@ -11,6 +11,7 @@ using SoftwareRenderer3D.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -119,6 +120,8 @@ namespace SoftwareRenderer3D.ViewModels
             {
                 _fileLoaded = value;
                 RaisePropertyChanged(nameof(IsFileLoaded));
+                RaisePropertyChanged(nameof(TriangleCount));
+                RaisePropertyChanged(nameof(VertexCount));
             }
         }
 
@@ -135,6 +138,24 @@ namespace SoftwareRenderer3D.ViewModels
                 _fps.Enqueue(double.Parse(value));
 
                 RaisePropertyChanged(nameof(FPS));
+            }
+        }
+
+        public string TriangleCount
+        {
+            get => $"Number of triangles: {(_mesh != null ? _mesh.FacetCount : 0)}";
+            set
+            {
+                RaisePropertyChanged(nameof(TriangleCount));
+            }
+        }
+
+        public string VertexCount
+        {
+            get => $"Number of vertices: {(_mesh != null ? _mesh.VertexCount : 0)}";
+            set
+            {
+                RaisePropertyChanged(nameof(VertexCount));
             }
         }
 
@@ -239,7 +260,14 @@ namespace SoftwareRenderer3D.ViewModels
             {
                 var filePath = openFileDialog.FileName;
 
-                _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
+                try
+                {
+                    _mesh = FileReaderFactory.GetFileReader(filePath).ReadFile(filePath);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
+                }
 
                 if (_mesh != null)
                 {
@@ -248,6 +276,11 @@ namespace SoftwareRenderer3D.ViewModels
                     OpenedFileName = fileName;
                     _mesh.EnsureMeshQuality();
                     IsFileLoaded = true;
+                }
+                else
+                {
+                    OpenedFileName = $"Failed to load {openFileDialog.SafeFileName}!";
+                    IsFileLoaded = false;
                 }
             }
             SimpleRendering = true;

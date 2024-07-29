@@ -40,8 +40,8 @@ namespace SoftwareRenderer3D.Utils
 
         public static List<Vector3> LightSources = new List<Vector3>()
             {
-                new Vector3(0, 100, 100),
-                new Vector3(0, -123, -242),
+                //new Vector3(0, 100, 100),
+                new Vector3(0, -123, 242),
             };
 
     }

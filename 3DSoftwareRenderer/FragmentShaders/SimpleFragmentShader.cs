@@ -49,7 +49,7 @@ namespace SoftwareRenderer3D.FragmentShaders
                     + fragment.V2.WorldPoint * fragment.BarycentricCoordinates.Z;
                 var lightDirection = (worldPosition - lightSource).Normalize();
 
-                diffuse += (-Vector3.Dot(interpolatedNormal, lightDirection)).Clamp();
+                diffuse += Vector3.Dot(interpolatedNormal, -lightDirection).Clamp();
             }
 
             diffuse = diffuse.Clamp(0, 1);
