@@ -69,6 +69,7 @@
     <Compile Include="Collada\GeometryLoader.cs" />
     <Compile Include="Collada\SourceLoader.cs" />
     <Compile Include="Collada\ColladaVertex.cs" />
+    <Compile Include="DataStructures\Fragment\IFragment.cs" />
     <Compile Include="DataStructures\Fragment\SimpleFragment.cs" />
     <Compile Include="Enums\FileName.cs" />
     <Compile Include="Enums\FragmentShaderType.cs" />

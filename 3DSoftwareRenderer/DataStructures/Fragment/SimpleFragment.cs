@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace SoftwareRenderer3D.DataStructures.Fragment
 {
-    public struct SimpleFragment: IEqualityComparer
+    public struct SimpleFragment: IEqualityComparer, IFragment
     {
         public SimpleFragment(Vector2 coordinates, double depth, Vector3 barycentric, IVertex v0, IVertex v1, IVertex v2)
         {

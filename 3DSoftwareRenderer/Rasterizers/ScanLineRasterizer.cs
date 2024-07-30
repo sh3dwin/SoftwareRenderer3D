@@ -14,9 +14,9 @@ namespace SoftwareRenderer3D.Rasterizers
 {
     public static class ScanLineRasterizer
     {
-        public static List<SimpleFragment> Rasterize(Mesh<IVertex> mesh, int width, int height, IEnumerable<int> facetIds)
+        public static List<IFragment> Rasterize(Mesh<IVertex> mesh, int width, int height, IEnumerable<int> facetIds)
         {
-            var fragments = new ConcurrentBag<SimpleFragment>();
+            var fragments = new ConcurrentBag<IFragment>();
             Parallel.ForEach(facetIds, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, facetId =>
             {
                 var facet = mesh.GetFacet(facetId);
@@ -33,7 +33,7 @@ namespace SoftwareRenderer3D.Rasterizers
             });
             return fragments.ToList();
         }
-        private static List<SimpleFragment> RasterizeTriangle(int width, int height, IVertex v0, IVertex v1, IVertex v2)
+        private static List<IFragment> RasterizeTriangle(int width, int height, IVertex v0, IVertex v1, IVertex v2)
         {
             var (sortedV0, sortedV1, sortedV2) = RenderUtils.SortIndices(v0, v1, v2);
             if (sortedV0 == sortedV1 || sortedV1 == sortedV2 || sortedV2 == sortedV0)
@@ -48,7 +48,7 @@ namespace SoftwareRenderer3D.Rasterizers
 
             var yMiddle = sortedV1.ScreenPosition.Y.Clamp(yStart, yEnd);
 
-            var result = new List<SimpleFragment>();
+            var result = new List<IFragment>();
             if (RenderUtils.HaveClockwiseOrientation(sortedV0.ScreenPosition, sortedV1.ScreenPosition, sortedV2.ScreenPosition))
             {
                 // P0
@@ -76,7 +76,7 @@ namespace SoftwareRenderer3D.Rasterizers
         //   .................P1
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<SimpleFragment> ScanLineHalfTriangleBottomFlat(int width, int height, int yStart, int yEnd,
+        private static List<IFragment> ScanLineHalfTriangleBottomFlat(int width, int height, int yStart, int yEnd,
             IVertex anchor, IVertex vRight, IVertex vLeft)
         {
             var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
@@ -86,7 +86,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 ? 1f
                 : 1 / (vRight.ScreenPosition.Y - anchor.ScreenPosition.Y);
 
-            var result = new List<SimpleFragment>();
+            var result = new List<IFragment>();
             for (var y = yStart; y <= yEnd; y++)
             {
                 var gradient1 = ((y - anchor.ScreenPosition.Y) * deltaY1).Clamp();
@@ -113,7 +113,7 @@ namespace SoftwareRenderer3D.Rasterizers
         //          .....
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<SimpleFragment> ScanLineHalfTriangleTopFlat(int width, int height, int yStart, int yEnd,
+        private static List<IFragment> ScanLineHalfTriangleTopFlat(int width, int height, int yStart, int yEnd,
             IVertex anchor, IVertex vRight, IVertex vLeft)
         {
             var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
@@ -123,7 +123,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 ? 1f
                 : 1 / (vRight.ScreenPosition.Y - anchor.ScreenPosition.Y);
 
-            var result = new List<SimpleFragment>();
+            var result = new List<IFragment>();
             for (var y = yStart; y <= yEnd; y++)
             {
                 var gradient1 = ((vLeft.ScreenPosition.Y - y) * deltaY1).Clamp();
@@ -148,7 +148,7 @@ namespace SoftwareRenderer3D.Rasterizers
         /// Scan line on the x direction
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<SimpleFragment> ScanSingleLine(int width, int height, Vector3 start, Vector3 end,
+        private static List<IFragment> ScanSingleLine(int width, int height, Vector3 start, Vector3 end,
             IVertex v0, IVertex v1, IVertex v2)
         {
             var minX = System.Math.Max(start.X, 0);
@@ -156,7 +156,7 @@ namespace SoftwareRenderer3D.Rasterizers
 
             var deltaX = 1 / (end.X - start.X);
 
-            var result = new List<SimpleFragment>();
+            var result = new List<IFragment>();
             for (var x = minX; x < maxX; x++)
             {
                 var gradient = (x - start.X) * deltaX;

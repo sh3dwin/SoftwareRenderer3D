@@ -26,7 +26,7 @@ namespace SoftwareRenderer3D.FragmentShaders
         {
             _texture = null;
         }
-        public static void ShadeFragments(IFrameBuffer frameBuffer, List<Vector3> lightSources, List<SimpleFragment> fragments, Dictionary<IVertex, double> subsurfaceScatteringAmount)
+        public static void ShadeFragments(IFrameBuffer frameBuffer, List<Vector3> lightSources, List<IFragment> fragments, Dictionary<IVertex, double> subsurfaceScatteringAmount)
         {
             Parallel.ForEach(fragments, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, fragment =>
             {
@@ -35,7 +35,7 @@ namespace SoftwareRenderer3D.FragmentShaders
                 frameBuffer.SetPixelColor((int)fragment.ScreenCoordinates.X, (int)fragment.ScreenCoordinates.Y, (float)fragment.Depth, color);
             });
         }
-        private static Color ShadeFragment(SimpleFragment fragment, List<Vector3> lightSources, Dictionary<IVertex, double> subsurfaceScatteringAmount)
+        private static Color ShadeFragment(IFragment fragment, List<Vector3> lightSources, Dictionary<IVertex, double> subsurfaceScatteringAmount)
         {
             var diffuse = 0.0;
 
@@ -101,7 +101,7 @@ namespace SoftwareRenderer3D.FragmentShaders
             return fragmentColor;
         }
 
-        private static Color GetFragmentTextureColor(SimpleFragment fragment)
+        private static Color GetFragmentTextureColor(IFragment fragment)
         {
             var texturePosition =
                 (fragment.V0 as TexturedVertex).TextureCoordinates * fragment.BarycentricCoordinates.X
