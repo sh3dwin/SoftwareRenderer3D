@@ -17,11 +17,11 @@ using SoftwareRenderer3D.FragmentShaders;
 
 namespace SoftwareRenderer3D.RenderingPipelines
 {
-    public static class SubsurfaceScatteringPipeline
+    public class SubsurfaceScatteringPipeline: IRenderPipeline
     {
         private static Mesh<IVertex> _lastRenderedMesh;
         private static Dictionary<IVertex, double> _subsurfaceScatteringAmount;
-        public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
+        public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
             if (mesh == null)
                 return frameBuffer.GetFrame();

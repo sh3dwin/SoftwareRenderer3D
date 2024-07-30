@@ -321,31 +321,7 @@ namespace SoftwareRenderer3D.ViewModels
             _renderContext.FrameBuffer.Update((int)_width, (int)_height);
 
 
-            Bitmap bitmap;
-
-            switch (_renderType)
-            {
-                case RenderType.Simple:
-                    {
-                        bitmap = SimplePipeline.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
-                        break;
-                    }
-                case RenderType.Transparent:
-                    {
-                        bitmap = OrderIndependentTransparencyPipeline.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
-                        break;
-                    }
-                case RenderType.SubsurfaceScattering:
-                    {
-                        bitmap = SubsurfaceScatteringPipeline.Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
-                        break;
-                    }
-                default:
-                    {
-                        bitmap = _renderContext.FrameBuffer.GetFrame();
-                        break;
-                    }
-            }
+            Bitmap bitmap = RenderPipelineFactory.GetRenderPipeline(_renderType).Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
 
             RenderTarget = BitmapToImageSource(bitmap);
 

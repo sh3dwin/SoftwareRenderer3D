@@ -75,6 +75,7 @@
     <Compile Include="Enums\FrameBufferCombineType.cs" />
     <Compile Include="Enums\RenderType.cs" />
     <Compile Include="Extensions\MeshExtensions.cs" />
+    <Compile Include="Factories\RenderPipelineFactory.cs" />
     <Compile Include="FragmentShaders\SimpleFragmentShader.cs" />
     <Compile Include="FragmentShaders\SubsurfaceScatteringFragmentShader.cs" />
     <Compile Include="FrameBuffers\DepthPeelingBuffer.cs" />
@@ -100,6 +101,7 @@
     <Compile Include="Maths\QuaternionExtensions.cs" />
     <Compile Include="Rasterizers\ScanLineRasterizer.cs" />
     <Compile Include="RenderContexts\RenderContext.cs" />
+    <Compile Include="RenderingPipelines\IRenderPipeline.cs" />
     <Compile Include="RenderingPipelines\SimplePipeline.cs" />
     <Compile Include="RenderingPipelines\SubsurfaceScatteringPipeline.cs" />
     <Compile Include="RenderingPipelines\OrderIndependentTransparencyPipeline.cs" />

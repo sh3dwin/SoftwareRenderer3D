@@ -15,9 +15,9 @@ using System.Numerics;
 
 namespace SoftwareRenderer3D.RenderingPipelines
 {
-    public static class OrderIndependentTransparencyPipeline
+    public class OrderIndependentTransparencyPipeline: IRenderPipeline
     {
-        public static Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
+        public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
             if (mesh == null)
                 return frameBuffer.GetFrame();
