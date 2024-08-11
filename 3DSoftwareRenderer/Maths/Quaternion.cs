@@ -86,5 +86,14 @@ namespace SoftwareRenderer3D.Maths
                 0, 0, 0, 1);
         }
 
+        public Matrix4x4 RotationMatrixAlternative()
+        {
+            return new Matrix4x4(
+                (float)(1 - 2 * (c * c + d * d)), (float)(2 * (b * c - a * d)), (float)(2 * (b * d + a * c)), 0,
+                (float)(2 * (b * c + a * d)), (float)(1 - 2 * (b * b + d * d)), (float)(2 * (c * d - a * b)), 0,
+                (float)(2 * (b * d - a * c)), (float)(2 * (c * d + a * b)), (float)(1 - 2 * (b * b + c * c)), 0,
+                0, 0, 0, 1);
+        }
+
     }
 }

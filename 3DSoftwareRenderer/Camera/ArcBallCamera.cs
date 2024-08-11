@@ -56,7 +56,7 @@ namespace SoftwareRenderer3D.Camera
         /// <returns></returns>
         public Matrix4x4 ViewMatrix => _viewMatrix;
         public Matrix4x4 ProjectionMatrix => _projectionMatrix;
-        public Matrix4x4 RotationMatrix => _rotation.RotationMatrix();
+        public Matrix4x4 RotationMatrix => _rotation.RotationMatrixAlternative();
         public Maths.Quaternion Rotation => _rotation;
 
         public void Rotate(float width, float height, Vector3 firstPixel, Vector3 secondPixel)
@@ -83,11 +83,11 @@ namespace SoftwareRenderer3D.Camera
             UpdateProjectionMatrix(width, height, fov);
         }
 
-        public Vector3 EyePosition => Vector4.Transform(_position, _rotation.RotationMatrix()).ToVector3();
+        public Vector3 EyePosition => Vector4.Transform(_position, _rotation.RotationMatrixAlternative()).ToVector3();
 
         private void CalculateView()
         {
-            var rotationMatrix = _rotation.RotationMatrix();
+            var rotationMatrix = _rotation.RotationMatrixAlternative();
             var viewMatrix = new Matrix4x4(
                 rotationMatrix.M11, rotationMatrix.M12, rotationMatrix.M13, -_position.X + _lookAt.X,
                 rotationMatrix.M21, rotationMatrix.M22, rotationMatrix.M23, -_position.Y + _lookAt.Y,

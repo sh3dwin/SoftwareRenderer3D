@@ -5,6 +5,7 @@ using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
     /// Describes the base class for the Mesh data structure
     /// </summary>
     /// <typeparam name="V"></typeparam>
-    public class Mesh<V>: IEquatable<Mesh<V>>
+    public class Mesh<V> : IEquatable<Mesh<V>>
         where V : IVertex
     {
         private Dictionary<int, V> _vertices { get; set; }
@@ -80,12 +81,20 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
         {
             var sum = Vector3.Zero;
 
-            foreach(var vertex in _vertices.Values)
+            foreach (var vertex in _vertices.Values)
             {
                 sum += vertex.WorldPoint;
             }
 
             return sum / _vertices.Count;
+        }
+
+        // Needs fixing
+        public Vector3 GeometricCenter()
+        {
+            (var first, var second) = _vertices.Values.Select(v => v.WorldPoint).BoundingBox();
+
+            return 0.5f * (first + second);
         }
 
         public void EnsureMeshQuality()

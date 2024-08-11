@@ -113,6 +113,7 @@
     <Compile Include="Utils\Barycentric.cs" />
     <Compile Include="Utils\ColorUtils.cs" />
     <Compile Include="Utils\Constants.cs" />
+    <Compile Include="Utils\GeometryUtils.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\VectorUtils.cs" />
     <Compile Include="Utils\Globals.cs" />
