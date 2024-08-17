@@ -144,7 +144,13 @@ namespace SoftwareRenderer3D.ViewModels
 
         public string TriangleCount
         {
-            get => $"Number of triangles: {(_mesh != null ? _mesh.FacetCount : 0)}";
+            get
+            {
+                if (IsFileLoaded)
+                    return $"Number of triangles: {(_mesh != null ? _mesh.FacetCount : 0)}";
+                else
+                    return "";
+            }
             set
             {
                 RaisePropertyChanged(nameof(TriangleCount));
@@ -153,7 +159,13 @@ namespace SoftwareRenderer3D.ViewModels
 
         public string VertexCount
         {
-            get => $"Number of vertices: {(_mesh != null ? _mesh.VertexCount : 0)}";
+            get
+            {
+                if (IsFileLoaded)
+                    return $"Number of vertices: {(_mesh != null ? _mesh.VertexCount : 0)}";
+                else
+                    return "";
+            }
             set
             {
                 RaisePropertyChanged(nameof(VertexCount));
@@ -281,7 +293,6 @@ namespace SoftwareRenderer3D.ViewModels
                 else
                 {
                     MessageBox.Show($"Failed to load {openFileDialog.SafeFileName}!");
-                    OpenedFileName = $"Failed to load {openFileDialog.SafeFileName}!";
                     IsFileLoaded = false;
                 }
             }
