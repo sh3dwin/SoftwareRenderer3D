@@ -16,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace SoftwareRenderer3D.ViewModels
@@ -279,6 +280,7 @@ namespace SoftwareRenderer3D.ViewModels
                 }
                 else
                 {
+                    MessageBox.Show($"Failed to load {openFileDialog.SafeFileName}!");
                     OpenedFileName = $"Failed to load {openFileDialog.SafeFileName}!";
                     IsFileLoaded = false;
                 }
