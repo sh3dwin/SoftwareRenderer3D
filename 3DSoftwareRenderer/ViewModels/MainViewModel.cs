@@ -26,6 +26,8 @@ namespace SoftwareRenderer3D.ViewModels
         private float _width;
         private float _height;
 
+        private bool _showStats = false;
+
         private BitmapImage _renderTarget;
         private Mesh<IVertex> _mesh;
 
@@ -103,7 +105,13 @@ namespace SoftwareRenderer3D.ViewModels
         /// </summary>
         public string OpenedFileName
         {
-            get => _openedFileName ?? "No model selected";
+            get
+            {
+                if (IsFileLoaded)
+                    return _openedFileName;
+                else
+                    return "No model selected";
+            }
             set
             {
                 _openedFileName = value;
@@ -121,8 +129,22 @@ namespace SoftwareRenderer3D.ViewModels
             {
                 _fileLoaded = value;
                 RaisePropertyChanged(nameof(IsFileLoaded));
+                RaisePropertyChanged(nameof(OpenedFileName));
                 RaisePropertyChanged(nameof(TriangleCount));
                 RaisePropertyChanged(nameof(VertexCount));
+            }
+        }
+
+        /// <summary>
+        /// Controls whether various statistics are visible.
+        /// </summary>
+        public bool ShowStats
+        {
+            get => _showStats;
+            set
+            {
+                _showStats = value;
+                RaisePropertyChanged(nameof(ShowStats));
             }
         }
 
@@ -131,7 +153,10 @@ namespace SoftwareRenderer3D.ViewModels
         /// </summary>
         public string FPS
         {
-            get => $"FPS: {(_fps.Sum() / _fps.Count):#.##}";
+            get
+            {
+                return $"FPS: {(_fps.Sum() / _fps.Count):#.##}";
+            }
             set
             {
                 if (_fps.Count == 15)
@@ -142,6 +167,9 @@ namespace SoftwareRenderer3D.ViewModels
             }
         }
 
+        /// <summary>
+        /// Triangle count in the mesh.
+        /// </summary>
         public string TriangleCount
         {
             get
@@ -149,7 +177,7 @@ namespace SoftwareRenderer3D.ViewModels
                 if (IsFileLoaded)
                     return $"Number of triangles: {(_mesh != null ? _mesh.FacetCount : 0)}";
                 else
-                    return "";
+                    return string.Empty;
             }
             set
             {
@@ -157,6 +185,9 @@ namespace SoftwareRenderer3D.ViewModels
             }
         }
 
+        /// <summary>
+        /// Vertex count in the mesh.
+        /// </summary>
         public string VertexCount
         {
             get
@@ -164,7 +195,7 @@ namespace SoftwareRenderer3D.ViewModels
                 if (IsFileLoaded)
                     return $"Number of vertices: {(_mesh != null ? _mesh.VertexCount : 0)}";
                 else
-                    return "";
+                    return string.Empty;
             }
             set
             {
@@ -288,6 +319,7 @@ namespace SoftwareRenderer3D.ViewModels
 
                     OpenedFileName = fileName;
                     _mesh.EnsureMeshQuality();
+                    ResetView();
                     IsFileLoaded = true;
                 }
                 else
@@ -309,10 +341,6 @@ namespace SoftwareRenderer3D.ViewModels
 
         internal void Pan(Vector3 currentMousePosition)
         {
-            if (currentMousePosition != _lastMousePosition)
-            {
-
-            }
             _renderContext.Pan(currentMousePosition, _lastMousePosition);
             SetMouse(currentMousePosition);
             UpToDate = false;
@@ -373,6 +401,17 @@ namespace SoftwareRenderer3D.ViewModels
             }
         }
 
-        
+        internal void UnloadModel()
+        {
+            _mesh = null;
+            IsFileLoaded = false;
+            UpToDate = false;
+        }
+
+        internal void ResetView()
+        {
+            _renderContext.Camera.Reset();
+            UpToDate = false;
+        }
     }
 }

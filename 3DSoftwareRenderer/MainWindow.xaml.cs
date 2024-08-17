@@ -78,5 +78,20 @@ namespace SoftwareRenderer3D
         {
             _viewModel.LoadModel();
         }
+
+        private void ClearFile_Click(object sender, EventArgs e)
+        {
+            _viewModel.UnloadModel();
+        }
+
+        private void ShowStatistics_Click(object sender, EventArgs e)
+        {
+            _viewModel.ShowStats = !_viewModel.ShowStats;
+        }
+
+        private void ResetView_Click(object sender, EventArgs e)
+        {
+            _viewModel.ResetView();
+        }
     }
 }

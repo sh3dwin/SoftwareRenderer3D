@@ -21,6 +21,9 @@ namespace SoftwareRenderer3D.Camera
         private Vector3 _position;
         private Vector3 _lookAt;
 
+        private Vector3 _initialPosition;
+        private Vector3 _initialLookAt;
+
         private Matrix4x4 _viewMatrix;
 
         private Matrix4x4 _projectionMatrix;
@@ -46,8 +49,11 @@ namespace SoftwareRenderer3D.Camera
             _nearPlane = Constants.NearFrustumPlaneDistance;
             _farPlane = Constants.FarFrustumPlaneDistance;
 
-            _position = initialPosition;
-            _lookAt = lookAt;
+            _initialPosition = initialPosition;
+            _position = _initialPosition;
+
+            _initialLookAt = lookAt;
+            _lookAt = _initialLookAt;
 
             CalculateView();
         }
@@ -169,6 +175,15 @@ namespace SoftwareRenderer3D.Camera
                 0, 0, -1, 0);
         }
 
-        
+        internal void Reset()
+        {
+            _position = _initialPosition;
+            _lookAt = _initialLookAt;
+
+            _rotation = Maths.Quaternion.Identity;
+            _prevRotation = _rotation;
+
+            CalculateView();
+        }
     }
 }

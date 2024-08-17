@@ -22,16 +22,21 @@
         <Menu Grid.Row="0" FontSize="14">
             <MenuItem Header="File">
                 <MenuItem Header="Open" Click="OpenFile_Click"/>
+                <MenuItem Header="Clear" Click="ClearFile_Click" IsEnabled="{Binding IsFileLoaded}"/>
+            </MenuItem>
+            <MenuItem Header="View">
+                <MenuItem Header="Show Statictics" Click="ShowStatistics_Click" IsChecked="{Binding ShowStats}"/>
+                <MenuItem Header="Reset" Click="ResetView_Click" IsEnabled="{Binding Path=IsFileLoaded}" />
             </MenuItem>
         </Menu>
 
         <Image Grid.Row="1" Stretch="Fill" x:Name="RenderTarget" Source="{Binding RenderTarget}"/>
-        <Label Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="14" Content="{Binding FPS}"/>
+        <Label Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="14" Content="{Binding FPS}" Visibility="{Binding Path=ShowStats, Converter={StaticResource BoolToVis}}"/>
         <StackPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">
-            <Label  FontSize="12" Content="{Binding TriangleCount}"/>
-            <Label  FontSize="12" Content="{Binding VertexCount}"/>
+            <Label  FontSize="12" Content="{Binding TriangleCount}" Visibility="{Binding Path=ShowStats, Converter={StaticResource BoolToVis}}"/>
+            <Label  FontSize="12" Content="{Binding VertexCount}" Visibility="{Binding Path=ShowStats, Converter={StaticResource BoolToVis}}"/>
         </StackPanel>
-        <StackPanel Grid.Row="1" Width="200" HorizontalAlignment="Left" IsEnabled="{Binding IsFileLoaded}">
+        <StackPanel Grid.Row="1" Width="200" HorizontalAlignment="Left" Visibility="{Binding Path=IsFileLoaded, Converter={StaticResource BoolToVis}}">
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Simple" IsChecked="{Binding SimpleRendering}" />
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Transparency"  IsChecked="{Binding TransparentRendering}"/>
             <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Subsurface-scattering" IsChecked="{Binding SubsurfaceScatteringRendering}"/>
