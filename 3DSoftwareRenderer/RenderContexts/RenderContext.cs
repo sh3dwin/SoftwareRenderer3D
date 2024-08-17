@@ -2,6 +2,7 @@
 using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.FrameBuffers;
 using SoftwareRenderer3D.Utils.GeneralUtils;
+using System;
 using System.Numerics;
 
 namespace SoftwareRenderer3D.RenderContexts
@@ -61,6 +62,12 @@ namespace SoftwareRenderer3D.RenderContexts
             _frameBuffer.Update((int)width, (int)height);
         }
 
+        internal void Pan(Vector3 currentMousePosition, Vector3 lastMousePosition)
+        {
+            _camera.Pan(_width, _height, _fov, currentMousePosition, lastMousePosition);
+            _frameBuffer.Update((int)_width, (int)_height);
+        }
+
         public void Resize(float width, float height)
         {
             _width = width;
@@ -85,5 +92,7 @@ namespace SoftwareRenderer3D.RenderContexts
             _camera.Zoom(_width, _height, _fov);
             _frameBuffer.Update((int)_width, (int)_height);
         }
+
+        
     }
 }

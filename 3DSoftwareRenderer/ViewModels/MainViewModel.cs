@@ -32,8 +32,7 @@ namespace SoftwareRenderer3D.ViewModels
 
         private Queue<double> _fps = new Queue<double>();
 
-        private int _lastX;
-        private int _lastY;
+        private Vector3 _lastMousePosition;
 
         private string _openedFileName;
         private bool _fileLoaded;
@@ -49,6 +48,8 @@ namespace SoftwareRenderer3D.ViewModels
         {
             _width = width;
             _height = height;
+
+            _lastMousePosition = new Vector3(_width / 2.0f, height / 2.0f, 0);
 
             var camera = new ArcBallCamera(new Vector3(0, 0, 3), Vector3.Zero);
 
@@ -288,9 +289,19 @@ namespace SoftwareRenderer3D.ViewModels
 
         public void Rotate(Vector3 mouseCoords)
         {
-            var previousMouseCoords = new Vector3(_lastX, _lastY, 0);
-            _renderContext.Rotate(_width, _height, previousMouseCoords, mouseCoords);
-            SetMouse(mouseCoords.X, mouseCoords.Y);
+            _renderContext.Rotate(_width, _height, _lastMousePosition, mouseCoords);
+            SetMouse(mouseCoords);
+            UpToDate = false;
+        }
+
+        internal void Pan(Vector3 currentMousePosition)
+        {
+            if (currentMousePosition != _lastMousePosition)
+            {
+
+            }
+            _renderContext.Pan(currentMousePosition, _lastMousePosition);
+            SetMouse(currentMousePosition);
             UpToDate = false;
         }
 
@@ -308,10 +319,9 @@ namespace SoftwareRenderer3D.ViewModels
             _renderContext.Zoom(reduce);
             UpToDate = false;
         }
-        public void SetMouse(float x, float y)
+        public void SetMouse(Vector3 newPosition)
         {
-            _lastX = (int)x;
-            _lastY = (int)y;
+            _lastMousePosition = newPosition;
         }
 
         private void Render()
@@ -350,5 +360,6 @@ namespace SoftwareRenderer3D.ViewModels
             }
         }
 
+        
     }
 }

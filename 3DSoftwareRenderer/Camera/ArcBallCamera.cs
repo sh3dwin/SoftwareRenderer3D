@@ -16,6 +16,8 @@ namespace SoftwareRenderer3D.Camera
     /// https://www.khronos.org/opengl/wiki/Object_Mouse_Trackball
     public class ArcBallCamera
     {
+        private const double PanScaling = 10;
+
         private Vector3 _position;
         private Vector3 _lookAt;
 
@@ -75,7 +77,22 @@ namespace SoftwareRenderer3D.Camera
         public void Rotate(float width, float height, float fov, Vector3 previousMouseCoords, Vector3 newMouseCoords)
         {
             Rotate(width, height, previousMouseCoords, newMouseCoords);
-            UpdateProjectionMatrix(width, height, fov);
+        }
+
+        internal void Pan(float width, float height, float fov, Vector3 currentMousePosition, Vector3 lastMousePosition)
+        {
+            var ndcCurrent = currentMousePosition.ToNDC(width, height);
+            var ndcLast = lastMousePosition.ToNDC(width, height);
+
+            PanInternal(ndcCurrent, ndcLast);
+            CalculateView();
+        }
+
+        private void PanInternal(Vector3 currentMousePosition, Vector3 lastMousePosition)
+        {
+            var pan = currentMousePosition - lastMousePosition;
+
+            _lookAt += Vector3.Multiply(pan, (float)PanScaling);
         }
 
         public void Zoom(float width, float height, float fov)
@@ -88,11 +105,19 @@ namespace SoftwareRenderer3D.Camera
         private void CalculateView()
         {
             var rotationMatrix = _rotation.RotationMatrixAlternative();
-            var viewMatrix = new Matrix4x4(
-                rotationMatrix.M11, rotationMatrix.M12, rotationMatrix.M13, -_position.X + _lookAt.X,
-                rotationMatrix.M21, rotationMatrix.M22, rotationMatrix.M23, -_position.Y + _lookAt.Y,
-                rotationMatrix.M31, rotationMatrix.M32, rotationMatrix.M33, -_position.Z + _lookAt.Z,
+            var camerMatrix = new Matrix4x4(
+                rotationMatrix.M11, rotationMatrix.M12, rotationMatrix.M13, -_position.X,
+                rotationMatrix.M21, rotationMatrix.M22, rotationMatrix.M23, -_position.Y,
+                rotationMatrix.M31, rotationMatrix.M32, rotationMatrix.M33, -_position.Z,
                 0, 0, 0, 1);
+
+            var lookAtTranslationMatrix = new Matrix4x4(
+                1, 0, 0, _lookAt.X,
+                0, 1, 0, _lookAt.Y,
+                0, 0, 1, _lookAt.Z,
+                0, 0, 0, 1);
+
+            var viewMatrix = Matrix4x4.Multiply(lookAtTranslationMatrix, camerMatrix);
 
             _viewMatrix = viewMatrix;
         }
@@ -143,5 +168,7 @@ namespace SoftwareRenderer3D.Camera
                 0, 0, (-(_farPlane + _nearPlane)) / (_farPlane - _nearPlane), (-(20.0f * _farPlane * _nearPlane)) / (_farPlane - _nearPlane),
                 0, 0, -1, 0);
         }
+
+        
     }
 }

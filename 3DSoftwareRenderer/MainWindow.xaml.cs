@@ -24,36 +24,27 @@ namespace SoftwareRenderer3D
 
             DataContext = _viewModel;
 
-            RenderTarget.MouseMove += Rotate;
+            RenderTarget.MouseMove += ProcessMouseMovement;
             SizeChanged += Resize;
             RenderTarget.MouseWheel += Zoom;
+            // RenderTarget.MouseMove += Pan;
         }
 
-        private void SetRotationStart(object sender, MouseEventArgs e)
-        {
-            if (e.RightButton != MouseButtonState.Pressed)
-            {
-                return;
-            }
-            var pos = e.GetPosition(RenderTarget);
-            var mousePos = new Vector3((float)pos.X, (float)pos.Y, 0);
-
-            _viewModel.SetMouse(mousePos.X, mousePos.Y);
-        }
-
-        private void Rotate(object sender, MouseEventArgs e)
+        private void ProcessMouseMovement(object sender, MouseEventArgs e)
         {
             var pos = e.GetPosition(RenderTarget);
             var mousePos = new Vector3((float)pos.X, (float)pos.Y, 0);
-            
-            if (e.RightButton != MouseButtonState.Pressed)
+
+            if (e.MiddleButton == MouseButtonState.Pressed)
             {
-                _viewModel.SetMouse(mousePos.X, mousePos.Y);
-                return;
+                _viewModel.Pan(mousePos);
             }
-            
-            _viewModel.Rotate(mousePos);
-            _viewModel.SetMouse(mousePos.X, mousePos.Y);
+            if (e.RightButton == MouseButtonState.Pressed)
+            {
+                _viewModel.Rotate(mousePos);
+            }
+
+            _viewModel.SetMouse(mousePos);
         }
 
         private void Zoom(object sender, MouseWheelEventArgs e)
@@ -66,7 +57,6 @@ namespace SoftwareRenderer3D
             {
                 _viewModel.UpdateZoom(false);
             }
-            
         }
 
         private void Resize(object sender, EventArgs e)

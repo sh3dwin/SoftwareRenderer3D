@@ -86,5 +86,14 @@ namespace SoftwareRenderer3D.Utils.GeneralUtils
         {
             return new Vector3(vector.X, vector.Y, vector.Z);
         }
+
+        public static Vector3 ToNDC(this Vector3 vector, double width, double height)
+        {
+            var ndcX = (vector.X - width / 2) / width / 2;
+            var ndcY = (- vector.Y - height / 2) / height / 2;
+            var ndcZ = vector.Z;
+
+            return new Vector3((float)ndcX, (float)ndcY, (float)ndcZ);
+        }
     }
 }
