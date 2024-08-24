@@ -54,6 +54,7 @@ namespace SoftwareRenderer3D.FragmentShaders
                 diffuse += (-Vector3.Dot(interpolatedNormal, lightDirection)).Clamp();
             }
 
+            var subsurfaceAmount = 0.0;
             if (fragment.BarycentricCoordinates.X > 1 + Epsilon || fragment.BarycentricCoordinates.X < -Epsilon
                 || fragment.BarycentricCoordinates.Y > 1 + Epsilon || fragment.BarycentricCoordinates.Y < -Epsilon
                 || fragment.BarycentricCoordinates.Z > 1 + Epsilon || fragment.BarycentricCoordinates.Z < -Epsilon)
@@ -73,18 +74,22 @@ namespace SoftwareRenderer3D.FragmentShaders
                     else
                         closest = fragment.V2;
                 }
-                diffuse += 1 - subsurfaceScatteringAmount[closest];
+                subsurfaceAmount = 0 + subsurfaceScatteringAmount[closest];
             }
 
             else
             {
-                diffuse += 1 - (
+                subsurfaceAmount = 0 + (
                     subsurfaceScatteringAmount[fragment.V0] * fragment.BarycentricCoordinates.X
                     + subsurfaceScatteringAmount[fragment.V1] * fragment.BarycentricCoordinates.Y
                     + subsurfaceScatteringAmount[fragment.V2] * fragment.BarycentricCoordinates.Z);
             }
 
-            diffuse = diffuse.Clamp(0, 0.9);
+
+            diffuse = diffuse.Clamp(0, 0.6);
+            subsurfaceAmount = subsurfaceAmount.Clamp(0, 0.3);
+
+            diffuse += subsurfaceAmount; 
 
             var color = fragment.V0.Color.Mult(fragment.BarycentricCoordinates.X)
                 .Add(fragment.V1.Color.Mult(fragment.BarycentricCoordinates.Y)

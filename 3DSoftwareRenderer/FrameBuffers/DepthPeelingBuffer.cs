@@ -8,7 +8,7 @@ namespace SoftwareRenderer3D.FrameBuffers
 {
     public class DepthPeelingBuffer : IFrameBuffer
     {
-        private const double DepthTestEpsilon = 1e-5;
+        private const double DepthTestEpsilon = 1e-1;
         private int[] _colorBuffer;
         private int[] _minColorBuffer;
 

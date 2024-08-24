@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_3DSoftwareRenderer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="930" Width="800">
+        Title="Software Renderer 3D" Height="920" Width="900">
     <Window.Resources>
         <!-- In your resources section of the XAML -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
@@ -14,7 +14,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="20*"/>
             <RowDefinition Height="800*"/>
-            <RowDefinition Height="70*"/>
+            <RowDefinition Height="100*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -27,6 +27,29 @@
             <MenuItem Header="View">
                 <MenuItem Header="Show Statictics" Click="ShowStatistics_Click" IsChecked="{Binding ShowStats}"/>
                 <MenuItem Header="Reset" Click="ResetView_Click" IsEnabled="{Binding Path=IsFileLoaded}" />
+                <MenuItem Header="Render Effect" IsEnabled="{Binding Path=IsFileLoaded}">
+                    <MenuItem>
+                        <MenuItem.Template>
+                            <ControlTemplate>
+                                <RadioButton Margin="15 10 10 10" GroupName="RenderEffect" Content="Simple" IsChecked="{Binding SimpleRendering}" />
+                            </ControlTemplate>
+                        </MenuItem.Template>
+                    </MenuItem>
+                    <MenuItem>
+                        <MenuItem.Template>
+                            <ControlTemplate>
+                                <RadioButton Margin="15 10 10 10" GroupName="RenderEffect" Content="Transparency"  IsChecked="{Binding TransparentRendering}"/>
+                            </ControlTemplate>
+                        </MenuItem.Template>
+                    </MenuItem>
+                    <MenuItem>
+                        <MenuItem.Template>
+                            <ControlTemplate>
+                                <RadioButton Margin="15 10 10 10" GroupName="RenderEffect" Content="Subsurface-scattering" IsChecked="{Binding SubsurfaceScatteringRendering}"/>
+                            </ControlTemplate>
+                        </MenuItem.Template>
+                    </MenuItem>
+                </MenuItem>
             </MenuItem>
         </Menu>
 
@@ -36,14 +59,11 @@
             <Label  FontSize="12" Content="{Binding TriangleCount}" Visibility="{Binding Path=ShowStats, Converter={StaticResource BoolToVis}}"/>
             <Label  FontSize="12" Content="{Binding VertexCount}" Visibility="{Binding Path=ShowStats, Converter={StaticResource BoolToVis}}"/>
         </StackPanel>
-        <StackPanel Grid.Row="1" Width="200" HorizontalAlignment="Left" Visibility="{Binding Path=IsFileLoaded, Converter={StaticResource BoolToVis}}">
-            <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Simple" IsChecked="{Binding SimpleRendering}" />
-            <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Transparency"  IsChecked="{Binding TransparentRendering}"/>
-            <RadioButton Margin="10 10 10 10" GroupName="RenderEffect" Content="Subsurface-scattering" IsChecked="{Binding SubsurfaceScatteringRendering}"/>
-        </StackPanel>
-
         <Label Grid.Row="2" x:Name="OpenedFile" Content="{Binding OpenedFileName}"/>
-        <Slider Grid.Row="2" x:Name="OpacitySlider" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="10, 10, 10, 10" MaxHeight="50" MinHeight="50" MaxWidth="400" MinWidth="400" Minimum="1" Maximum="10" Value="{Binding Opacity}"
+        <StackPanel Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Center" Visibility="{Binding Path=IsFileLoaded, Converter={StaticResource BoolToVis}}">
+            <Label HorizontalAlignment="Center" VerticalAlignment="Top" Visibility="{Binding Path=TransparentRendering, Converter={StaticResource BoolToVis}}" x:Name="OpacityLabel">Opacity Level</Label>
+            <Slider x:Name="OpacitySlider" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="10, 10, 10, 10" MaxHeight="50" MinHeight="50" MaxWidth="400" MinWidth="400" Minimum="1" Maximum="10" Value="{Binding Opacity}"
                 Visibility="{Binding Path=TransparentRendering, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
     </Grid>
 </Window>

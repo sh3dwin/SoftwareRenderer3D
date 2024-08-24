@@ -151,7 +151,7 @@ namespace SoftwareRenderer3D.FileReaders
                                 var v2 = ParseVector3ASCII(reader.ReadLine(), 1);
                                 ProcessVertex(veIds, v2);
 
-                                normal = Vector3.Normalize(Vector3.Cross(Vector3.Normalize(v1 - v0), Vector3.Normalize(v2 - v0)));
+                                normal = Vector3.Normalize(Vector3.Cross(Vector3.Normalize(v1 - v0), Vector3.Normalize(v2 - v1)));
                                 var facet = new Facet(veIds[v0], veIds[v1], veIds[v2], normal);
 
                                 faIds.Add(faIds.Count, facet);

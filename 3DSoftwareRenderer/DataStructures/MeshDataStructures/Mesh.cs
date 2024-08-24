@@ -111,7 +111,7 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
 
                 var normal = Vector3.Cross(Vector3.Normalize(v2.WorldPoint - v0.WorldPoint), Vector3.Normalize(v1.WorldPoint - v0.WorldPoint));
 
-                facet.UpdateNormal(normal);
+                //facet.UpdateNormal(normal);
 
                 if (!vertexOccurrences.ContainsKey(v0.WorldPoint))
                 {

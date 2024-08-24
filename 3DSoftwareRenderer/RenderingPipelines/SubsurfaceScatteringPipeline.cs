@@ -17,10 +17,12 @@ using SoftwareRenderer3D.FragmentShaders;
 
 namespace SoftwareRenderer3D.RenderingPipelines
 {
-    public class SubsurfaceScatteringPipeline: IRenderPipeline
+    public class SubsurfaceScatteringPipeline : IRenderPipeline
     {
         private static Mesh<IVertex> _lastRenderedMesh;
         private static Dictionary<IVertex, double> _subsurfaceScatteringAmount;
+        private const double LightDecayParameter = 0.5;
+
         public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
             if (mesh == null)
@@ -57,19 +59,16 @@ namespace SoftwareRenderer3D.RenderingPipelines
             return frameBuffer.GetFrame();
         }
 
-
-
         private static Dictionary<IVertex, double> CalculateSubsurfaceScattering(Mesh<IVertex> mesh)
         {
-            var subsurfaceDistanceTraveled = new Dictionary<IVertex, double>();
+            var subsurfaceDistanceTraveled = new double[mesh.VertexCount];
 
             var vertexIds = mesh.VertexIds;
             var facets = mesh.Facets;
 
             var g3Vertices = vertexIds.Select(veId => new Vector3f(mesh.GetVertexPoint(veId).ToVector3f())).ToList();
 
-
-            DMesh3 g3Mesh = new DMesh3(MeshComponents.VertexNormals);
+            DMesh3 g3Mesh = new DMesh3();
             for (int i = 0; i < vertexIds.Count(); ++i)
                 g3Mesh.AppendVertex(new NewVertexInfo(g3Vertices[i]));
             foreach (var facet in facets)
@@ -82,19 +81,26 @@ namespace SoftwareRenderer3D.RenderingPipelines
             {
                 var vertex = mesh.GetVertex(vertexId);
                 var subsurfaceDistance = CalculateVertexSubsurfaceDistanceTraveled(mesh, g3Mesh, spatial, vertexId);
-                lock (subsurfaceDistanceTraveled)
-                {
-                    subsurfaceDistanceTraveled[vertex] = subsurfaceDistance;
-                }
+                subsurfaceDistanceTraveled[vertexId] = CalculateLightDecay(subsurfaceDistance);
             });
 
-            var maxDistanceTraveled = subsurfaceDistanceTraveled.Values.Max();
-            var subsurfaceScatteringAmounts = new Dictionary<IVertex, double>(subsurfaceDistanceTraveled.Count);
+            var maxDistanceTraveled = subsurfaceDistanceTraveled.Max();
+            var subsurfaceScatteringAmounts = new Dictionary<IVertex, double>(subsurfaceDistanceTraveled.Length);
 
-            foreach (var keyValue in subsurfaceDistanceTraveled)
+            var maxDistance = subsurfaceDistanceTraveled.Max();
+            for (var vertexId = 0; vertexId < subsurfaceDistanceTraveled.Length; vertexId++)
             {
-                var normalizedDistance = keyValue.Value / maxDistanceTraveled;
-                subsurfaceScatteringAmounts[keyValue.Key] = CalculateLightDecay(normalizedDistance);
+                var distance = subsurfaceDistanceTraveled[vertexId];
+                var normalizedDistance = distance / maxDistance;
+                subsurfaceDistanceTraveled[vertexId] = 1 - LightDecayParameter * normalizedDistance;
+            }
+
+            for (var vertexId = 0; vertexId < subsurfaceDistanceTraveled.Length; vertexId++)
+            {
+                var distance = subsurfaceDistanceTraveled[vertexId];
+                var vertex = mesh.GetVertex(vertexId);
+                //subsurfaceScatteringAmounts[vertex] = CalculateLightDecay(distance);
+                subsurfaceScatteringAmounts[vertex] = distance;
             }
 
             return subsurfaceScatteringAmounts;
@@ -104,9 +110,9 @@ namespace SoftwareRenderer3D.RenderingPipelines
         {
             var origin = Globals.LightSources.First().ToVector3d();
             var vertexPos = mesh.GetVertex(vertexId).WorldPoint.ToVector3d();
-            var direction = (vertexPos - origin).Normalized;
+            var direction = (origin - vertexPos).Normalized;
 
-            Ray3d ray = new Ray3d(origin, direction);
+            Ray3d ray = new Ray3d(vertexPos + 0.01 * direction, direction);
             int hitTriangleId = spatial.FindNearestHitTriangle(ray);
 
             if (hitTriangleId != DMesh3.InvalidID)
@@ -114,9 +120,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
                 IntrRay3Triangle3 intersection = MeshQueries.TriangleIntersection(g3Mesh, hitTriangleId, ray);
                 double hitDistance = origin.Distance(ray.PointAt(intersection.RayParameter));
 
-                var distanceToVertex = origin.Distance(vertexPos) - hitDistance;
-
-                return distanceToVertex;
+                return hitDistance;
             }
 
             return 0;
@@ -124,7 +128,8 @@ namespace SoftwareRenderer3D.RenderingPipelines
 
         private static double CalculateLightDecay(double distance)
         {
-            return Math.Pow(Math.E, -1.0 * distance);
+            return distance;
+            return Math.Exp(1 / (1 + LightDecayParameter * distance));
         }
     }
 }
