@@ -63,7 +63,14 @@ namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
         }
         public Vector3 Normal => _normal;
 
-        public Vector3 WorldPoint => _worldPosition;
+        public Vector3 WorldPoint
+        {
+            get => _worldPosition;
+            set
+            {
+                _worldPosition = value;
+            }
+        }
 
         public Color Color
         {

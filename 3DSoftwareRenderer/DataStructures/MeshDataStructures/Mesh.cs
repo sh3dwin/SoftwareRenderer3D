@@ -109,9 +109,9 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
                 var v1 = _vertices[facet.V1];
                 var v2 = _vertices[facet.V2];
 
-                var normal = Vector3.Cross(Vector3.Normalize(v2.WorldPoint - v0.WorldPoint), Vector3.Normalize(v1.WorldPoint - v0.WorldPoint));
+                var normal = Vector3.Cross(Vector3.Normalize(v1.WorldPoint - v0.WorldPoint), Vector3.Normalize(v2.WorldPoint - v0.WorldPoint));
 
-                //facet.UpdateNormal(normal);
+                facet.UpdateNormal(normal);
 
                 if (!vertexOccurrences.ContainsKey(v0.WorldPoint))
                 {
@@ -175,7 +175,6 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
                 newVertices[keyValue.Value] = _vertices[positionVertexId[keyValue.Key]];
                 newVertices[keyValue.Value].Color = Color.White;
             }
-
             _vertices = newVertices;
             _facets = newFacets;
         }

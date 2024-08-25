@@ -166,6 +166,9 @@
     <None Include="Models\dae\dragon.dae">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Models\stl\cube.stl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Models\stl\sphere.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

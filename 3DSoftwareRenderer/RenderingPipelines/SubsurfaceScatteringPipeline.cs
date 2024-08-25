@@ -21,7 +21,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
     {
         private static Mesh<IVertex> _lastRenderedMesh;
         private static Dictionary<IVertex, double> _subsurfaceScatteringAmount;
-        private const double LightDecayParameter = 0.5;
+        private const double LightDecayParameter = 0.2;
 
         public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
@@ -77,7 +77,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
             DMeshAABBTree3 spatial = new DMeshAABBTree3(g3Mesh);
             spatial.Build();
 
-            Parallel.ForEach(vertexIds, vertexId =>
+            Parallel.ForEach(vertexIds, new ParallelOptions { MaxDegreeOfParallelism = Constants.NumberOfThreads }, vertexId =>
             {
                 var vertex = mesh.GetVertex(vertexId);
                 var subsurfaceDistance = CalculateVertexSubsurfaceDistanceTraveled(mesh, g3Mesh, spatial, vertexId);
@@ -92,14 +92,13 @@ namespace SoftwareRenderer3D.RenderingPipelines
             {
                 var distance = subsurfaceDistanceTraveled[vertexId];
                 var normalizedDistance = distance / maxDistance;
-                subsurfaceDistanceTraveled[vertexId] = 1 - LightDecayParameter * normalizedDistance;
+                subsurfaceDistanceTraveled[vertexId] = 1 - normalizedDistance;
             }
 
             for (var vertexId = 0; vertexId < subsurfaceDistanceTraveled.Length; vertexId++)
             {
                 var distance = subsurfaceDistanceTraveled[vertexId];
                 var vertex = mesh.GetVertex(vertexId);
-                //subsurfaceScatteringAmounts[vertex] = CalculateLightDecay(distance);
                 subsurfaceScatteringAmounts[vertex] = distance;
             }
 
@@ -118,7 +117,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
             if (hitTriangleId != DMesh3.InvalidID)
             {
                 IntrRay3Triangle3 intersection = MeshQueries.TriangleIntersection(g3Mesh, hitTriangleId, ray);
-                double hitDistance = origin.Distance(ray.PointAt(intersection.RayParameter));
+                double hitDistance = vertexPos.Distance(ray.PointAt(intersection.RayParameter));
 
                 return hitDistance;
             }

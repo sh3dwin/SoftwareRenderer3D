@@ -53,7 +53,6 @@ namespace SoftwareRenderer3D.FragmentShaders
 
                 diffuse += (-Vector3.Dot(interpolatedNormal, lightDirection)).Clamp();
             }
-
             var subsurfaceAmount = 0.0;
             if (fragment.BarycentricCoordinates.X > 1 + Epsilon || fragment.BarycentricCoordinates.X < -Epsilon
                 || fragment.BarycentricCoordinates.Y > 1 + Epsilon || fragment.BarycentricCoordinates.Y < -Epsilon
@@ -86,10 +85,9 @@ namespace SoftwareRenderer3D.FragmentShaders
             }
 
 
-            diffuse = diffuse.Clamp(0, 0.6);
-            subsurfaceAmount = subsurfaceAmount.Clamp(0, 0.3);
-
-            diffuse += subsurfaceAmount; 
+            diffuse *= 0.7;
+            subsurfaceAmount = 0.3 * subsurfaceAmount.Clamp();
+            diffuse += subsurfaceAmount;
 
             var color = fragment.V0.Color.Mult(fragment.BarycentricCoordinates.X)
                 .Add(fragment.V1.Color.Mult(fragment.BarycentricCoordinates.Y)
