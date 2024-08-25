@@ -154,22 +154,22 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Models\dae\skull.dae">
+    <None Include="Resources\Models\dae\skull.dae">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Models\stl\bunny.stl">
+    <None Include="Resources\Models\stl\bunny.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Models\dae\cowboy.dae">
+    <None Include="Resources\Models\dae\cowboy.dae">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Models\dae\dragon.dae">
+    <None Include="Resources\Models\dae\dragon.dae">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Models\stl\cube.stl">
+    <None Include="Resources\Models\stl\cube.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Models\stl\sphere.stl">
+    <None Include="Resources\Models\stl\sphere.stl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
@@ -182,36 +182,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Models\dae\textures\Ani_Fire_A.png">
+    <None Include="Resources\Models\dae\textures\cowboy.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\cowboy.bmp">
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\Textures\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Models\dae\textures\cowboy - Copy.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\Dragon_Bump_Col2.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\Dragon_ground_color.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\Dragon_Nor.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\Dragon_Nor_mirror2.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\Fire_A_2.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\Floor_C.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\Floor_N.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Models\dae\textures\Floor_S.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

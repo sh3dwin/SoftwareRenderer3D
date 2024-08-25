@@ -58,8 +58,12 @@ namespace SoftwareRenderer3D.ViewModels
 
             _renderContext = new RenderContext((int)width, (int)height, 100, camera);
 
-            var texturePath = @"E:\FINKI\000Diplmoska\3DSoftwareRenderer\3DSoftwareRenderer\Models\dae\textures\cowboy.bmp";
-            var texture = new Texture(new Bitmap(texturePath), true);
+            var textureName = "cowboy.bmp";
+            var textureDirectory = Path.Combine(Environment.CurrentDirectory, @"Resources\Models\dae\textures");
+            var texturePath = Path.Combine(textureDirectory, textureName);
+            // texturePath = @"E:\FINKI\000Diplmoska\pictures\checkerboard.png";
+            var bitmap = new Bitmap(texturePath);
+            var texture = new Texture(bitmap, true);
             _renderContext.BindTexture(texture);
 
             _renderType = RenderType.None;
