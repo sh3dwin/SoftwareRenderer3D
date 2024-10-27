@@ -46,5 +46,7 @@ namespace SoftwareRenderer3D.Utils
                 // new Vector3(0, -123, 242),
             };
 
+        public static Vector3 InitialCameraPosition = new Vector3(0, 0, 1);
+
     }
 }

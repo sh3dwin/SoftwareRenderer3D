@@ -111,7 +111,7 @@ namespace SoftwareRenderer3D.Camera
         private void CalculateView()
         {
             var rotationMatrix = _rotation.RotationMatrixAlternative();
-            var camerMatrix = new Matrix4x4(
+            var cameraMatrix = new Matrix4x4(
                 rotationMatrix.M11, rotationMatrix.M12, rotationMatrix.M13, -_position.X,
                 rotationMatrix.M21, rotationMatrix.M22, rotationMatrix.M23, -_position.Y,
                 rotationMatrix.M31, rotationMatrix.M32, rotationMatrix.M33, -_position.Z,
@@ -123,7 +123,7 @@ namespace SoftwareRenderer3D.Camera
                 0, 0, 1, _lookAt.Z,
                 0, 0, 0, 1);
 
-            var viewMatrix = Matrix4x4.Multiply(lookAtTranslationMatrix, camerMatrix);
+            var viewMatrix = Matrix4x4.Multiply(lookAtTranslationMatrix, cameraMatrix);
 
             _viewMatrix = viewMatrix;
         }

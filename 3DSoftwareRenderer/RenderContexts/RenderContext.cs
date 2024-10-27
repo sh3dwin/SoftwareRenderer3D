@@ -1,6 +1,7 @@
 ﻿using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.FrameBuffers;
+using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
 using System.Numerics;
@@ -9,6 +10,11 @@ namespace SoftwareRenderer3D.RenderContexts
 {
     public class RenderContext
     {
+        private const float ZoomInMultiplier = 1.1f;
+        private const float ZoomOutMultiplier = 0.9f;
+        private const int MaxFovDegrees = 160;
+        private const int MinFovDegrees = 1;
+
         private float _width;
         private float _height;
 
@@ -26,7 +32,7 @@ namespace SoftwareRenderer3D.RenderContexts
             _fov = fov;
 
             _frameBuffer = new FrameBuffer(width, height);
-            _camera = new ArcBallCamera(new Vector3(0, 0, 1), Vector3.Zero);
+            _camera = new ArcBallCamera(Globals.InitialCameraPosition, Vector3.Zero);
         }
 
         public RenderContext(int width, int height, float fov, ArcBallCamera camera)
@@ -87,8 +93,8 @@ namespace SoftwareRenderer3D.RenderContexts
         }
         public void Zoom(bool zoomOut)
         {
-            _fov *= zoomOut ? 1.1f : 0.9f;
-            _fov = MathUtils.Clamp(_fov, 1, 160);
+            _fov *= zoomOut ? ZoomInMultiplier : ZoomOutMultiplier;
+            _fov = MathUtils.Clamp(_fov, MinFovDegrees, MaxFovDegrees);
             _camera.Zoom(_width, _height, _fov);
             _frameBuffer.Update((int)_width, (int)_height);
         }
