@@ -31,7 +31,7 @@ namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
         }
 
         public Vector3 Normal => _normal;
-        public Vector3 WorldPoint
+        public Vector3 Position
         {
             get => _worldPosition;
             set

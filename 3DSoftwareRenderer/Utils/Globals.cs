@@ -29,9 +29,9 @@ namespace SoftwareRenderer3D.Utils
 
         private static readonly Dictionary<int, Facet> testFacets = new Dictionary<int, Facet>
             {
-                {0, new Facet(0, 1, 2, Vector3.Cross(Vector3.Normalize(testVertices[2].WorldPoint - testVertices[0].WorldPoint), Vector3.Normalize(testVertices[1].WorldPoint - testVertices[0].WorldPoint))) },
-                {1, new Facet(3, 4, 5, Vector3.Cross(Vector3.Normalize(testVertices[5].WorldPoint - testVertices[3].WorldPoint), Vector3.Normalize(testVertices[4].WorldPoint - testVertices[3].WorldPoint))) },
-                {2, new Facet(6, 7, 8, Vector3.Cross(Vector3.Normalize(testVertices[8].WorldPoint - testVertices[6].WorldPoint), Vector3.Normalize(testVertices[7].WorldPoint - testVertices[6].WorldPoint))) },
+                {0, new Facet(0, 1, 2, Vector3.Cross(Vector3.Normalize(testVertices[2].Position - testVertices[0].Position), Vector3.Normalize(testVertices[1].Position - testVertices[0].Position))) },
+                {1, new Facet(3, 4, 5, Vector3.Cross(Vector3.Normalize(testVertices[5].Position - testVertices[3].Position), Vector3.Normalize(testVertices[4].Position - testVertices[3].Position))) },
+                {2, new Facet(6, 7, 8, Vector3.Cross(Vector3.Normalize(testVertices[8].Position - testVertices[6].Position), Vector3.Normalize(testVertices[7].Position - testVertices[6].Position))) },
             };
 
         public static Mesh<IVertex> TestMesh = new Mesh<IVertex>(testVertices, testFacets);

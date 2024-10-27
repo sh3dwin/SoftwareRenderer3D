@@ -58,14 +58,14 @@ namespace SoftwareRenderer3D.Utils.GeneralUtils
                 );
         }
 
-        public static Vector4 TransformHomogeneus(this Vector3 vector, Matrix4x4 matrix)
+        public static Vector4 TransformHomogeneous(this Vector3 vector, Matrix4x4 matrix)
         {
-            var homogeneusVector = new Vector4(vector.X, vector.Y, vector.Z, 1);
+            var homogeneousVector = new Vector4(vector.X, vector.Y, vector.Z, 1);
 
-            var x = homogeneusVector.X * matrix.M11 + homogeneusVector.Y * matrix.M12 + homogeneusVector.Z * matrix.M13 + homogeneusVector.W * matrix.M14;
-            var y = homogeneusVector.X * matrix.M21 + homogeneusVector.Y * matrix.M22 + homogeneusVector.Z * matrix.M23 + homogeneusVector.W * matrix.M24;
-            var z = homogeneusVector.X * matrix.M31 + homogeneusVector.Y * matrix.M32 + homogeneusVector.Z * matrix.M33 + homogeneusVector.W * matrix.M34;
-            var w = homogeneusVector.X * matrix.M41 + homogeneusVector.Y * matrix.M42 + homogeneusVector.Z * matrix.M43 + homogeneusVector.W * matrix.M44;
+            var x = homogeneousVector.X * matrix.M11 + homogeneousVector.Y * matrix.M12 + homogeneousVector.Z * matrix.M13 + homogeneousVector.W * matrix.M14;
+            var y = homogeneousVector.X * matrix.M21 + homogeneousVector.Y * matrix.M22 + homogeneousVector.Z * matrix.M23 + homogeneousVector.W * matrix.M24;
+            var z = homogeneousVector.X * matrix.M31 + homogeneousVector.Y * matrix.M32 + homogeneousVector.Z * matrix.M33 + homogeneousVector.W * matrix.M34;
+            var w = homogeneousVector.X * matrix.M41 + homogeneousVector.Y * matrix.M42 + homogeneousVector.Z * matrix.M43 + homogeneousVector.W * matrix.M44;
 
             return new Vector4(x, y, z, w);
 

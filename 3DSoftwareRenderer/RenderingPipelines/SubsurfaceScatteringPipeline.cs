@@ -108,7 +108,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
         private static double CalculateVertexSubsurfaceDistanceTraveled(Mesh<IVertex> mesh, DMesh3 g3Mesh, DMeshAABBTree3 spatial, int vertexId)
         {
             var origin = Globals.LightSources.First().ToVector3d();
-            var vertexPos = mesh.GetVertex(vertexId).WorldPoint.ToVector3d();
+            var vertexPos = mesh.GetVertex(vertexId).Position.ToVector3d();
             var direction = (origin - vertexPos).Normalized;
 
             Ray3d ray = new Ray3d(vertexPos + 0.01 * direction, direction);
