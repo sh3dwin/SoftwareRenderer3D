@@ -20,14 +20,11 @@ namespace SoftwareRenderer3D
 
             _viewModel = new MainViewModel(800, 800);
 
-            //OpacitySlider.Value = _viewModel.Opacity;
-
             DataContext = _viewModel;
 
             RenderTarget.MouseMove += ProcessMouseMovement;
             SizeChanged += Resize;
             RenderTarget.MouseWheel += Zoom;
-            // RenderTarget.MouseMove += Pan;
         }
 
         private void ProcessMouseMovement(object sender, MouseEventArgs e)

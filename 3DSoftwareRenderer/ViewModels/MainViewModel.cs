@@ -350,6 +350,12 @@ namespace SoftwareRenderer3D.ViewModels
             UpToDate = false;
         }
 
+        public void UpdateZoom(bool reduce)
+        {
+            _renderContext.Zoom(reduce);
+            UpToDate = false;
+        }
+
         public void Resize(float width, float height)
         {
             _width = width;
@@ -359,11 +365,6 @@ namespace SoftwareRenderer3D.ViewModels
             UpToDate = false;
         }
 
-        public void UpdateZoom(bool reduce)
-        {
-            _renderContext.Zoom(reduce);
-            UpToDate = false;
-        }
         public void SetMouse(Vector3 newPosition)
         {
             _lastMousePosition = newPosition;
