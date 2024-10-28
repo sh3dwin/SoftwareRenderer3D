@@ -14,7 +14,7 @@ using System.Numerics;
 
 namespace SoftwareRenderer3D.RenderingPipelines
 {
-    public class SimplePipeline: IRenderPipeline
+    public class SimplePipeline : IRenderPipeline
     {
         public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
         {
@@ -31,7 +31,14 @@ namespace SoftwareRenderer3D.RenderingPipelines
             mesh.TransformVertices(width, height, viewMatrix, projectionMatrix);
 
             var facetIds = Globals.BackfaceCulling
-                ? mesh.FacetIds.Where(faId => Vector3.Dot((mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize(), mesh.GetFacetNormal(faId)) <= 0.1)
+                ? mesh.FacetIds.Where(
+                    faId =>
+                    {
+                        var normal = mesh.GetFacetNormal(faId);
+                        var viewingDirection = (mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize();
+                        var angle = Vector3.Dot(viewingDirection, normal);
+                        return angle <= Constants.BackfaceCullingAngleThreshold;
+                    })
                 : mesh.FacetIds;
 
             var fragments = ScanLineRasterizer.Rasterize(mesh, width, height, facetIds);

@@ -14,6 +14,7 @@ using SoftwareRenderer3D.Rasterizers;
 using System.Threading.Tasks;
 using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.FragmentShaders;
+using SoftwareRenderer3D.DataStructures.FacetDataStructures;
 
 namespace SoftwareRenderer3D.RenderingPipelines
 {
@@ -33,7 +34,6 @@ namespace SoftwareRenderer3D.RenderingPipelines
                 _lastRenderedMesh = mesh;
                 _subsurfaceScatteringAmount = CalculateSubsurfaceScattering(mesh);
             }
-            _lastRenderedMesh.Equals(mesh);
 
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
@@ -45,7 +45,14 @@ namespace SoftwareRenderer3D.RenderingPipelines
             mesh.TransformVertices(width, height, viewMatrix, projectionMatrix);
 
             var facetIds = Globals.BackfaceCulling
-                ? mesh.FacetIds.Where(faId => Vector3.Dot((mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize(), mesh.GetFacetNormal(faId)) <= 0.1)
+                ? mesh.FacetIds.Where(
+                    faId =>
+                    {
+                        var normal = mesh.GetFacetNormal(faId);
+                        var viewingDirection = (mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize();
+                        var angle = Vector3.Dot(viewingDirection, normal);
+                        return angle <= Constants.BackfaceCullingAngleThreshold;
+                    })
                 : mesh.FacetIds;
 
             var fragments = ScanLineRasterizer.Rasterize(mesh, width, height, facetIds);
@@ -66,13 +73,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
             var vertexIds = mesh.VertexIds;
             var facets = mesh.Facets;
 
-            var g3Vertices = vertexIds.Select(veId => new Vector3f(mesh.GetVertexPoint(veId).ToVector3f())).ToList();
-
-            DMesh3 g3Mesh = new DMesh3();
-            for (int i = 0; i < vertexIds.Count(); ++i)
-                g3Mesh.AppendVertex(new NewVertexInfo(g3Vertices[i]));
-            foreach (var facet in facets)
-                g3Mesh.AppendTriangle(new Index3i(facet.V0, facet.V1, facet.V2));
+            DMesh3 g3Mesh = InitializeG3Mesh(mesh, vertexIds, facets);
 
             DMeshAABBTree3 spatial = new DMeshAABBTree3(g3Mesh);
             spatial.Build();
@@ -84,7 +85,13 @@ namespace SoftwareRenderer3D.RenderingPipelines
                 subsurfaceDistanceTraveled[vertexId] = CalculateLightDecay(subsurfaceDistance);
             });
 
-            var maxDistanceTraveled = subsurfaceDistanceTraveled.Max();
+            var subsurfaceScatteringAmounts = MapScatteringAmountToVertex(mesh, subsurfaceDistanceTraveled);
+
+            return subsurfaceScatteringAmounts;
+        }
+
+        private static Dictionary<IVertex, double> MapScatteringAmountToVertex(Mesh<IVertex> mesh, double[] subsurfaceDistanceTraveled)
+        {
             var subsurfaceScatteringAmounts = new Dictionary<IVertex, double>(subsurfaceDistanceTraveled.Length);
 
             var maxDistance = subsurfaceDistanceTraveled.Max();
@@ -103,6 +110,18 @@ namespace SoftwareRenderer3D.RenderingPipelines
             }
 
             return subsurfaceScatteringAmounts;
+        }
+
+        private static DMesh3 InitializeG3Mesh(Mesh<IVertex> mesh, IEnumerable<int> vertexIds, IEnumerable<Facet> facets)
+        {
+            var g3Vertices = vertexIds.Select(veId => new Vector3f(mesh.GetVertexPoint(veId).ToVector3f())).ToList();
+
+            DMesh3 g3Mesh = new DMesh3();
+            for (int i = 0; i < vertexIds.Count(); ++i)
+                g3Mesh.AppendVertex(new NewVertexInfo(g3Vertices[i]));
+            foreach (var facet in facets)
+                g3Mesh.AppendTriangle(new Index3i(facet.V0, facet.V1, facet.V2));
+            return g3Mesh;
         }
 
         private static double CalculateVertexSubsurfaceDistanceTraveled(Mesh<IVertex> mesh, DMesh3 g3Mesh, DMeshAABBTree3 spatial, int vertexId)
@@ -128,7 +147,6 @@ namespace SoftwareRenderer3D.RenderingPipelines
         private static double CalculateLightDecay(double distance)
         {
             return distance;
-            return Math.Exp(1 / (1 + LightDecayParameter * distance));
         }
     }
 }

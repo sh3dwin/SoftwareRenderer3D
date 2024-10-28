@@ -22,10 +22,6 @@ namespace SoftwareRenderer3D.RenderingPipelines
             if (mesh == null)
                 return frameBuffer.GetFrame();
 
-            var peelingBuffer = new DepthPeelingBuffer(frameBuffer.GetSize().Width, frameBuffer.GetSize().Height);
-
-            var depthPasses = Globals.DepthPeelingPasses;
-
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
 
@@ -36,12 +32,22 @@ namespace SoftwareRenderer3D.RenderingPipelines
             mesh.TransformVertices(width, height, viewMatrix, projectionMatrix);
 
             var facetIds = Globals.BackfaceCulling
-                ? mesh.FacetIds.Where(faId => Vector3.Dot((mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize(), mesh.GetFacetNormal(faId)) <= 0.1)
+                ? mesh.FacetIds.Where(
+                    faId =>
+                    {
+                        var normal = mesh.GetFacetNormal(faId);
+                        var viewingDirection = (mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize();
+                        var angle = Vector3.Dot(viewingDirection, normal);
+                        return angle <= Constants.BackfaceCullingAngleThreshold;
+                    })
                 : mesh.FacetIds;
+
+            SimpleFragmentShader.BindTexture(texture);
 
             var lightSources = Globals.LightSources;
 
-            SimpleFragmentShader.BindTexture(texture);
+            var peelingBuffer = new DepthPeelingBuffer(frameBuffer.GetSize().Width, frameBuffer.GetSize().Height);
+            var depthPasses = Globals.DepthPeelingPasses;
             for (var i = 0; i < depthPasses; i++)
             {
                 RenderPass(mesh, facetIds, lightSources, peelingBuffer);
