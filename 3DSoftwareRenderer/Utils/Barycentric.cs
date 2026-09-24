@@ -68,7 +68,7 @@ namespace SoftwareRenderer3D.Utils
             return new Vector3(alpha, beta, gamma);
         }
 
-        public static Vector3 CalculateBarycentricCoordinates(Vector2 p, Vector2 v0, Vector2 v1, Vector2 v2)
+        public static Vector3 CalculateBarycentricCoordinates(in Vector2 p, in Vector2 v0, in Vector2 v1, in Vector2 v2)
         {
             var x = p.X;
             var y = p.Y;

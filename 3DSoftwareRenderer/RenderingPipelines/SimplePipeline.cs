@@ -8,6 +8,7 @@ using SoftwareRenderer3D.Rasterizers;
 using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
@@ -30,16 +31,24 @@ namespace SoftwareRenderer3D.RenderingPipelines
 
             mesh.TransformVertices(width, height, viewMatrix, projectionMatrix);
 
-            var facetIds = Globals.BackfaceCulling
-                ? mesh.FacetIds.Where(
-                    faId =>
-                    {
-                        var normal = mesh.GetFacetNormal(faId);
-                        var viewingDirection = (mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize();
-                        var angle = Vector3.Dot(viewingDirection, normal);
-                        return angle <= Constants.BackfaceCullingAngleThreshold;
-                    })
-                : mesh.FacetIds;
+            var facetIds = mesh.FacetIds.ToList();
+
+            if(Globals.BackfaceCulling)
+            {
+                var facetsToKeep = new List<int>(mesh.FacetCount);
+                var cameraEyePos = camera.EyePosition;
+                for (var i = 0; i < facetIds.Count; i++)
+                {
+                    var faId = facetIds[i];
+                    var normal = mesh.GetFacetNormal(faId);
+                    var viewingDirection = (mesh.GetFacetMidpoint(faId) - cameraEyePos).Normalize();
+                    var angle = Vector3.Dot(viewingDirection, normal);
+                    if (angle <= Constants.BackfaceCullingAngleThreshold)
+                        facetsToKeep.Add(faId);
+                }
+
+                facetIds = facetsToKeep;
+            }
 
             var fragments = ScanLineRasterizer.Rasterize(mesh, width, height, facetIds);
 

@@ -5,9 +5,9 @@ namespace SoftwareRenderer3D.DataStructures.Fragment
 {
     public interface IFragment
     {
-        double Depth { get; set; }
-        Vector2 ScreenCoordinates { get; set; }
-        Vector3 BarycentricCoordinates { get; set; }
+        double Depth { get; }
+        Vector2 ScreenCoordinates { get; }
+        Vector3 BarycentricCoordinates { get; }
         IVertex V0 { get; }
         IVertex V1 { get; }
         IVertex V2 { get; }

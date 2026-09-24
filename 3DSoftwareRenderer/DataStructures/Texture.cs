@@ -3,6 +3,7 @@ using SoftwareRenderer3D.Utils;
 using SoftwareRenderer3D.Utils.GeneralUtils;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.CompilerServices;
 
 namespace SoftwareRenderer3D.DataStructures
 {
@@ -23,6 +24,7 @@ namespace SoftwareRenderer3D.DataStructures
             _height = texture.Height;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Color GetTextureColor(float u, float v, TextureInterpolation textureInterpolation)
         {
             v = _flipY ? (1 - v) : v;

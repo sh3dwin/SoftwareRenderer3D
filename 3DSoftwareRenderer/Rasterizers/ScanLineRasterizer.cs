@@ -9,33 +9,58 @@ using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Buffers;
+using System.Xml.XPath;
 
 namespace SoftwareRenderer3D.Rasterizers
 {
     public static class ScanLineRasterizer
     {
-        public static List<IFragment> Rasterize(Mesh<IVertex> mesh, int width, int height, IEnumerable<int> facetIds)
+        public static List<IFragment> Rasterize(Mesh<IVertex> mesh, int width, int height, IReadOnlyList<int> facetIds)
         {
             var fragments = new ConcurrentBag<IFragment>();
-            Parallel.ForEach(facetIds, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, facetId =>
+
+            var blockSize = facetIds.Count / Constants.NumberOfThreads;
+            Parallel.For(0, Constants.NumberOfThreads, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, threadId =>
             {
-                var facet = mesh.GetFacet(facetId);
+                var startIndex = threadId * blockSize;
+                var endIndex = System.Math.Min(startIndex + blockSize, mesh.FacetCount);
 
-                var v0 = mesh.GetVertex(facet.V0);
-                var v1 = mesh.GetVertex(facet.V1);
-                var v2 = mesh.GetVertex(facet.V2);
+                var blockFragments = new List<IFragment>();
+                for (var i = startIndex; i < endIndex; i++)
+                {
+                    var facet = mesh.GetFacet(facetIds[i]);
 
-                var normal = facet.Normal;
+                    var v0 = mesh.GetVertex(facet.V0);
+                    var v1 = mesh.GetVertex(facet.V1);
+                    var v2 = mesh.GetVertex(facet.V2);
 
-                if (RenderUtils.IsTriangleInFrustum(width, height, v0.ScreenPosition, v1.ScreenPosition, v2.ScreenPosition))
-                    foreach(var fragment in RasterizeTriangle(width, height, v0, v1, v2))
-                    fragments.Add(fragment);
+                    var normal = facet.Normal;
+
+                    if (RenderUtils.IsTriangleInFrustum(width, height, v0.ScreenPosition, v1.ScreenPosition, v2.ScreenPosition))
+                        foreach (var fragment in RasterizeTriangle(width, height, v0, v1, v2))
+                            blockFragments.Add(fragment);
+                }
+
+                for (var i = 0; i < blockFragments.Count; i++)
+                    fragments.Add(blockFragments[i]);
             });
-            return fragments.ToList();
+
+            var result = new List<IFragment>(fragments.Count);
+            foreach (var fragment in fragments.ToList())
+            {
+                if (fragment != null)
+                    result.Add(fragment);
+            }
+
+            return result;
         }
-        private static List<IFragment> RasterizeTriangle(int width, int height, IVertex v0, IVertex v1, IVertex v2)
+        private static IReadOnlyList<IFragment> RasterizeTriangle(int width, int height, IVertex v0, IVertex v1, IVertex v2)
         {
+            var result = new List<IFragment>();
+
             var (sortedV0, sortedV1, sortedV2) = RenderUtils.SortIndices(v0, v1, v2);
+
             if (sortedV0 == sortedV1 || sortedV1 == sortedV2 || sortedV2 == sortedV0)
                 return null;
 
@@ -48,7 +73,6 @@ namespace SoftwareRenderer3D.Rasterizers
 
             var yMiddle = sortedV1.ScreenPosition.Y.Clamp(yStart, yEnd);
 
-            var result = new List<IFragment>();
             if (RenderUtils.HaveClockwiseOrientation(sortedV0.ScreenPosition, sortedV1.ScreenPosition, sortedV2.ScreenPosition))
             {
                 // P0
@@ -76,7 +100,7 @@ namespace SoftwareRenderer3D.Rasterizers
         //   .................P1
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<IFragment> ScanLineHalfTriangleBottomFlat(int width, int height, int yStart, int yEnd,
+        private static IReadOnlyList<IFragment> ScanLineHalfTriangleBottomFlat(int width, int height, int yStart, int yEnd,
             IVertex anchor, IVertex vRight, IVertex vLeft)
         {
             var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
@@ -113,7 +137,7 @@ namespace SoftwareRenderer3D.Rasterizers
         //          .....
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<IFragment> ScanLineHalfTriangleTopFlat(int width, int height, int yStart, int yEnd,
+        private static IReadOnlyList<IFragment> ScanLineHalfTriangleTopFlat(int width, int height, int yStart, int yEnd,
             IVertex anchor, IVertex vRight, IVertex vLeft)
         {
             var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
@@ -148,7 +172,7 @@ namespace SoftwareRenderer3D.Rasterizers
         /// Scan line on the x direction
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<IFragment> ScanSingleLine(int width, int height, Vector3 start, Vector3 end,
+        private static IReadOnlyList<IFragment> ScanSingleLine(int width, int height, in Vector3 start, in Vector3 end,
             IVertex v0, IVertex v1, IVertex v2)
         {
             var minX = System.Math.Max(start.X, 0);

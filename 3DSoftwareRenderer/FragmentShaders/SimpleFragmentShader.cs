@@ -9,6 +9,7 @@ using SoftwareRenderer3D.FrameBuffers;
 using System.Threading.Tasks;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.DataStructures;
+using System.Linq;
 
 namespace SoftwareRenderer3D.FragmentShaders
 {
@@ -20,30 +21,41 @@ namespace SoftwareRenderer3D.FragmentShaders
         {
             _texture = texture;
         }
+
         public static void UnbindTexture()
         {
             _texture = null;
         }
-        public static void ShadeFragments(IFrameBuffer frameBuffer, List<Vector3> lightSources, List<IFragment> fragments)
-        {
-            Parallel.ForEach(fragments, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, fragment =>
-            {
-                var color = ShadeFragment(fragment, lightSources);
 
-                frameBuffer.SetPixelColor((int)fragment.ScreenCoordinates.X, (int)fragment.ScreenCoordinates.Y, (float)fragment.Depth, color);
+        public static void ShadeFragments(IFrameBuffer frameBuffer, List<Vector3> lightSources, IReadOnlyList<IFragment> fragments)
+        {
+            var bucketSize = fragments.Count / Constants.NumberOfThreads;
+            var useTexture = fragments.Any(f => f is TexturedVertex);
+
+            Parallel.For(0, Constants.NumberOfThreads, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, threadId =>
+            {
+                var startIndex = threadId * bucketSize;
+
+                for (var i = startIndex; i < startIndex + bucketSize; i++)
+                {
+                    var fragment = fragments[i];
+                    var color = ShadeFragment(fragment, lightSources, useTexture);
+                    frameBuffer.SetPixelColor((int)fragment.ScreenCoordinates.X, (int)fragment.ScreenCoordinates.Y, (float)fragment.Depth, color);
+                }
             });
         }
-        private static Color ShadeFragment(IFragment fragment, List<Vector3> lightSources)
+
+        private static Color ShadeFragment(in IFragment fragment, List<Vector3> lightSources, bool useTexture)
         {
             var diffuse = 0.0;
 
             foreach (var lightSource in lightSources)
             {
-                var interpolatedNormal = 
+                var interpolatedNormal =
                     (fragment.V0.Normal * fragment.BarycentricCoordinates.X
                     + fragment.V1.Normal * fragment.BarycentricCoordinates.Y
                     + fragment.V2.Normal * fragment.BarycentricCoordinates.Z).Normalize();
-                var worldPosition = 
+                var worldPosition =
                     fragment.V0.Position * fragment.BarycentricCoordinates.X
                     + fragment.V1.Position * fragment.BarycentricCoordinates.Y
                     + fragment.V2.Position * fragment.BarycentricCoordinates.Z;
@@ -55,14 +67,23 @@ namespace SoftwareRenderer3D.FragmentShaders
 
             diffuse = diffuse.Clamp(0, 1);
 
-            var color = fragment.V0.Color.Mult(fragment.BarycentricCoordinates.X)
-                .Add(fragment.V1.Color.Mult(fragment.BarycentricCoordinates.Y)
-                .Add(fragment.V2.Color.Mult(fragment.BarycentricCoordinates.Z)));
+            var v0FragmentColor = fragment.V0.Color;
+            var v1FragmentColor = fragment.V1.Color;
+            var v2FragmentColor = fragment.V2.Color;
 
-            if (fragment.V0.GetType().IsAssignableFrom(typeof(TexturedVertex)) && _texture != null)
-            {
+            var R = (byte)MathUtils.Clamp(v0FragmentColor.R * fragment.BarycentricCoordinates.X +
+                v1FragmentColor.R * fragment.BarycentricCoordinates.Y +
+                v2FragmentColor.R * fragment.BarycentricCoordinates.Z, 0, 255);
+            var G = (byte)MathUtils.Clamp(v0FragmentColor.G * fragment.BarycentricCoordinates.X +
+                v1FragmentColor.G * fragment.BarycentricCoordinates.Y +
+                v2FragmentColor.G * fragment.BarycentricCoordinates.Z, 0, 255);
+            var B = (byte)MathUtils.Clamp(v0FragmentColor.B * fragment.BarycentricCoordinates.X +
+                v1FragmentColor.B * fragment.BarycentricCoordinates.Y +
+                v2FragmentColor.B * fragment.BarycentricCoordinates.Z, 0, 255);
+            var color = Color.FromArgb(v0FragmentColor.A, R, G, B);
+
+            if (useTexture && _texture != null)
                 color = GetFragmentTextureColor(fragment);
-            }
 
             var opacity = Globals.NormalizedOpacity.Clamp(0, 255);
             var fragmentColor = Color.FromArgb((int)(opacity * 255), (int)(color.R * diffuse), (int)(color.G * diffuse), (int)(color.B * diffuse));
@@ -70,12 +91,12 @@ namespace SoftwareRenderer3D.FragmentShaders
             return fragmentColor;
         }
 
-        private static Color GetFragmentTextureColor(IFragment fragment)
+        private static Color GetFragmentTextureColor(in IFragment fragment)
         {
             var texturePosition =
-                (fragment.V0 as TexturedVertex).TextureCoordinates * fragment.BarycentricCoordinates.X
-                + (fragment.V1 as TexturedVertex).TextureCoordinates * fragment.BarycentricCoordinates.Y
-                + (fragment.V2 as TexturedVertex).TextureCoordinates * fragment.BarycentricCoordinates.Z;
+                ((TexturedVertex)fragment.V0).TextureCoordinates * fragment.BarycentricCoordinates.X
+                + ((TexturedVertex)fragment.V1).TextureCoordinates * fragment.BarycentricCoordinates.Y
+                + ((TexturedVertex)fragment.V2).TextureCoordinates * fragment.BarycentricCoordinates.Z;
 
             var color = _texture.GetTextureColor(texturePosition.X, texturePosition.Y, Globals.TextureInterpolation);
 

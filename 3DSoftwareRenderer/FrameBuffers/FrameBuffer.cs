@@ -67,8 +67,6 @@ namespace SoftwareRenderer3D.FrameBuffers
             _colorBuffer = ArrayUtils.GetEmptyIntBuffer(_width, _height, Constants.BackgroundColor);
             _depthBuffer = ArrayUtils.GetEmptyFloatBuffer(_width, _height);
         }
-        
-
 
         public static int[] BlendColorBuffers(FrameBuffer first, FrameBuffer second)
         {

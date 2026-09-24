@@ -31,16 +31,24 @@ namespace SoftwareRenderer3D.RenderingPipelines
 
             mesh.TransformVertices(width, height, viewMatrix, projectionMatrix);
 
-            var facetIds = Globals.BackfaceCulling
-                ? mesh.FacetIds.Where(
-                    faId =>
-                    {
-                        var normal = mesh.GetFacetNormal(faId);
-                        var viewingDirection = (mesh.GetFacetMidpoint(faId) - camera.EyePosition).Normalize();
-                        var angle = Vector3.Dot(viewingDirection, normal);
-                        return angle <= Constants.BackfaceCullingAngleThreshold;
-                    })
-                : mesh.FacetIds;
+            var facetIds = mesh.FacetIds.ToList();
+
+            if (Globals.BackfaceCulling)
+            {
+                var facetsToKeep = new List<int>(mesh.FacetCount);
+                var cameraEyePos = camera.EyePosition;
+                for (var i = 0; i < facetIds.Count; i++)
+                {
+                    var faId = facetIds[i];
+                    var normal = mesh.GetFacetNormal(faId);
+                    var viewingDirection = (mesh.GetFacetMidpoint(faId) - cameraEyePos).Normalize();
+                    var angle = Vector3.Dot(viewingDirection, normal);
+                    if (angle <= Constants.BackfaceCullingAngleThreshold)
+                        facetsToKeep.Add(faId);
+                }
+
+                facetIds = facetsToKeep;
+            }
 
             SimpleFragmentShader.BindTexture(texture);
 
@@ -61,7 +69,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
             return peelingBuffer.GetFrame();
         }
 
-        private static void RenderPass(Mesh<IVertex> mesh, IEnumerable<int> facetIds, List<Vector3> lightSources, DepthPeelingBuffer frameBuffer)
+        private static void RenderPass(Mesh<IVertex> mesh, IReadOnlyList<int> facetIds, List<Vector3> lightSources, DepthPeelingBuffer frameBuffer)
         {
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
