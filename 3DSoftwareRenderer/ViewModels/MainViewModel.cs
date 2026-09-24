@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using g3;
+using Microsoft.Win32;
 using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
@@ -323,6 +324,7 @@ namespace SoftwareRenderer3D.ViewModels
 
                     OpenedFileName = fileName;
                     _mesh.EnsureMeshQuality();
+                    _useTexture = _mesh.Vertices.Any(v => v is TexturedVertex);
                     ResetView();
                     IsFileLoaded = true;
                 }
@@ -332,6 +334,7 @@ namespace SoftwareRenderer3D.ViewModels
                     IsFileLoaded = false;
                 }
             }
+
             SimpleRendering = true;
             UpToDate = false;
         }
@@ -370,13 +373,13 @@ namespace SoftwareRenderer3D.ViewModels
             _lastMousePosition = newPosition;
         }
 
+        private bool _useTexture;
         private void Render()
         {
             var startTime = DateTime.Now;
             _renderContext.FrameBuffer.Update((int)_width, (int)_height);
 
-
-            Bitmap bitmap = RenderPipelineFactory.GetRenderPipeline(_renderType).Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _renderContext.Texture);
+            Bitmap bitmap = RenderPipelineFactory.GetRenderPipeline(_renderType).Render(_mesh, _renderContext.FrameBuffer, _renderContext.Camera, _useTexture, _renderContext.Texture);
 
             RenderTarget = BitmapToImageSource(bitmap);
 

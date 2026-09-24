@@ -24,7 +24,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
         private static Dictionary<IVertex, double> _subsurfaceScatteringAmount;
         private const double LightDecayParameter = 0.2;
 
-        public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
+        public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture = true, Texture texture = null)
         {
             if (mesh == null)
                 return frameBuffer.GetFrame();

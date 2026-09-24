@@ -17,7 +17,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
 {
     public class OrderIndependentTransparencyPipeline: IRenderPipeline
     {
-        public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
+        public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture = true, Texture texture = null)
         {
             if (mesh == null)
                 return frameBuffer.GetFrame();

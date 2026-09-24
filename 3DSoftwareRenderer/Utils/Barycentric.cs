@@ -96,5 +96,34 @@ namespace SoftwareRenderer3D.Utils
 
             return new Vector3(alpha, beta, gamma);
         }
+
+        public static Vector3 CalculateBarycentricCoordinatesVector3(in Vector3 p, in Vector3 v0, in Vector3 v1, in Vector3 v2)
+        {
+            var x = p.X;
+            var y = p.Y;
+
+            var alpha = (-(x - v1.X) * (v2.Y - v1.Y) + (y - v1.Y) * (v2.X - v1.X)) /
+                    (-(v0.X - v1.X) * (v2.Y - v1.Y) + (v0.Y - v1.Y) * (v2.X - v1.X));
+
+            var beta = (-(x - v2.X) * (v0.Y - v2.Y) + (y - v2.Y) * (v0.X - v2.X)) /
+                (-(v1.X - v2.X) * (v0.Y - v2.Y) + (v1.Y - v2.Y) * (v0.X - v2.X));
+
+            var gamma = 1 - alpha - beta;
+
+            if (alpha > 1)
+                return new Vector3(1, 0, 0);
+            if (alpha < 0)
+                return new Vector3(0, beta / (Math.Abs(beta) + Math.Abs(gamma)), gamma / (Math.Abs(beta) + Math.Abs(gamma)));
+            if (beta > 1)
+                return new Vector3(0, 1, 0);
+            if (beta < 0)
+                return new Vector3(alpha / (Math.Abs(alpha) + Math.Abs(gamma)), 0, gamma / (Math.Abs(alpha) + Math.Abs(gamma)));
+            if (gamma > 1)
+                return new Vector3(0, 0, 1);
+            if (gamma < 0)
+                return new Vector3(alpha / (Math.Abs(alpha) + Math.Abs(beta)), beta / (Math.Abs(alpha) + Math.Abs(beta)), 0);
+
+            return new Vector3(alpha, beta, gamma);
+        }
     }
 }

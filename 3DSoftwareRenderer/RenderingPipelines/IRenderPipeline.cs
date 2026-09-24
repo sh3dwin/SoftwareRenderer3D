@@ -9,6 +9,6 @@ namespace SoftwareRenderer3D.RenderingPipelines
 {
     public interface IRenderPipeline
     {
-        Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null);
+        Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture, Texture texture = null);
     }
 }

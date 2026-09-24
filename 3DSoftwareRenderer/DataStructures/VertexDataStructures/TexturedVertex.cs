@@ -93,6 +93,7 @@ namespace SoftwareRenderer3D.DataStructures.VertexDataStructures
         {
             _normal = normal;
         }
+
         public Vector2 TextureCoordinates => _texCoord;
     }
 }

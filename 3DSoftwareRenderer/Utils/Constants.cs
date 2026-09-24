@@ -9,7 +9,7 @@
 
         public const int MaximumOpacity = 10;
 
-        public const int NumberOfThreads = 10;
+        public const int NumberOfThreads = 8;
 
         public const double BackfaceCullingAngleThreshold = 0.1;
 

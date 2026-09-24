@@ -1,5 +1,6 @@
 ﻿using SoftwareRenderer3D.Camera;
 using SoftwareRenderer3D.DataStructures;
+using SoftwareRenderer3D.DataStructures.Fragment;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
 using SoftwareRenderer3D.DataStructures.VertexDataStructures;
 using SoftwareRenderer3D.FragmentShaders;
@@ -10,6 +11,7 @@ using SoftwareRenderer3D.Utils.GeneralUtils;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 
@@ -17,7 +19,8 @@ namespace SoftwareRenderer3D.RenderingPipelines
 {
     public class SimplePipeline : IRenderPipeline
     {
-        public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, Texture texture = null)
+
+        public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture, Texture texture = null)
         {
             if (mesh == null)
                 return frameBuffer.GetFrame();
@@ -33,7 +36,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
 
             var facetIds = mesh.FacetIds.ToList();
 
-            if(Globals.BackfaceCulling)
+            if (Globals.BackfaceCulling)
             {
                 var facetsToKeep = new List<int>(mesh.FacetCount);
                 var cameraEyePos = camera.EyePosition;
@@ -54,9 +57,14 @@ namespace SoftwareRenderer3D.RenderingPipelines
 
             var lightSources = Globals.LightSources;
 
-            SimpleFragmentShader.BindTexture(texture);
-            SimpleFragmentShader.ShadeFragments(frameBuffer, lightSources, fragments);
-            SimpleFragmentShader.UnbindTexture();
+            if (!useTexture || texture == null)
+                SimpleFragmentShader.ShadeFragments(frameBuffer, lightSources, fragments);
+            else
+            {
+                SimpleFragmentShader.BindTexture(texture);
+                SimpleFragmentShader.ShadeFragmentsWithTexture(frameBuffer, lightSources, fragments);
+                SimpleFragmentShader.UnbindTexture();
+            }
 
             return frameBuffer.GetFrame();
         }

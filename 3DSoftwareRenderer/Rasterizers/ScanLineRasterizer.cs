@@ -101,23 +101,27 @@ namespace SoftwareRenderer3D.Rasterizers
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static IReadOnlyList<IFragment> ScanLineHalfTriangleBottomFlat(int width, int height, int yStart, int yEnd,
-            IVertex anchor, IVertex vRight, IVertex vLeft)
+            in IVertex anchor, in IVertex vRight, in IVertex vLeft)
         {
-            var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
+            Vector3 anchorScreenPos = anchor.ScreenPosition;
+            Vector3 vLeftScreenPos = vLeft.ScreenPosition;
+            Vector3 vRightScreenPos = vRight.ScreenPosition;
+
+            var deltaY1 = System.Math.Abs(vLeftScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
                 ? 1f
-                : 1 / (vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y);
-            var deltaY2 = System.Math.Abs(vRight.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
+                : 1 / (vLeftScreenPos.Y - anchorScreenPos.Y);
+            var deltaY2 = System.Math.Abs(vRightScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
                 ? 1f
-                : 1 / (vRight.ScreenPosition.Y - anchor.ScreenPosition.Y);
+                : 1 / (vRightScreenPos.Y - anchorScreenPos.Y);
 
             var result = new List<IFragment>();
             for (var y = yStart; y <= yEnd; y++)
             {
-                var gradient1 = ((y - anchor.ScreenPosition.Y) * deltaY1).Clamp();
-                var gradient2 = ((vRight.ScreenPosition.Y - y) * deltaY2).Clamp();
+                var gradient1 = ((y - anchorScreenPos.Y) * deltaY1).Clamp();
+                var gradient2 = ((vRightScreenPos.Y - y) * deltaY2).Clamp();
 
-                var start = Vector3.Lerp(anchor.ScreenPosition, vLeft.ScreenPosition, gradient1);
-                var end = Vector3.Lerp(vRight.ScreenPosition, anchor.ScreenPosition, gradient2);
+                var start = Vector3.Lerp(anchorScreenPos, vLeftScreenPos, gradient1);
+                var end = Vector3.Lerp(vRightScreenPos, anchorScreenPos, gradient2);
 
                 if (start.X >= end.X)
                     continue;
@@ -138,23 +142,27 @@ namespace SoftwareRenderer3D.Rasterizers
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static IReadOnlyList<IFragment> ScanLineHalfTriangleTopFlat(int width, int height, int yStart, int yEnd,
-            IVertex anchor, IVertex vRight, IVertex vLeft)
+            in IVertex anchor, in IVertex vRight, in IVertex vLeft)
         {
-            var deltaY1 = System.Math.Abs(vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
+            Vector3 anchorScreenPos = anchor.ScreenPosition;
+            Vector3 vLeftScreenPos = vLeft.ScreenPosition;
+            Vector3 vRightScreenPos = vRight.ScreenPosition;
+
+            var deltaY1 = System.Math.Abs(vLeftScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
                 ? 1f
-                : 1 / (vLeft.ScreenPosition.Y - anchor.ScreenPosition.Y);
-            var deltaY2 = System.Math.Abs(vRight.ScreenPosition.Y - anchor.ScreenPosition.Y) < float.Epsilon
+                : 1 / (vLeftScreenPos.Y - anchorScreenPos.Y);
+            var deltaY2 = System.Math.Abs(vRightScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
                 ? 1f
-                : 1 / (vRight.ScreenPosition.Y - anchor.ScreenPosition.Y);
+                : 1 / (vRightScreenPos.Y - anchorScreenPos.Y);
 
             var result = new List<IFragment>();
             for (var y = yStart; y <= yEnd; y++)
             {
-                var gradient1 = ((vLeft.ScreenPosition.Y - y) * deltaY1).Clamp();
-                var gradient2 = ((vRight.ScreenPosition.Y - y) * deltaY2).Clamp();
+                var gradient1 = ((vLeftScreenPos.Y - y) * deltaY1).Clamp();
+                var gradient2 = ((vRightScreenPos.Y - y) * deltaY2).Clamp();
 
-                var start = Vector3.Lerp(vLeft.ScreenPosition, anchor.ScreenPosition, gradient1);
-                var end = Vector3.Lerp(vRight.ScreenPosition, anchor.ScreenPosition, gradient2);
+                var start = Vector3.Lerp(vLeftScreenPos, anchorScreenPos, gradient1);
+                var end = Vector3.Lerp(vRightScreenPos, anchorScreenPos, gradient2);
 
                 if (start.X >= end.X)
                     continue;
@@ -189,7 +197,7 @@ namespace SoftwareRenderer3D.Rasterizers
                 var yInt = (int)point.Y;
 
                 var screenPoint = new Vector3(xInt, yInt, point.Z);
-                var barycentric = Barycentric.CalculateBarycentricCoordinates(screenPoint.XY(), v0.ScreenPosition.XY(), v1.ScreenPosition.XY(), v2.ScreenPosition.XY());
+                var barycentric = Barycentric.CalculateBarycentricCoordinatesVector3(screenPoint, v0.ScreenPosition, v1.ScreenPosition, v2.ScreenPosition);
 
                 var fragment = new SimpleFragment(screenPoint.XY(), point.Z, barycentric, v0, v1, v2);
 

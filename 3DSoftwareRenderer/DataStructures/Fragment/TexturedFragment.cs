@@ -1,12 +1,15 @@
 ﻿using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Numerics;
+using System.Text;
 
 namespace SoftwareRenderer3D.DataStructures.Fragment
 {
-    public readonly struct SimpleFragment: IEqualityComparer, IFragment
+    internal struct TexturedFragment : IFragment, IEqualityComparer
     {
-        public SimpleFragment(Vector2 coordinates, double depth, Vector3 barycentric, IVertex v0, IVertex v1, IVertex v2)
+        public TexturedFragment(Vector2 coordinates, double depth, Vector3 barycentric, IVertex v0, IVertex v1, IVertex v2)
         {
             Depth = depth;
             ScreenCoordinates = coordinates;
@@ -14,6 +17,10 @@ namespace SoftwareRenderer3D.DataStructures.Fragment
             V0 = v0;
             V1 = v1;
             V2 = v2;
+
+            TextureCoordinates = ((TexturedVertex)V0).TextureCoordinates * BarycentricCoordinates.X
+                + ((TexturedVertex)V1).TextureCoordinates * BarycentricCoordinates.Y
+                + ((TexturedVertex)V2).TextureCoordinates * BarycentricCoordinates.Z;
         }
         public double Depth { get; }
         public Vector2 ScreenCoordinates { get; }
@@ -29,8 +36,8 @@ namespace SoftwareRenderer3D.DataStructures.Fragment
             if (!y.GetType().IsAssignableFrom(x.GetType()))
                 return false;
 
-            var fragmentX = (SimpleFragment)x;
-            var fragmentY = (SimpleFragment)y;
+            var fragmentX = (TexturedFragment)x;
+            var fragmentY = (TexturedFragment)y;
 
             return fragmentX.ScreenCoordinates.X == fragmentY.ScreenCoordinates.X
                 && fragmentX.ScreenCoordinates.Y == fragmentY.ScreenCoordinates.Y

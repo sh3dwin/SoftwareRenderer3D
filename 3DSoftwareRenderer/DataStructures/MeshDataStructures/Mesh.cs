@@ -18,12 +18,11 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
     public class Mesh<V> : IEquatable<Mesh<V>>
         where V : IVertex
     {
-        private Dictionary<int, V> _vertices { get; set; }
-        private Dictionary<int, Facet> _facets { get; set; }
+        private readonly Dictionary<int, V> _vertices;
+        private readonly Dictionary<int, Facet> _facets;
+
         private Vector3 _center;
         private Matrix4x4 _modelMatrix;
-
-
 
         public Mesh(Dictionary<int, V> vertices, Dictionary<int, Facet> facets) {
             _vertices = vertices;
@@ -175,8 +174,12 @@ namespace SoftwareRenderer3D.DataStructures.MeshDataStructures
                 newVertices[keyValue.Value] = _vertices[positionVertexId[keyValue.Key]];
                 newVertices[keyValue.Value].Color = Color.White;
             }
-            _vertices = newVertices;
-            _facets = newFacets;
+
+            foreach(var (id, vertex) in newVertices)
+                _vertices[id] = vertex;
+
+            foreach( var (id, facet) in newFacets)
+                _facets[id] = facet;
         }
 
         public void TransformVertices(int width, int height, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
