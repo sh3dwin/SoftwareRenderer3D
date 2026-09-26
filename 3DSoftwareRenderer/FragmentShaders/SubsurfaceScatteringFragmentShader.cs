@@ -32,7 +32,7 @@ namespace SoftwareRenderer3D.FragmentShaders
             {
                 var color = ShadeFragment(fragment, lightSources, subsurfaceScatteringAmount);
 
-                frameBuffer.SetPixelColor((int)fragment.ScreenCoordinates.X, (int)fragment.ScreenCoordinates.Y, (float)fragment.Depth, color);
+                frameBuffer.SetPixelColor((int)fragment.ScreenCoordinates.X, (int)fragment.ScreenCoordinates.Y, (float)fragment.Depth, color.A, color.R, color.B, color.G);
             });
         }
         private static Color ShadeFragment(IFragment fragment, List<Vector3> lightSources, Dictionary<IVertex, double> subsurfaceScatteringAmount)

@@ -38,14 +38,16 @@ namespace SoftwareRenderer3D.FrameBuffers
             return (_width, _height);
         }
 
-        public void SetPixelColor(int x, int y, float z, Color color)
+        public void SetPixelColor(int x, int y, float z, byte a, byte r, byte g, byte b) => SetPixelColor(x, y, z, a << 24 | r << 16 | g << 8 | b);
+
+        public void SetPixelColor(int x, int y, float z, int argb)
         {
             int index = x + y * _width;
             if (z >= _depthBuffer[index])
                 return;
 
             _depthBuffer[index] = z;
-            _colorBuffer[index] = color.ToArgb();
+            _colorBuffer[index] = argb;
         }
 
         public Bitmap GetFrame()

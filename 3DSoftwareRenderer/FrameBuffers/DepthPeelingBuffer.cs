@@ -45,12 +45,15 @@ namespace SoftwareRenderer3D.FrameBuffers
             return (_width, _height);
         }
 
-        public void SetPixelColor(int x, int y, float z, Color color)
+        public void SetPixelColor(int x, int y, float z, byte a, byte r, byte g, byte b) => SetPixelColor(x, y, z, a << 24 | r << 16 | g << 8 | b);
+
+        public void SetPixelColor(int x, int y, float z, int argb) 
         {
             int index = x + y * _width;
             if (z + DepthTestEpsilon >= _depthBuffer[index] || z - DepthTestEpsilon <= _minDepthBuffer[index])
                 return;
 
+            var color = Color.FromArgb(argb);
             Color blendedColor;
 
             // Something has been drawn in the previous pass

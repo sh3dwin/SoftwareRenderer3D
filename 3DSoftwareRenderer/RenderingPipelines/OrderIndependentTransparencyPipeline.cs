@@ -17,6 +17,8 @@ namespace SoftwareRenderer3D.RenderingPipelines
 {
     public class OrderIndependentTransparencyPipeline: IRenderPipeline
     {
+        private SimpleFragmentShader _fragmentShader = new SimpleFragmentShader();
+
         public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture = true, Texture texture = null)
         {
             if (mesh == null)
@@ -50,7 +52,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
                 facetIds = facetsToKeep;
             }
 
-            SimpleFragmentShader.BindTexture(texture);
+            _fragmentShader.BindTexture(texture);
 
             var lightSources = Globals.LightSources;
 
@@ -64,18 +66,18 @@ namespace SoftwareRenderer3D.RenderingPipelines
 
             RenderPass(mesh, facetIds, lightSources, peelingBuffer);
 
-            SimpleFragmentShader.UnbindTexture();
+            _fragmentShader.UnbindTexture();
 
             return peelingBuffer.GetFrame();
         }
 
-        private static void RenderPass(Mesh<IVertex> mesh, IReadOnlyList<int> facetIds, List<Vector3> lightSources, DepthPeelingBuffer frameBuffer)
+        private void RenderPass(Mesh<IVertex> mesh, IReadOnlyList<int> facetIds, List<Vector3> lightSources, DepthPeelingBuffer frameBuffer)
         {
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
 
             var fragments = ScanLineRasterizer.Rasterize(mesh, width, height, facetIds);
-            SimpleFragmentShader.ShadeFragments(frameBuffer, lightSources, fragments);
+            _fragmentShader.ShadeFragments(frameBuffer, lightSources, fragments);
         }
     }
 }

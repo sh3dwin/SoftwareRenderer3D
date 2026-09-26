@@ -19,7 +19,8 @@ namespace SoftwareRenderer3D.RenderingPipelines
 {
     public class SimplePipeline : IRenderPipeline
     {
-
+        private SimpleFragmentShader _fragmentShader = new SimpleFragmentShader();
+        
         public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture, Texture texture = null)
         {
             if (mesh == null)
@@ -58,12 +59,12 @@ namespace SoftwareRenderer3D.RenderingPipelines
             var lightSources = Globals.LightSources;
 
             if (!useTexture || texture == null)
-                SimpleFragmentShader.ShadeFragments(frameBuffer, lightSources, fragments);
+                _fragmentShader.ShadeFragments(frameBuffer, lightSources, fragments);
             else
             {
-                SimpleFragmentShader.BindTexture(texture);
-                SimpleFragmentShader.ShadeFragmentsWithTexture(frameBuffer, lightSources, fragments);
-                SimpleFragmentShader.UnbindTexture();
+                _fragmentShader.BindTexture(texture);
+                _fragmentShader.ShadeFragmentsWithTexture(frameBuffer, lightSources, fragments);
+                _fragmentShader.UnbindTexture();
             }
 
             return frameBuffer.GetFrame();
