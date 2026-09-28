@@ -20,7 +20,8 @@ namespace SoftwareRenderer3D.RenderingPipelines
     public class SimplePipeline : IRenderPipeline
     {
         private SimpleFragmentShader _fragmentShader = new SimpleFragmentShader();
-        
+        private ScanLineRasterizer _rasterizer = new ScanLineRasterizer();
+
         public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture, Texture texture = null)
         {
             if (mesh == null)
@@ -54,7 +55,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
                 facetIds = facetsToKeep;
             }
 
-            var fragments = ScanLineRasterizer.Rasterize(mesh, width, height, facetIds);
+            var fragments = _rasterizer.Rasterize(mesh, width, height, facetIds);
 
             var lightSources = Globals.LightSources;
 

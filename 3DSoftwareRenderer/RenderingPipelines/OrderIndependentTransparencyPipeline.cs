@@ -18,6 +18,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
     public class OrderIndependentTransparencyPipeline: IRenderPipeline
     {
         private SimpleFragmentShader _fragmentShader = new SimpleFragmentShader();
+        private ScanLineRasterizer _rasterizer = new ScanLineRasterizer();
 
         public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture = true, Texture texture = null)
         {
@@ -76,7 +77,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
             var width = frameBuffer.GetSize().Width;
             var height = frameBuffer.GetSize().Height;
 
-            var fragments = ScanLineRasterizer.Rasterize(mesh, width, height, facetIds);
+            var fragments = _rasterizer.Rasterize(mesh, width, height, facetIds);
             _fragmentShader.ShadeFragments(frameBuffer, lightSources, fragments);
         }
     }

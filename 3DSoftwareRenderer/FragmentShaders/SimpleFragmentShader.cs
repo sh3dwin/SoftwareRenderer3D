@@ -95,6 +95,7 @@ namespace SoftwareRenderer3D.FragmentShaders
         public void ShadeFragments(IFrameBuffer frameBuffer, List<Vector3> lightSources, IReadOnlyList<IFragment> fragments)
         {
             var bucketSize = fragments.Count / Constants.NumberOfThreads;
+            var opacity = Globals.NormalizedOpacity;
 
             Parallel.For(0, Constants.NumberOfThreads, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, threadId =>
             {
@@ -103,38 +104,27 @@ namespace SoftwareRenderer3D.FragmentShaders
                 for (var i = startIndex; i < startIndex + bucketSize; i++)
                 {
                     var fragment = fragments[i];
-                    var argb = ShadeFragment(fragment, lightSources);
+                    var argb = ShadeFragment(fragment, lightSources, Globals.NormalizedOpacity);
                     frameBuffer.SetPixelColor((int)fragment.ScreenCoordinates.X, (int)fragment.ScreenCoordinates.Y, (float)fragment.Depth, argb);
                 }
             });
         }
 
-        public int ShadeFragment(in IFragment fragment, List<Vector3> lightSources)
+        public int ShadeFragment(in IFragment fragment, List<Vector3> lightSources, double opacity = 1.0)
         {
-            var diffuse = 0.0f;
-
-            var opacity = Globals.NormalizedOpacity;
+            // Interpolate vertex colors
+            var v0 = fragment.V0;
+            var v1 = fragment.V1;
+            var v2 = fragment.V2;
 
             Vector3 barycentricCoordinates = fragment.BarycentricCoordinates;
             var barX = barycentricCoordinates.X;
             var barY = barycentricCoordinates.Y;
             var barZ = barycentricCoordinates.Z;
 
-            foreach (var lightSource in lightSources)
-            {
-                var interpolatedNormal = (fragment.V0.Normal * barX + fragment.V1.Normal * barY + fragment.V2.Normal * barZ);
-                var worldPosition = fragment.V0.Position * barX + fragment.V1.Position * barY + fragment.V2.Position * barZ;
-                var lightDirection = (worldPosition - lightSource).Normalize();
-
-                var lightAngle = Vector3.Dot(interpolatedNormal, lightDirection);
-                diffuse += (-lightAngle).Clamp(0, 1);
-            }
-
-            diffuse = diffuse.Clamp(0, 1);
-
-            var v0FragmentColor = fragment.V0.Color;
-            var v1FragmentColor = fragment.V1.Color;
-            var v2FragmentColor = fragment.V2.Color;
+            var v0FragmentColor = v0.Color;
+            var v1FragmentColor = v1.Color;
+            var v2FragmentColor = v2.Color;
 
             float r = v0FragmentColor.R * barX + v1FragmentColor.R * barY + v2FragmentColor.R * barZ;
             float g = v0FragmentColor.G * barX + v1FragmentColor.G * barY + v2FragmentColor.G * barZ;
@@ -156,7 +146,22 @@ namespace SoftwareRenderer3D.FragmentShaders
             else if (b < 0)
                 b = 0;
 
-            return ((byte)(opacity * 255) << 24 | (byte)(r * diffuse) << 16 | (byte)(g * diffuse) << 8 | (byte)(b * diffuse));
+            // Lighting
+            var diffuse = 0.0f;
+            for (int i = 0; i < lightSources.Count; i++)
+            {
+                Vector3 lightSource = lightSources[i];
+                var interpolatedNormal = v0.Normal * barX + v1.Normal * barY + v2.Normal * barZ;
+                var worldPosition = v0.Position * barX + v1.Position * barY + v2.Position * barZ;
+                var lightDirection = (worldPosition - lightSource).Normalize();
+
+                var lightAngle = Vector3.Dot(interpolatedNormal, lightDirection);
+                diffuse += (-lightAngle).Clamp(0, 1);
+            }
+
+            diffuse = diffuse.Clamp(0, 1);
+
+            return (byte)(opacity * 255) << 24 | (byte)(r * diffuse) << 16 | (byte)(g * diffuse) << 8 | (byte)(b * diffuse);
         }
 
         public void ShadeFragmentsWithTexture(IFrameBuffer frameBuffer, List<Vector3> lightSources, IReadOnlyList<IFragment> fragments)

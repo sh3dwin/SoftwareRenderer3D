@@ -1,32 +1,33 @@
-﻿using System.Numerics;
-using System.Runtime.CompilerServices;
-using SoftwareRenderer3D.Utils.GeneralUtils;
-using SoftwareRenderer3D.Utils;
-using SoftwareRenderer3D.DataStructures.VertexDataStructures;
-using System.Collections.Generic;
+﻿using BenchmarkDotNet.Attributes;
 using SoftwareRenderer3D.DataStructures.Fragment;
 using SoftwareRenderer3D.DataStructures.MeshDataStructures;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
+using SoftwareRenderer3D.DataStructures.VertexDataStructures;
+using SoftwareRenderer3D.Utils;
+using SoftwareRenderer3D.Utils.GeneralUtils;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Buffers;
-using System.Xml.XPath;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace SoftwareRenderer3D.Rasterizers
 {
-    public static class ScanLineRasterizer
+    public class ScanLineRasterizer
     {
-        public static List<IFragment> Rasterize(Mesh<IVertex> mesh, int width, int height, IReadOnlyList<int> facetIds)
+        public List<IFragment> Rasterize(Mesh<IVertex> mesh, int width, int height, IReadOnlyList<int> facetIds)
         {
-            var fragments = new ConcurrentBag<IFragment>();
+            var fragments = new List<IFragment>();
 
             var blockSize = facetIds.Count / Constants.NumberOfThreads;
-            Parallel.For(0, Constants.NumberOfThreads, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads }, threadId =>
+            Parallel.For(0, Constants.NumberOfThreadss, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads },
+                () => new List<IFragment>(512),
+                (threadId, loop, localFragments) =>
             {
                 var startIndex = threadId * blockSize;
-                var endIndex = System.Math.Min(startIndex + blockSize, mesh.FacetCount);
+                var endIndex =
+                Math.Min(startIndex + blockSize, mesh.FacetCount);
 
-                var blockFragments = new List<IFragment>();
                 for (var i = startIndex; i < endIndex; i++)
                 {
                     var facet = mesh.GetFacet(facetIds[i]);
@@ -39,23 +40,22 @@ namespace SoftwareRenderer3D.Rasterizers
 
                     if (RenderUtils.IsTriangleInFrustum(width, height, v0.ScreenPosition, v1.ScreenPosition, v2.ScreenPosition))
                         foreach (var fragment in RasterizeTriangle(width, height, v0, v1, v2))
-                            blockFragments.Add(fragment);
+                            if(fragment is not null)
+                                localFragments.Add(fragment);
                 }
 
-                for (var i = 0; i < blockFragments.Count; i++)
-                    fragments.Add(blockFragments[i]);
+                return localFragments;
+            }, localFragments =>
+            {
+                lock (fragments)
+                {
+                    fragments.AddRange(localFragments.Where(f => f is not null));
+                }
             });
 
-            var result = new List<IFragment>(fragments.Count);
-            foreach (var fragment in fragments.ToList())
-            {
-                if (fragment != null)
-                    result.Add(fragment);
-            }
-
-            return result;
+            return fragments;
         }
-        private static IReadOnlyList<IFragment> RasterizeTriangle(int width, int height, IVertex v0, IVertex v1, IVertex v2)
+        private IReadOnlyList<IFragment> RasterizeTriangle(int width, int height, IVertex v0, IVertex v1, IVertex v2)
         {
             var result = new List<IFragment>();
 
@@ -64,8 +64,8 @@ namespace SoftwareRenderer3D.Rasterizers
             if (sortedV0 == sortedV1 || sortedV1 == sortedV2 || sortedV2 == sortedV0)
                 return null;
 
-            var yStart = (int)System.Math.Max(sortedV0.ScreenPosition.Y, 0);
-            var yEnd = (int)System.Math.Min(sortedV2.ScreenPosition.Y, height - 1);
+            var yStart = (int)Math.Max(sortedV0.ScreenPosition.Y, 0);
+            var yEnd = (int)Math.Min(sortedV2.ScreenPosition.Y, height - 1);
 
             // Out if clipped
             if (yStart > yEnd)
@@ -100,17 +100,17 @@ namespace SoftwareRenderer3D.Rasterizers
         //   .................P1
         // P2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static IReadOnlyList<IFragment> ScanLineHalfTriangleBottomFlat(int width, int height, int yStart, int yEnd,
+        private IReadOnlyList<IFragment> ScanLineHalfTriangleBottomFlat(int width, int height, int yStart, int yEnd,
             in IVertex anchor, in IVertex vRight, in IVertex vLeft)
         {
             Vector3 anchorScreenPos = anchor.ScreenPosition;
             Vector3 vLeftScreenPos = vLeft.ScreenPosition;
             Vector3 vRightScreenPos = vRight.ScreenPosition;
 
-            var deltaY1 = System.Math.Abs(vLeftScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
+            var deltaY1 = Math.Abs(vLeftScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
                 ? 1f
                 : 1 / (vLeftScreenPos.Y - anchorScreenPos.Y);
-            var deltaY2 = System.Math.Abs(vRightScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
+            var deltaY2 = Math.Abs(vRightScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
                 ? 1f
                 : 1 / (vRightScreenPos.Y - anchorScreenPos.Y);
 
@@ -141,17 +141,17 @@ namespace SoftwareRenderer3D.Rasterizers
         //          .....
         //            P0
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static IReadOnlyList<IFragment> ScanLineHalfTriangleTopFlat(int width, int height, int yStart, int yEnd,
+        private IReadOnlyList<IFragment> ScanLineHalfTriangleTopFlat(int width, int height, int yStart, int yEnd,
             in IVertex anchor, in IVertex vRight, in IVertex vLeft)
         {
             Vector3 anchorScreenPos = anchor.ScreenPosition;
             Vector3 vLeftScreenPos = vLeft.ScreenPosition;
             Vector3 vRightScreenPos = vRight.ScreenPosition;
 
-            var deltaY1 = System.Math.Abs(vLeftScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
+            var deltaY1 = Math.Abs(vLeftScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
                 ? 1f
                 : 1 / (vLeftScreenPos.Y - anchorScreenPos.Y);
-            var deltaY2 = System.Math.Abs(vRightScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
+            var deltaY2 = Math.Abs(vRightScreenPos.Y - anchorScreenPos.Y) < float.Epsilon
                 ? 1f
                 : 1 / (vRightScreenPos.Y - anchorScreenPos.Y);
 
@@ -180,31 +180,82 @@ namespace SoftwareRenderer3D.Rasterizers
         /// Scan line on the x direction
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static IReadOnlyList<IFragment> ScanSingleLine(int width, int height, in Vector3 start, in Vector3 end,
+        private IReadOnlyList<IFragment> ScanSingleLine(int width, int height, in Vector3 start, in Vector3 end,
             IVertex v0, IVertex v1, IVertex v2)
         {
-            var minX = System.Math.Max(start.X, 0);
-            var maxX = System.Math.Min(end.X, width);
+            var minX = Math.Clamp(start.X, 0, width);
+            var maxX = Math.Clamp(end.X, 0, width);
 
-            var deltaX = 1 / (end.X - start.X);
+            var dx = maxX - minX;
+            var invDX = 1 / dx;
 
-            var result = new List<IFragment>();
+            var result = new IFragment[((int)dx + 1)];
             for (var x = minX; x < maxX; x++)
             {
-                var gradient = (x - start.X) * deltaX;
-                var point = Vector3.Lerp(start, end, gradient);
-                var xInt = (int)x;
-                var yInt = (int)point.Y;
+                var point = Vector3.Lerp(start, end, (x - start.X) * invDX);
 
-                var screenPoint = new Vector3(xInt, yInt, point.Z);
+                var screenPoint = new Vector3((int)x, (int)point.Y, point.Z);
                 var barycentric = Barycentric.CalculateBarycentricCoordinatesVector3(screenPoint, v0.ScreenPosition, v1.ScreenPosition, v2.ScreenPosition);
 
                 var fragment = new SimpleFragment(screenPoint.XY(), point.Z, barycentric, v0, v1, v2);
 
-                result.Add(fragment);
+                result[(int)(x - minX)] = fragment;
             }
+            return result;
+        }
+
+
+
+        #region Benchmark
+
+        public IEnumerable<(IVertex, IVertex, IVertex)> GetBenchmarkVertices(Random random)
+        {
+            for (var i = 0; i < N; i++)
+            {
+                // Random v0, v1, v2
+                var vertices = new List<StandardVertex>(3);
+                for (var j = 0; j < 3; j++)
+                    vertices.Add(new StandardVertex(new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble())));
+
+                yield return (vertices[0], vertices[1], vertices[2]);
+            }
+        }
+
+        public List<(IVertex, IVertex, IVertex)> _benchmarkVertices;
+
+        public List<Vector3> _startValues;
+
+        public List<Vector3> _endValues;
+
+        [Params(1_000, 10_000)]
+        public int N;
+
+        [GlobalSetup]
+        public void GlobalSetup()
+        {
+            var random = new Random();
+            _benchmarkVertices = GetBenchmarkVertices(random).ToList();
+
+            _startValues = new List<Vector3>(N);
+            for (var i = 0; i < N; i++)
+                _startValues.Add(new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()));
+
+            _endValues = new List<Vector3>(N);
+            for (var i = 0; i < N; i++)
+                _endValues.Add(new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()));
+        }
+
+        [Benchmark]
+        public IReadOnlyList<IFragment> BenchmarkScanSingleLine()
+        {
+            IReadOnlyList<IFragment> result = default;
+
+            for (int i = 0; i < _benchmarkVertices.Count; i++)
+                result = ScanSingleLine(600, 800, _startValues[i], _endValues[i],
+                    _benchmarkVertices[i].Item1, _benchmarkVertices[i].Item2, _benchmarkVertices[i].Item3);
 
             return result;
         }
+        #endregion
     }
 }

@@ -23,6 +23,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
         private static Mesh<IVertex> _lastRenderedMesh;
         private static Dictionary<IVertex, double> _subsurfaceScatteringAmount;
         private const double LightDecayParameter = 0.2;
+        private ScanLineRasterizer _rasterizer = new ScanLineRasterizer();
 
         public Bitmap Render(Mesh<IVertex> mesh, IFrameBuffer frameBuffer, ArcBallCamera camera, bool useTexture = true, Texture texture = null)
         {
@@ -63,7 +64,7 @@ namespace SoftwareRenderer3D.RenderingPipelines
                 facetIds = facetsToKeep;
             }
 
-            var fragments = ScanLineRasterizer.Rasterize(mesh, width, height, facetIds);
+            var fragments = _rasterizer.Rasterize(mesh, width, height, facetIds);
 
             var lightSources = Globals.LightSources;
 
