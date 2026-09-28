@@ -20,7 +20,7 @@ namespace SoftwareRenderer3D.Rasterizers
             var fragments = new List<IFragment>();
 
             var blockSize = facetIds.Count / Constants.NumberOfThreads;
-            Parallel.For(0, Constants.NumberOfThreadss, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads },
+            Parallel.For(0, Constants.NumberOfThreads, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads },
                 () => new List<IFragment>(512),
                 (threadId, loop, localFragments) =>
             {
