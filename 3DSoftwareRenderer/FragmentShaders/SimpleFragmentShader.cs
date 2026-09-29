@@ -156,10 +156,10 @@ namespace SoftwareRenderer3D.FragmentShaders
                 var lightDirection = (worldPosition - lightSource).Normalize();
 
                 var lightAngle = Vector3.Dot(interpolatedNormal, lightDirection);
-                diffuse += (-lightAngle).Clamp(0, 1);
+                diffuse += (-lightAngle).Clamp(0.0f, 1.0f);
             }
 
-            diffuse = diffuse.Clamp(0, 1);
+            diffuse = diffuse.Clamp(0.0f, 1.0f);
 
             return (byte)(opacity * 255) << 24 | (byte)(r * diffuse) << 16 | (byte)(g * diffuse) << 8 | (byte)(b * diffuse);
         }

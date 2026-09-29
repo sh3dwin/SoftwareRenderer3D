@@ -19,8 +19,15 @@ namespace SoftwareRenderer3D.Rasterizers
         {
             var fragments = new List<IFragment>();
 
-            var blockSize = facetIds.Count / Constants.NumberOfThreads;
-            Parallel.For(0, Constants.NumberOfThreads, new ParallelOptions() { MaxDegreeOfParallelism = Constants.NumberOfThreads },
+            var degreesOfParallelism = Constants.NumberOfThreads;
+            var blockSize = facetIds.Count / degreesOfParallelism;
+            if (blockSize == 0)
+            {
+                degreesOfParallelism = 1;
+                blockSize = mesh.FacetCount;
+            }
+
+            Parallel.For(0, Constants.NumberOfThreads, new ParallelOptions() { MaxDegreeOfParallelism = degreesOfParallelism },
                 () => new List<IFragment>(512),
                 (threadId, loop, localFragments) =>
             {
@@ -183,23 +190,24 @@ namespace SoftwareRenderer3D.Rasterizers
         private IReadOnlyList<IFragment> ScanSingleLine(int width, int height, in Vector3 start, in Vector3 end,
             IVertex v0, IVertex v1, IVertex v2)
         {
-            var minX = Math.Clamp(start.X, 0, width);
-            var maxX = Math.Clamp(end.X, 0, width);
+            var minX = Math.Clamp((int)start.X, 0, width - 1);
+            var maxX = Math.Clamp((int)end.X, 0, width - 1);
 
             var dx = maxX - minX;
-            var invDX = 1 / dx;
+            var invDX = dx != 0 ? 1 / dx : 0;
 
-            var result = new IFragment[((int)dx + 1)];
-            for (var x = minX; x < maxX; x++)
+            var result = new IFragment[(dx + 1)];
+            var offset = 0;
+            for (var x = minX; x <= maxX ; x++)
             {
                 var point = Vector3.Lerp(start, end, (x - start.X) * invDX);
 
-                var screenPoint = new Vector3((int)x, (int)point.Y, point.Z);
+                var screenPoint = new Vector3(x, (int)point.Y, point.Z);
                 var barycentric = Barycentric.CalculateBarycentricCoordinatesVector3(screenPoint, v0.ScreenPosition, v1.ScreenPosition, v2.ScreenPosition);
 
                 var fragment = new SimpleFragment(screenPoint.XY(), point.Z, barycentric, v0, v1, v2);
 
-                result[(int)(x - minX)] = fragment;
+                result[offset++] = fragment;
             }
             return result;
         }
